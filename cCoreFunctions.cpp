@@ -5,7 +5,9 @@
  *
  ****************************************/
 
-#include <Rcpp.h>
+#include <RcppArmadillo.h>
+// [[Rcpp::depends(RcppArmadillo)]]
+
 using namespace Rcpp;
 using namespace std;
 
@@ -14,16 +16,16 @@ using namespace std;
 void modelHivProg(List &pop,
                   List &mc,
                   List &stats,
-                  List &hivInputs,
+                  arma:: cube &hivInputs, //@MS: need to decide about HIV input structure
                   const int tick){
         
         //Get the model constants we will be using
-        // const int HIV_NEG=as<int>(mc["HIV.NEG"]);
-        // const int HIV_UNDIAG=as<int>(mc["HIV.UNDIAG"]);
-        // const int HIV_DIAG_UNSUPP=as<int>(mc["HIV.DIAG_UNSUPP"]);
-        // const int HIV_SUPP=as<int>(mc["HIV.SUPP"]);
+        const int HIV_NEG=as<int>(mc["HIV.NEG"]);
+        const int HIV_UNDIAG=as<int>(mc["HIV.UNDIAG"]);
+        const int HIV_DIAG_UNSUPP=as<int>(mc["HIV.DIAG_UNSUPP"]);
+        const int HIV_SUPP=as<int>(mc["HIV.SUPP"]);
         
-        //STAT COLLECTION #@JP: can we initialize these to 0 and then add them to stats at the end
+        //STAT COLLECTION 
         int nHiv_inc=0;
         int nHiv_diag=0;
         int nHiv_artInitiation=0;
@@ -45,7 +47,7 @@ void modelHivProg(List &pop,
                 switch (hivStatus){
                 case 0://HIV_NEG:
                         if (rand() <  vvInc[as<int>(p["sex"])][as<int>(p["agegroup"])] ) {
-                                p["bMarkedHivInc"]=true; //@JP: how to manipulate person's attrebutes from C++'
+                                p["bMarkedHivInc"]=true;
                         }
                         break;
                 case 1://HIV_UNDIAG:
@@ -120,3 +122,7 @@ void modelDeathsAging(List &pop,
                  List &stats,
                  const int tick){
 }
+
+
+
+

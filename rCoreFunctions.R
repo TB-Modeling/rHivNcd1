@@ -4,8 +4,8 @@
 #  
 #####################################
 print("Reading R Core Functions... ")
+# always pass time via the global parameter TICK
 
-#@JP: which functions in R vs C++?
 
 #creates the initial population
 create.initial.population<-function(TICK){
@@ -25,7 +25,7 @@ return(pop)
 
 #model initial HIV status
 set.initiatl.hiv.status<-function(personID, #id of a selected population member
-                                  tick #current time
+                                  TICK #current time (should pass via the global parameter)
 ){
   p<-pop[[personID]]
   r<-runif(1)
@@ -37,23 +37,23 @@ set.initiatl.hiv.status<-function(personID, #id of a selected population member
   }else{
     if (r<mat[mc$HIV.UNDIAG+1]){
       p$hivState=mc$HIV.UNDIAG
-      p$tHivinc=tick
+      p$tHivinc=TICK
     }else{
       if(r<mat[mc$HIV.DIAG_UNSUPP+1]){
         p$hivState=mc$HIV.DIAG_UNSUPP
-        p$tHivinc=tick
-        p$tHivdiag=tick
+        p$tHivinc=TICK
+        p$tHivdiag=TICK
       }else{
         p$hivState=mc$HIV.SUPP
-        p$tHivinc=tick
-        p$tHivdiag=tick
-        p$tHivsupp=tick
+        p$tHivinc=TICK
+        p$tHivdiag=TICK
+        p$tHivsupp=TICK
       }}}
 }
 
 #model initial HIV status
-set.initiatl.ncd.status<-function(personID, #id of a selected population member
-                                  tick #current time
+set.initiatl.ncd.status<-function(personID,
+                                  TICK 
 ){
   p<-pop[[personID]]
   r<-runif(1)
@@ -65,15 +65,15 @@ set.initiatl.ncd.status<-function(personID, #id of a selected population member
   }else{
     if (r<mat[mc$NCD.DIAB+1]){
       p$ncdState=mc$NCD.DIAB
-      p$tDiabinc=tick
+      p$tDiabinc=TICK
     }else{
       if(r<mat[mc$NCD.HYP+1]){
         p$ncdState=mc$NCD.HYP
-        p$tHypinc=tick
+        p$tHypinc=TICK
       }else{
         p$ncdState=mc$NCD.DIAB_HYP
-        p$tHypinc=tick
-        p$tDiabinc=tick
+        p$tHypinc=TICK
+        p$tDiabinc=TICK
       }}}
 }
 

@@ -34,8 +34,10 @@ dim(mat.initial.pop)
 pop<-create.initial.population(TICK)
 N=length(pop)
 cat(paste0("population created with"),N," persons")
-# cat("initial states: ")
-# returnHivStates(pop);returnNcdStates(pop);returnHivNcdStates(pop)
+cat("initial states: ")
+returnHivStates(pop);
+returnNcdStates(pop);
+returnHivNcdStates(pop)
 # barplot(returnAgeDist(pop),main="ageDist")
 #######
 # Set initial HIV status
