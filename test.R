@@ -39,4 +39,31 @@ v=readArray3D_byCol(a,dim)
 cat("done \n")
 # 
 # 
-# 
+
+
+
+#R code:
+library(Rcpp)
+library(RcppArmadillo)
+
+cat("Compiling ... ")
+sourceCpp("cTest.cpp")
+cat("done\n")
+
+##Create a 3D array
+dimensions = c(3,4,5)
+a = array(seq(1,60),dim=dimensions)
+#Looks good
+print(a)
+
+#Send it to C++
+testCube(a)
+
+# The RcppArmadillo dependency must be imported in both the R and the C++ 
+#   (in fact, it replaces  #include<Rcpp.h> in the C++), and
+# // [[Rcpp::depends(RcppArmadillo)]]
+#  is also required.  Then you can use the arma::cube object to accept any 3D array (as can
+# be seen from the R code).  The dimensions of the object can be queried with the n_* series 
+# of functions.  For each slice of the 3d object, we examine that slice like it's a matrix, 
+# using the ( , ) operator (above I called the slice of the 3D object 'slice', so it's the call to 'slice(k,j)')
+# # 

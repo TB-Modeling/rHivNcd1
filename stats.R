@@ -17,7 +17,7 @@ annual.stats<-list(
 )
 
 rest.annual.stats=function(){
-  annual.stats$hiv.inc <<- 0  #@JP:what's this operator? <<-
+  annual.stats$hiv.inc <<- 0
   annual.stats$hiv.diag <<- 0
   annual.stats$art.initiation <<- 0
   annual.stats$art.disengagement <<- 0

@@ -6,6 +6,8 @@
 
 # The R6 library has a lightweight class
 library(R6)
+source("globalVariables.R")
+
 # We create class instances with the Agent$new()
 # function, which calls the 'initialize()' function
 # we defined
@@ -19,22 +21,22 @@ Person<-R6Class("Person",
         sex=NULL,
         
         hivState=mc$HIV.NEG,
-        tHivinc=NULL,
-        tHivdiag=NULL,
-        tHivsupp=NULL,
-        tHivdiseng=NULL,
+        tHivInc=NULL,
+        tHivDiag=NULL,
+        tHivSupp=NULL,
+        tHivDiseng=NULL,
         bMarkedHivInc=F,
         bMarkedHivDiag=F,
         bMarkedHivSupp=F,
         bMarkedHivDiseng=F,
         
         ncdState=mc$NCD.NEG, 
-        tDiabinc=NULL,
-        tDiabdiag=NULL,
-        tDiabtrt=NULL,
-        tHypinc=NULL,
-        tHypdiag=NULL,
-        tHyptrt=NULL,
+        tDiabInc=NULL,
+        tDiabDiag=NULL,
+        tDiabTrt=NULL,
+        tHypInc=NULL,
+        tHypDiag=NULL,
+        tHypTrt=NULL,
         
         cvdState=mc$CVD.NONE,
         nMi=0,
@@ -48,15 +50,45 @@ Person<-R6Class("Person",
         bNcdscreened=F,
         tNcdscreened=F,
         ################################
+        #define public functions here:
         initialize=function(id=NA,sex=NA,age=NA,tborn=0){
           self$id<-id
           self$sex<-sex
           self$age<-age
           self$tborn<-tborn
-          # self$greet()
-        },
+          },
         greet = function() {
           cat(paste0("Hello, my id is ", self$id,", age=",self$age,", sex=",self$sex," , hivState=",self$hivState,",ncdState=",self$ncdState, ".\n"))
+        },
+        #HIV transitions:
+        hiv.getInfected=function(tick){
+          self$hivState=mc$HIV.UNDIAG
+          tHivInc=tick
+          bMarkedHivInc=F
+        },
+        hiv.getDiagnosed=function(tick){
+          self$hivState=mc$HIV.DIAG_UNSUPP
+          tHivDiag=tick
+          bMarkedHivDiag=F
+        },
+        hiv.getSuppressed=function(tick){
+          self$hivState=mc$HIV.SUPP
+          tHivSupp=tick
+          bMarkedHivSupp=F
+        },
+        hiv.getDisengage=function(tick){
+          self$hivState=mc$HIV.DIAG_UNSUPP
+          tHivDiseng=tick
+          bMarkedHivDiseng=F
+        },
+        #NCD transitions
+        diab.getInfected=function(tick){
+          self$ncdState=mc$NCD.DIAB
+          self$tDiabInc=tick
+        },
+        hyp.getInfected=function(tick){
+          self$ncdState=mc$NCD.HYP
+          self$tHypInc=tick
         }
       ),
       
