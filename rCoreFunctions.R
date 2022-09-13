@@ -7,6 +7,19 @@ print("Reading R Core Functions... ")
 # always pass time via the global parameter TICK
 
 
+
+create.initial.population.MS = function(TICK){
+  sim.pop = read.csv("~/Dropbox/Documents_local/Hopkins/PhD/Dissertation/ABM/ncd_analysis/simpop.csv")
+  vIds = sim.pop$X
+  vAges = sim.pop$age
+  vSexes = sim.pop$sex
+
+  pop = (mapply(Person$new, vIds,vSexes,vAges,TICK))
+  pop = unlist(pop)
+
+  pop
+}
+
 #creates the initial population
 create.initial.population<-function(TICK){
 pop<-lapply(c(1:DIM.SEX),function(i){
