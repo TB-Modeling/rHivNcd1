@@ -51,11 +51,12 @@ Person<-R6Class("Person",
         tNcdscreened=F,
         ################################
         #define public functions here:
-        initialize=function(id=NA,sex=NA,age=NA,tborn=0){
+        initialize=function(id=NA,sex=NA,age=NA,tborn=0,ncdState=NA){
           self$id<-id
           self$sex<-sex
           self$age<-age
           self$tborn<-tborn
+          self$ncdState<-ncdState
           },
         greet = function() {
           cat(paste0("Hello, my id is ", self$id,", age=",self$age,", sex=",self$sex," , hivState=",self$hivState,",ncdState=",self$ncdState, ".\n"))
