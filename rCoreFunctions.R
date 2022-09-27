@@ -11,7 +11,7 @@ get.hiv.probabilities = function(){
   hiv.pop = read.csv("data/hivpop.csv")
   ages = c("0-4","5-9","10-14","15-19", "20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59",
            "60-64","65-69","70-74","75-79","80 and over")
-  sexes = c("female","male")
+  sexes = c("FEMALE","MALE")
   hiv.status = c("hiv_negative","undiagnosed","diagnosed_unengaged","engaged_unsuppressed","engaged_suppressed")
   hiv.dim.names.1 = list(age = ages,
                          sex = sexes,
@@ -37,72 +37,71 @@ get.hiv.probabilities = function(){
   hiv.probs
 }
 
-hiv.probs = get.hiv.probabilities()
-
-#model initial HIV status 
-set.initial.hiv.status.MS = function(personID, #id of a selected population member
-                                      TICK, #current time (should pass via the global parameter)
-                                     hiv.probs
+# model initial HIV status 
+set.initial.hiv.status = function(personID, #id of a selected population member
+                                  TICK #current time (should pass via the global parameter)
 ){
   p<-pop[[personID]]
   
-  #empty p object for purpose of writing - NEED SOME HELP WITH THIS 
-  p = NULL
-  p$sex = "female"
-  p$agegroup = "10-14"
-  
+  hiv.probs = get.hiv.probabilities()
   hiv.states = unlist(dimnames(hiv.probs)[1])
-  
   specific.hiv.probs = hiv.probs[,p$sex,p$agegroup]
+  
   hiv.status = sample(x = hiv.states, size = 1, prob = specific.hiv.probs)
   
-  # THESE DON'T QUITE MATCH WHAT'S IN THE GLOBAL VARIABLES
   if(hiv.status=="hiv_negative")
     p$hivState=0
-  if(hiv.status=="undiagnosed")
+  if(hiv.status=="undiagnosed"){
     p$hivState=1
-  if(hiv.status=="diagnosed_unengaged")
+    p$tHivInc=TICK
+  }
+  if(hiv.status=="diagnosed_unengaged"){
     p$hivState=2
-  if(hiv.status=="engaged_unsuppressed" | hiv.status=="engaged_suppressed")
+    p$tHivInc=TICK
+    tHivDiag=TICK
+  }
+  if(hiv.status=="engaged_unsuppressed" | hiv.status=="engaged_suppressed"){
     p$hivState=3
+    p$tHivInc=TICK
+    p$tHivDiag=TICK
+    p$tHivEng=TICK # old version did tHivSupp instead
+  }
+
 }
 
 
-
-create.initial.population.MS = function(TICK){
+#creates the initial population
+create.initial.population = function(TICK){
   sim.pop = read.csv("data/simpop.csv")
-  sim.pop$ncd[sim.pop$hypertension==0 & sim.pop$diabetes==0] = 0 # neither
-  sim.pop$ncd[sim.pop$hypertension==0 & sim.pop$diabetes==1] = 1 # diabetic
-  sim.pop$ncd[sim.pop$hypertension==1 & sim.pop$diabetes==0] = 2 # hypertensive
-  sim.pop$ncd[sim.pop$hypertension==1 & sim.pop$diabetes==1] = 3 # both
+  sim.pop$age[sim.pop$age==0] = 0.5
+  sim.pop$age[sim.pop$age>85] = 85 # TEMPORARY FIX FOR NOW TO GET AGE GROUPS TO WORK 
+  sim.pop$ncd[sim.pop$hypertension==0 & sim.pop$diabetes==0] = mc$NCD.NEG #0, neither 
+  sim.pop$ncd[sim.pop$hypertension==0 & sim.pop$diabetes==1] = mc$NCD.DIAB #1, diabetic
+  sim.pop$ncd[sim.pop$hypertension==1 & sim.pop$diabetes==0] = mc$NCD.HYP #2, hypertensive
+  sim.pop$ncd[sim.pop$hypertension==1 & sim.pop$diabetes==1] = mc$NCD.DIAB_HYP #3, both
 
+  sim.pop$tDiabinc=NULL
+  sim.pop$tDiabInc[sim.pop$ncd==1 | sim.pop$ncd==3] = TICK
+  
+  sim.pop$tHypInc=NULL
+  sim.pop$tHypInc[sim.pop$ncd==3 | sim.pop$ncd==3] = TICK
+  
   vIds = sim.pop$X
   vAges = sim.pop$age
   vSexes = sim.pop$sex
   vncdState = sim.pop$ncd
+  vtDiabInc = sim.pop$tDiabInc
+  vtHypInc = sim.pop$tHypInc
 
-  pop = (mapply(Person$new, vIds,vSexes,vAges,TICK,vncdState))
+  pop = (mapply(Person$new, vIds,vSexes,vAges,TICK,vncdState,vtDiabInc,vtHypInc))
   pop = unlist(pop)
 
   pop
 }
 
-#creates the initial population
-create.initial.population<-function(TICK){
-pop<-lapply(c(1:DIM.SEX),function(i){
-  lapply(c(1:DIM.AGE),function(j){
-    #sex=i-1 ; agegroup=j    
-    n=mat.initial.pop[i,j] #number of persons in this sex/agegroup
-    vIds<-seq(lastID+1,lastID+n); lastID<<-lastID+n
-    vAges<-floor(runif(n,(j-1)*5,j*5))
-    #
-    return(mapply(Person$new, vIds,i,vAges,TICK))
-  })
-})
-pop<-unlist(pop)
-return(pop)
-}
+## OLD VERSIONS BELOW - I THINK THESE CAN BE REMOVED ## 
 
+## MS - I think I can remove this one now; but check other places for Supp (should now be Eng)
 #model initial HIV status
 set.initiatl.hiv.status<-function(personID, #id of a selected population member
                                   TICK #current time (should pass via the global parameter)
@@ -131,6 +130,8 @@ set.initiatl.hiv.status<-function(personID, #id of a selected population member
       }}}
 }
 
+
+## MS - I think I can remove this one now that I've added incidence times to create initial 
 #model initial NCD status
 set.initiatl.ncd.status<-function(personID,
                                   TICK 
