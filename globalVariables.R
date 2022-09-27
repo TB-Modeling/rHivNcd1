@@ -15,7 +15,7 @@ AGE.INTERVAL=5
 MIN.AGE=0
 MAX.AGE=85
 
-DIM.NAMES.HIV=c("HIV.NEG","HIV.UNDIAG","HIV.DIAG_UNSUPP", "HIV.SUPP")
+DIM.NAMES.HIV=c("HIV.NEG","HIV.UNDIAG","HIV.DIAG_UNENG", "HIV.ENG")
 DIM.NAMES.NCD=c("NCD.NEG","NCD.DIAB","NCD.HYP","NCD.DIAB_HYP")
 
 #Set the start time to the initial year of model
@@ -28,8 +28,8 @@ mc<-list(
   
   HIV.NEG=0,
   HIV.UNDIAG=1, #undiagnosed
-  HIV.DIAG_UNSUPP=2, #diagnosed but not on trt
-  HIV.SUPP=3, #on trt and suppressed
+  HIV.DIAG_UNENG=2, #diagnosed but not on trt 
+  HIV.ENG=3, #on trt
   
   NCD.NEG=0, #no diabetes or hypertension
   NCD.DIAB=1, #diabetic
