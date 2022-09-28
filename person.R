@@ -23,11 +23,11 @@ Person<-R6Class("Person",
         hivState=mc$HIV.NEG,
         tHivInc=NULL,
         tHivDiag=NULL,
-        tHivSupp=NULL,
+        tHivEng=NULL,
         tHivDiseng=NULL,
         bMarkedHivInc=F,
         bMarkedHivDiag=F,
-        bMarkedHivSupp=F,
+        bMarkedHivEng=F,
         bMarkedHivDiseng=F,
         
         ncdState=mc$NCD.NEG, 
@@ -74,10 +74,10 @@ Person<-R6Class("Person",
           tHivDiag=tick
           bMarkedHivDiag=F
         },
-        hiv.getSuppressed=function(tick){
-          self$hivState=mc$HIV.SUPP
-          tHivSupp=tick
-          bMarkedHivSupp=F
+        hiv.getEngaged=function(tick){
+          self$hivState=mc$HIV.ENG
+          tHivEng=tick
+          bMarkedHivEng=F
         },
         hiv.getDisengage=function(tick){
           self$hivState=mc$HIV.DIAG_UNSUPP
