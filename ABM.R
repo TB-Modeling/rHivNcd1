@@ -41,14 +41,7 @@ returnHivNcdStates(pop)
 # barplot(returnAgeDist(pop),main="ageDist")
 #######
 # Set initial HIV status
-invisible(mapply(set.initial.hiv.status,c(1:length(pop)),TICK))
-# cat("new HIV states: ")
-# returnHivStates(pop)/N;returnHivNcdStates(pop)
-#######
-# Set initial NCD status (randomly assigned on top of HIV)
-    # invisible(mapply(set.initiatl.ncd.status,c(1:length(pop)),TICK)) - MS removing because we do this when we create initial
-# cat("new NCD states: ")
-# returnNcdStates(pop)/N;returnHivNcdStates(pop)
+invisible(mapply(set.initial.hiv.status,c(1:length(pop)))) #@Parastu - check this out with hiv.probs
 ################################################
 
 # Annual LOOP:
