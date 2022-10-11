@@ -6,7 +6,7 @@
 # Rcpp for C++ integration
 library(Rcpp)
 
-#Initial Setup
+#Initial Setup for random seed
 set.seed(1)
 
 ##SOURCE R FILES##
@@ -24,24 +24,27 @@ sourceCpp("cHelperFunctions.cpp")
 sourceCpp("cCoreFunctions.cpp")
 cat("Rcpp code compiled \n")
 
-
+#@MS: need to align variable names between HIV and NCD models (FEMALE vs female?) (number of HIV states: 4 or 5?)
+#@redo the HIV output to only have 4 HIV states instead of 5
 #########################################################################################
 #Create initial population 
 #########################################################################################
 cat("Generating Population ... ")
-dim(mat.initial.pop)
+pop<-create.initial.population(TICK,n = 1000)
 
-pop<-create.initial.population(TICK)
-N=length(pop)
-cat(paste0("population created with"),N," persons")
 cat("initial states: ")
-returnHivStates(pop);
-returnNcdStates(pop);
-returnHivNcdStates(pop)
+array(cReturnHivStates(pop),dimnames = list(mc$DIM.NAMES.HIV))
+array(cReturnNcdStates(pop),dimnames = list(mc$DIM.NAMES.NCD))
+a=cReturnHivNcdStates(pop)
+array(unlist(a),dim = c(4,4),dimnames = list(mc$DIM.NAMES.HIV,
+                                     mc$DIM.NAMES.NCD))
+a[1,1]
 # barplot(returnAgeDist(pop),main="ageDist")
 #######
-# Set initial HIV status
-invisible(mapply(set.initial.hiv.status,c(1:length(pop)))) #@Parastu - check this out with hiv.probs
+# Set initial HIV status in 2015
+invisible(mapply(set.initial.hiv.status,c(1:length(pop)))) 
+returnHivStates(pop);
+
 ################################################
 
 # Annual LOOP:

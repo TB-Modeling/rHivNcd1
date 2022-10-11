@@ -5,48 +5,58 @@
 #####################################
 print("Reading global variables... ")
 
+
+
+NUM_SEXES=2
+NUM_AGE_GROUPS=17
 NUM_HIV_STATES=4
 NUM_NCD_STATES=4
-NUM_AGE_GROUPS=18
 
-INITIAL.YEAR=2022
+INITIAL.YEAR=2015
 END.YEAR=2050
 AGE.INTERVAL=5
 MIN.AGE=0
 MAX.AGE=85
 
-DIM.NAMES.HIV=c("HIV.NEG","HIV.UNDIAG","HIV.DIAG_UNENG", "HIV.ENG")
-DIM.NAMES.NCD=c("NCD.NEG","NCD.DIAB","NCD.HYP","NCD.DIAB_HYP")
+
 
 #Set the start time to the initial year of model
 TICK <- INITIAL.YEAR
 lastID<-0 #global variable to keep track of person's id
 
 mc<-list(
-  MALE=0,
-  FEMALE=1,
+  MALE=1,
+  FEMALE=2,
   
-  HIV.NEG=0,
-  HIV.UNDIAG=1, #undiagnosed
-  HIV.DIAG_UNENG=2, #diagnosed but not on trt 
-  HIV.ENG=3, #on trt
+  HIV.NEG=1,
+  HIV.UNDIAG=2, #undiagnosed
+  HIV.UNENG=3,  #diagnosed but not on trt 
+  HIV.SUPP=4,   #on trt & suppressed
   
-  NCD.NEG=0, #no diabetes or hypertension
-  NCD.DIAB=1, #diabetic
-  NCD.HYP=2, #hypertensive
-  NCD.DIAB_HYP=3, #both
+  NCD.NEG=1, #no diabetes or hypertension
+  NCD.DIAB=2, #diabetic
+  NCD.HYP=3, #hypertensive
+  NCD.DIAB_HYP=4, #both
   
-  DEATH.NATURAL=0,
-  DEATH.HIV=1,
-  DEATH.STROKE=2,
-  DEATH.MI=3,
+  DEATH.NATURAL=1,
+  DEATH.HIV=2,
+  DEATH.STROKE=3,
+  DEATH.MI=4,
   
-  NCDTRT.NONE=0,
-  NCDTRT.HYP=1,
-  NCDTRT.DIAB=2,
-  NCDTRT.HYPDIAB=3,
+  NCDTRT.NONE=1,
+  NCDTRT.HYP=2,
+  NCDTRT.DIAB=3,
+  NCDTRT.HYPDIAB=4,
   
-  CVD.NONE=0,
-  CVD.MI=1,
-  CVD.STROKE=2
+  CVD.NONE=1,
+  CVD.MI=2,
+  CVD.STROKE=3,
+
+  hiv.model.status = c("hiv_negative","undiagnosed","diagnosed_unengaged","engaged_unsuppressed","engaged_suppressed"),
+  
+  DIM.NAMES.SEX=c("FEMALE","MALE"),
+  DIM.NAME.AGEGROUP=c("0-4","5-9","10-14","15-19", "20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59",
+                      "60-64","65-69","70-74","75-79","80-85"),
+  DIM.NAMES.HIV=c("HIV.NEG","HIV.UNDIAG","HIV.UNENG", "HIV.SUPP"),
+  DIM.NAMES.NCD=c("NCD.NEG","NCD.DIAB","NCD.HYP","NCD.DIAB_HYP")
 )

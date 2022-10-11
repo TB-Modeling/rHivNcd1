@@ -55,10 +55,15 @@ dimensions = c(3,4,5)
 a = array(seq(1,60),dim=dimensions)
 #Looks good
 print(a)
-
+dim(hiv.probs)
 #Send it to C++
 testCube(a)
 
+
+hiv.probs
+setInitialHivStates(pop,
+                    hiv.probs,
+                    1)
 # The RcppArmadillo dependency must be imported in both the R and the C++ 
 #   (in fact, it replaces  #include<Rcpp.h> in the C++), and
 # // [[Rcpp::depends(RcppArmadillo)]]
