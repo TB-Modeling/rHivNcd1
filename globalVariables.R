@@ -7,16 +7,7 @@ print("Reading global variables... ")
 
 
 
-NUM_SEXES=2
-NUM_AGE_GROUPS=17
-NUM_HIV_STATES=4
-NUM_NCD_STATES=4
 
-INITIAL.YEAR=2015
-END.YEAR=2050
-AGE.INTERVAL=5
-MIN.AGE=0
-MAX.AGE=85
 
 
 
@@ -25,6 +16,18 @@ TICK <- INITIAL.YEAR
 lastID<-0 #global variable to keep track of person's id
 
 mc<-list(
+  NUM.SEXES=2,
+  NUM.AGE.GROUPS=17,
+  NUM.HIV.STATES=4,
+  NUM.NCD.STATES=4,
+  
+  INITIAL.YEAR=2015,
+  END.YEAR=2050,
+  AGE.INTERVAL=5,
+  MIN.AGE=0,
+  MAX.AGE=85,
+  
+  
   MALE=1,
   FEMALE=2,
   
@@ -52,7 +55,7 @@ mc<-list(
   CVD.MI=2,
   CVD.STROKE=3,
 
-  hiv.model.status = c("hiv_negative","undiagnosed","diagnosed_unengaged","engaged_unsuppressed","engaged_suppressed"),
+  # hiv.model.status = c("hiv_negative","undiagnosed","diagnosed_unengaged","engaged_unsuppressed","engaged_suppressed"),
   
   DIM.NAMES.SEX=c("FEMALE","MALE"),
   DIM.NAME.AGEGROUP=c("0-4","5-9","10-14","15-19", "20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59",

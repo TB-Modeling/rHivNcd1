@@ -30,20 +30,23 @@ cat("Rcpp code compiled \n")
 #Create initial population 
 #########################################################################################
 cat("Generating Population ... ")
-pop<-create.initial.population(TICK,n = 1000)
+pop<-create.initial.population(TICK,n = 10000)
 
 cat("initial states: ")
 array(cReturnHivStates(pop),dimnames = list(mc$DIM.NAMES.HIV))
 array(cReturnNcdStates(pop),dimnames = list(mc$DIM.NAMES.NCD))
-a=cReturnHivNcdStates(pop)
-array(unlist(a),dim = c(4,4),dimnames = list(mc$DIM.NAMES.HIV,
-                                     mc$DIM.NAMES.NCD))
-a[1,1]
+array(unlist(cReturnHivNcdStates(pop)),dim = c(4,4),dimnames = list(
+                                     mc$DIM.NAMES.NCD,
+                                     mc$DIM.NAMES.HIV))
+#'@MS: since you have more experience with array operations in R, 
+#'can you explain to me how unlist and array work hand in hand to get the dim order correctly?
 # barplot(returnAgeDist(pop),main="ageDist")
 #######
 # Set initial HIV status in 2015
 invisible(mapply(set.initial.hiv.status,c(1:length(pop)))) 
-returnHivStates(pop);
+array(unlist(cReturnHivNcdStates(pop)),dim = c(4,4),dimnames = list(
+  mc$DIM.NAMES.NCD,
+  mc$DIM.NAMES.HIV))
 
 ################################################
 

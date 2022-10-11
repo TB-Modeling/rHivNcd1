@@ -43,7 +43,7 @@ get.hiv.probabilities = function(hiv.pop){
   #transform 1D data to correct array dimensions
   ages = mc$DIM.NAME.AGEGROUP
   sexes = mc$DIM.NAMES.SEX
-  hiv.status = mc$hiv.model.status #'@MS: should be replaced later
+  hiv.status = mc$DIM.NAMES.HIV
 
  hiv.dim.names.1 = list(age = ages,
                          sex = sexes,
@@ -81,30 +81,13 @@ set.initial.hiv.status = function(personID #id of a selected population member
   #read 1D data from hiv outputs
   hiv.pop = read.csv("data/hivPrev2015.csv")
   hiv.probs = get.hiv.probabilities(hiv.pop)
-  hiv.states = unlist(dimnames(hiv.probs)[1])
-  specific.hiv.probs = hiv.probs[,p$sex,p$agegroup]
+  probs = hiv.probs[,p$sex,p$agegroup]
   
   #'@MS: add a sanity check here to break the code if this doesnt hold
   # sum(specific.hiv.probs) == 1
   
-  hiv.status = sample(x = hiv.states, size = 1, prob = specific.hiv.probs)
-  
-  if(hiv.status=="hiv_negative")
-    p$hivState=0
-  if(hiv.status=="undiagnosed"){
-    p$hivState=1
-  }
-  if(hiv.status=="diagnosed_unengaged"){
-    p$hivState=2
-  }
-  if(hiv.status=="engaged"){
-    p$hivState=3
-  }
-  #'@MS: eventually you should use the same number of HIV states (4) and can set the HIV status directly here and wont need the if's down here
-  # hiv.states = c(mc$HIV.NEG,mc$HIV.UNDIAG,mc$HIV.DIAG_UNENG,mc$HIV.ENG)
-  # p$hivState=hiv.staus;
-  
-   # cat("Initial HIV states set.")
+  rand.hiv.state = sample(x = c(1:length(probs)), size = 1, prob = probs)
+  p$hivState=rand.hiv.state
 }
 
 
