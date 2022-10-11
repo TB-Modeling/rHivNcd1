@@ -32,7 +32,7 @@ vector<double> cReturnAgDist(List &pop){
     Environment p = pop[i];
     if (as<int>(p["agegroup"])>NUM_AGE_GROUPS) throw logic_error(errAgeDist); //@JP: this doesnt really work
     else{
-      res[as<int>(p["agegroup"])]++; 
+      res[as<int>(p["agegroup"])-1]++; 
     }}
   return(res);
 }
@@ -44,7 +44,7 @@ vector<double> cReturnSex(List &pop){
   //Loop through the population
   for (int i = 0; i < popsize; i++) {
     Environment p = pop[i];
-    res[as<int>(p["sex"])]++; 
+    res[as<int>(p["sex"])-1]++; 
   }
   return(res);
 }
@@ -58,7 +58,7 @@ vector<vector<double>> cReturnSexAgeDist(List &pop){
     Environment p = pop[i];
     // if (as<int>(p["agegroup"])>NUM_AGE_GROUPS) throw logic_error(errAgeDist); //@JP: this doesnt really work
     // else{
-    res[as<int>(p["sex"])][as<int>(p["agegroup"])]++; 
+    res[as<int>(p["sex"])-1][as<int>(p["agegroup"])-1]++; 
   }
   // }
   return(res);
@@ -71,7 +71,7 @@ vector<double> cReturnHivStates(List &pop){
   //Loop through the population
   for (int i = 0; i < popsize; i++) {
     Environment p = pop[i];
-    res[as<int>(p["hivState"])]++; 
+    res[as<int>(p["hivState"])-1]++; 
   }
   return(res);
 }
@@ -83,7 +83,7 @@ vector<double> cReturnNcdStates(List &pop){
   //Loop through the population
   for (int i = 0; i < popsize; i++) {
     Environment p = pop[i];
-    res[as<int>(p["ncdState"])]++; 
+    res[as<int>(p["ncdState"])-1]++; 
   }
   return(res);
 }
@@ -95,7 +95,7 @@ vector<vector<double>> cReturnHivNcdStates(List &pop){
   //Loop through the population
   for (int i = 0; i < popsize; i++) {
     Environment p = pop[i];
-    res[as<int>(p["hivState"])][as<int>(p["ncdState"])]++; 
+    res[as<int>(p["hivState"])-1][as<int>(p["ncdState"])-1]++; 
   }
   return(res);
 }
