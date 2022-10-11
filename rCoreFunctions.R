@@ -12,7 +12,7 @@ get.hiv.probabilities = function(){
   ages = c("0-4","5-9","10-14","15-19", "20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59",
            "60-64","65-69","70-74","75-79","80 and over")
   sexes = c("FEMALE","MALE")
-  hiv.status = c("hiv_negative","undiagnosed","diagnosed_unengaged","engaged_unsuppressed","engaged_suppressed")
+  hiv.status = c("hiv_negative","undiagnosed","diagnosed_unengaged","engaged")
   hiv.dim.names.1 = list(age = ages,
                          sex = sexes,
                          hiv.status = hiv.status)
@@ -58,7 +58,7 @@ set.initial.hiv.status = function(personID #id of a selected population member
   if(hiv.status=="diagnosed_unengaged"){
     p$hivState=2
   }
-  if(hiv.status=="engaged_unsuppressed" | hiv.status=="engaged_suppressed"){
+  if(hiv.status=="engaged"){
     p$hivState=3
   }
 
