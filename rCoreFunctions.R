@@ -44,7 +44,8 @@ get.hiv.probabilities = function(hiv.pop){
   ages = mc$DIM.NAME.AGEGROUP
   sexes = mc$DIM.NAMES.SEX
   hiv.status = mc$hiv.model.status #'@MS: should be replaced later
-  hiv.dim.names.1 = list(age = ages,
+
+ hiv.dim.names.1 = list(age = ages,
                          sex = sexes,
                          hiv.status = hiv.status)
   hiv.pop = array(hiv.pop[,2],
@@ -96,7 +97,7 @@ set.initial.hiv.status = function(personID #id of a selected population member
   if(hiv.status=="diagnosed_unengaged"){
     p$hivState=2
   }
-  if(hiv.status=="engaged_unsuppressed" | hiv.status=="engaged_suppressed"){
+  if(hiv.status=="engaged"){
     p$hivState=3
   }
   #'@MS: eventually you should use the same number of HIV states (4) and can set the HIV status directly here and wont need the if's down here
