@@ -38,7 +38,7 @@ vector<double> cReturnAgDist(List &pop){
 }
 
 // [[Rcpp::export]]
-vector<double> cReturnSex(List &pop){
+vector<double> cReturnSexDist(List &pop){
   vector<double> res(NUM_SEXES,0);
   const int popsize = pop.size();
   //Loop through the population
