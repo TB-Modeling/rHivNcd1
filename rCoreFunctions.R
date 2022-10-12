@@ -42,8 +42,8 @@ get.hiv.probabilities = function(hiv.pop){
   ages = mc$DIM.NAME.AGEGROUP
   sexes = mc$DIM.NAMES.SEX
   hiv.status = mc$DIM.NAMES.HIV
-
- hiv.dim.names.1 = list(age = ages,
+  
+  hiv.dim.names.1 = list(age = ages,
                          sex = sexes,
                          hiv.status = hiv.status)
   hiv.pop = array(hiv.pop[,2],
@@ -67,8 +67,8 @@ get.hiv.probabilities = function(hiv.pop){
   dimnames(hiv.probs) = hiv.dim.names.2
   
   hiv.probs
-
-  }
+  
+}
 
 # model initial HIV status 
 set.initial.hiv.status = function(personID #id of a selected population member
@@ -78,67 +78,91 @@ set.initial.hiv.status = function(personID #id of a selected population member
   #read 1D data from hiv outputs
   hiv.pop = read.csv("data/hivPrev2015.csv")
   hiv.probs = get.hiv.probabilities(hiv.pop)
-  probs = hiv.probs[,p$sex,p$agegroup]
+  p.probs = hiv.probs[,p$sex,p$agegroup]
   
   #'@MS: add a sanity check here to break the code if this doesnt hold
-  # sum(specific.hiv.probs) == 1
+  # sum(p.probs) == 1
   
-  rand.hiv.state = sample(x = c(1:length(probs)), size = 1, prob = probs)
+  rand.hiv.state = sample(x = c(1:length(p.probs)), size = 1, prob = p.probs)
   p$hivState=rand.hiv.state
 }
-
+################################################################
 # model one simulated year
-model.annual.dynamics<-function(pop){
+model.annual.dynamics<-function(sim){
+  pop=sim$pop
+  mc=sim$mc
+  gss=sim$gss
+  
   #check the TNOW and break if it's not correctly set
   if ((mc$TNOW%%mc$ANNUAL.TIMESTEPS)!=0) break("TNOW is not set correctly")
   
   #Add one year
-  mc$YNOW=mc$YNOW+1
+  mc$YNOW<-mc$YNOW+1
+  cat("It's now year =",mc$YNOW,"\n")
+  
   #Aging
   invisible(lapply(pop,function(x){x$incAge}))
   barplot(cReturnAgDist(pop),names.arg = mc$DIM.NAME.AGEGROUP,main=paste("Age distribution tnow=",mc$TNOW))
   
   
   
-  #model each timestep within the year
+  # model each timestep within the year
   for(i in (1:mc$ANNUAL.TIMESTEPS)){
-  mc$TNOW=mc$TNOW+1  
-    
+  mc$TNOW=mc$TNOW+1
+
   }
-  
-  #DEATHS 
+  ################################################################
+  ### DEATHS 
   #Aging out:
-  #' @MS: Here is how I am modeling a specific event for all pop members and return 1 if that event happens to be able to count instances 
-  n=invisible(lapply(pop,function(x){if(x$age>85){x$bMarkedDead=T; return (1)}}))
-  sum(unlist(n))
-  
+  n.ageout=sum(unlist(invisible(lapply(pop,function(x){
+    if(x$age>mc$MAX.AGE) {
+      x$bMarkedDead=T;
+      return(1)
+    }}))))
+  cat(n.ageout," persons are aging out","\n")
   
   #Kill those dead
-  n=invisible(lapply(pop,function(x){if(x$bMarkedDeat==T){
-    XXX #'@JP: how do we kill agents?
-    return (1)}}))
+  npop<-length(pop)
+  death.status=unlist(invisible(lapply(c(1:npop),function(x){
+    return(pop[[x]]$bMarkedDead)
+  })))
+  n.deaths<-sum(death.status)
+  gss$n.deaths[mc$YNOW]=n.deaths
+  cat(n.deaths," persons are marked dead","\n")
+  #only keep those who are alive
+  pop<-pop[!death.status] #'@JP: should we delete these dead people?
   
-  #BIRTHS
+  cat("current pop size is ",length(pop),"\n")
+  ################################################################
+  ### BIRTHS
   #compute number of newborns needed (assuming a fix pop size for now)
-  n=mc$POP.size-length(pop)
-  vIds = c((mc$lastID+1): (mc$lastID+n))
-  mc$lastID=mc$lastID+n
-  vSexes = sample(c(mc$MALE,mc$FEMALE),n,prob = c(.5,.5),replace = T)
-  pop1 = (mapply(Person$new, vIds,vSexes,0,mc$TNOW,mc$NCD.NEG)) #'@JP: do we need to delete pop1 and open memory?
-  pop<-rbind(pop,pop1)
+  n.births=mc$POP.SIZE-length(pop)
+  if(n.births>0){
+    cat(n.births," newborns are added","\n")
+    vIds = c((mc$lastID+1): (mc$lastID+n.births))
+    mc$lastID=mc$lastID+n.births
+    vSexes = sample(c(mc$MALE,mc$FEMALE),n.births,prob = c(.5,.5),replace = T)
+    pop1 = (mapply(Person$new, vIds,vSexes,0,mc$TNOW,mc$NCD.NEG)) #'@JP: do we need to delete pop1 and open memory?
+    pop<-c(pop,pop1)
+  #
+    gss$n.births[mc$YNOW]=n.births
+    }
   
-  }
+  #
+  gss$pop.size[mc$YNOW]=length(pop)
+  
+  
+  
+  cat("Final pop size is ",length(pop),"\n")
+  
+  return(list(pop=pop,
+              mc=mc,
+              gss=gss))
+}
 
 
 
 
-install.packages("pryr")
-a=pop1[1]
-pryr::address(a)
-
-rm(a);gc()
-pryr::address(pop[1])
-# bool modelBirths(mt19937 &rng);
 # bool modelHivDynamics(mt19937 &rng);
 # bool modelNcdDynamics(mt19937 &rng);
 # bool modelDeathsAging(mt19937 &rng);

@@ -24,11 +24,11 @@ Person<-R6Class("Person",
         tHivInc=NULL,
         tHivDiag=NULL,
         tHivEng=NULL,
-        tHivDiseng=NULL,
+        tHivUneng=NULL,
         bMarkedHivInc=F,
         bMarkedHivDiag=F,
         bMarkedHivEng=F,
-        bMarkedHivDiseng=F,
+        bMarkedHivUneng=F,
         
         ncdState=mc$NCD.NEG, 
         tDiabInc=NULL,
@@ -69,7 +69,7 @@ Person<-R6Class("Person",
           bMarkedHivInc=F
         },
         hiv.getDiagnosed=function(tnow){
-          self$hivState=mc$HIV.DIAG_UNSUPP
+          self$hivState=mc$HIV.UNENG
           tHivDiag=tnow
           bMarkedHivDiag=F
         },
@@ -78,10 +78,10 @@ Person<-R6Class("Person",
           tHivEng=tnow
           bMarkedHivEng=F
         },
-        hiv.getDisengage=function(tnow){
-          self$hivState=mc$HIV.DIAG_UNSUPP
-          tHivDiseng=tnow
-          bMarkedHivDiseng=F
+        hiv.getUnengage=function(tnow){
+          self$hivState=mc$HIV.UNENG
+          tHivUneng=tnow
+          bMarkedHivUneng=F
         },
         #NCD transitions
         diab.getInfected=function(tnow){
@@ -91,8 +91,13 @@ Person<-R6Class("Person",
         hyp.getInfected=function(tnow){
           self$ncdState=mc$NCD.HYP
           self$tHypInc=tnow
+        },
+        #run a function when the object is garbage collected
+        finalize = function() {
+          print("Finalizer has been called!")
         }
-      ),
+      
+        ),
       
       #Active fields are particularly useful in conjunction with private fields, 
       # because they make it possible to implement components that look like fields 
@@ -101,12 +106,10 @@ Person<-R6Class("Person",
         agegroup=function(){ min(ceiling(self$age/mc$AGE.INTERVAL),mc$NUM.AGE.GROUPS)}, #we limit the last agegroups to not exceed 17
         incAge=function(){ 
           self$age<-self$age+1
-          invisible(self)}
-      ),
-      #run a function when the object is garbage collected
-      finalize = function() {
-        print("Finalizer has been called!")
-      }
+          invisible(self)
+          }
+      )
+     
 )
 
 
