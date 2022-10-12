@@ -44,7 +44,6 @@ Person<-R6Class("Person",
         bMarkedMi=F,
         bMarkedStroke=F,
         
-        deathCause=NULL,
         bMarkedDead=F,
         ncdtrtState=NULL,
         bNcdscreened=F,
@@ -64,34 +63,34 @@ Person<-R6Class("Person",
           cat(paste0("Hello, my id is ", self$id,", age=",self$age,", sex=",self$sex," , hivState=",self$hivState,",ncdState=",self$ncdState, ".\n"))
         },
         #HIV transitions:
-        hiv.getInfected=function(tick){
+        hiv.getInfected=function(tnow){
           self$hivState=mc$HIV.UNDIAG
-          tHivInc=tick
+          tHivInc=tnow
           bMarkedHivInc=F
         },
-        hiv.getDiagnosed=function(tick){
+        hiv.getDiagnosed=function(tnow){
           self$hivState=mc$HIV.DIAG_UNSUPP
-          tHivDiag=tick
+          tHivDiag=tnow
           bMarkedHivDiag=F
         },
-        hiv.getEngaged=function(tick){
+        hiv.getEngaged=function(tnow){
           self$hivState=mc$HIV.ENG
-          tHivEng=tick
+          tHivEng=tnow
           bMarkedHivEng=F
         },
-        hiv.getDisengage=function(tick){
+        hiv.getDisengage=function(tnow){
           self$hivState=mc$HIV.DIAG_UNSUPP
-          tHivDiseng=tick
+          tHivDiseng=tnow
           bMarkedHivDiseng=F
         },
         #NCD transitions
-        diab.getInfected=function(tick){
+        diab.getInfected=function(tnow){
           self$ncdState=mc$NCD.DIAB
-          self$tDiabInc=tick
+          self$tDiabInc=tnow
         },
-        hyp.getInfected=function(tick){
+        hyp.getInfected=function(tnow){
           self$ncdState=mc$NCD.HYP
-          self$tHypInc=tick
+          self$tHypInc=tnow
         }
       ),
       
@@ -99,11 +98,15 @@ Person<-R6Class("Person",
       # because they make it possible to implement components that look like fields 
       # from the outside but provide additional checks.
       active=list(
-        agegroup=function(){ ceiling(self$age/AGE.INTERVAL)},
+        agegroup=function(){ min(ceiling(self$age/mc$AGE.INTERVAL),mc$NUM.AGE.GROUPS)}, #we limit the last agegroups to not exceed 17
         incAge=function(){ 
           self$age<-self$age+1
           invisible(self)}
-      )
+      ),
+      #run a function when the object is garbage collected
+      finalize = function() {
+        print("Finalizer has been called!")
+      }
 )
 
 

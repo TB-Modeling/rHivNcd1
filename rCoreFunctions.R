@@ -4,12 +4,10 @@
 #  
 #####################################
 print("Reading R Core Functions... ")
-# always pass time via the global parameter TICK
 
 #creates the initial population
-create.initial.population = function(TICK,
-                                     n=0){
-  cat("Generating Population in",TICK,"\n")
+create.initial.population = function(n=0){
+  cat("Generating Population in tnow=",mc$TNOW,"\n")
   sim.pop = read.csv("data/stepSimPop2015.csv")
   
   sim.pop$age[sim.pop$age==0] = 0.5 #we need this so that the first agegroups is set to 1
@@ -29,7 +27,7 @@ create.initial.population = function(TICK,
   vSexes = as.numeric(sim.pop$sex)
   vncdState = sim.pop$ncd
   
-  pop = (mapply(Person$new, vIds,vSexes,vAges,TICK,vncdState))
+  pop = (mapply(Person$new, vIds,vSexes,vAges,mc$TNOW,vncdState))
   pop = unlist(pop)
   
   cat(length(vIds),"persons generated.","\n")
@@ -72,7 +70,6 @@ get.hiv.probabilities = function(hiv.pop){
 
   }
 
-
 # model initial HIV status 
 set.initial.hiv.status = function(personID #id of a selected population member
 ){
@@ -90,4 +87,62 @@ set.initial.hiv.status = function(personID #id of a selected population member
   p$hivState=rand.hiv.state
 }
 
+# model one simulated year
+model.annual.dynamics<-function(pop){
+  #check the TNOW and break if it's not correctly set
+  if ((mc$TNOW%%mc$ANNUAL.TIMESTEPS)!=0) break("TNOW is not set correctly")
+  
+  #Add one year
+  mc$YNOW=mc$YNOW+1
+  #Aging
+  invisible(lapply(pop,function(x){x$incAge}))
+  barplot(cReturnAgDist(pop),names.arg = mc$DIM.NAME.AGEGROUP,main=paste("Age distribution tnow=",mc$TNOW))
+  
+  
+  
+  #model each timestep within the year
+  for(i in (1:mc$ANNUAL.TIMESTEPS)){
+  mc$TNOW=mc$TNOW+1  
+    
+  }
+  
+  #DEATHS 
+  #Aging out:
+  #' @MS: Here is how I am modeling a specific event for all pop members and return 1 if that event happens to be able to count instances 
+  n=invisible(lapply(pop,function(x){if(x$age>85){x$bMarkedDead=T; return (1)}}))
+  sum(unlist(n))
+  
+  
+  #Kill those dead
+  n=invisible(lapply(pop,function(x){if(x$bMarkedDeat==T){
+    XXX #'@JP: how do we kill agents?
+    return (1)}}))
+  
+  #BIRTHS
+  #compute number of newborns needed (assuming a fix pop size for now)
+  n=mc$POP.size-length(pop)
+  vIds = c((mc$lastID+1): (mc$lastID+n))
+  mc$lastID=mc$lastID+n
+  vSexes = sample(c(mc$MALE,mc$FEMALE),n,prob = c(.5,.5),replace = T)
+  pop1 = (mapply(Person$new, vIds,vSexes,0,mc$TNOW,mc$NCD.NEG)) #'@JP: do we need to delete pop1 and open memory?
+  pop<-rbind(pop,pop1)
+  
+  }
+
+
+
+
+install.packages("pryr")
+a=pop1[1]
+pryr::address(a)
+
+rm(a);gc()
+pryr::address(pop[1])
+# bool modelBirths(mt19937 &rng);
+# bool modelHivDynamics(mt19937 &rng);
+# bool modelNcdDynamics(mt19937 &rng);
+# bool modelDeathsAging(mt19937 &rng);
+# bool modelArtCoverage(mt19937 &rng);
+# bool removeDeaths();
+# bool modelIntervention(mt19937 &rng);
 
