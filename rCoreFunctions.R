@@ -12,7 +12,7 @@ create.initial.population = function(n=0){
   
   sim.pop$age[sim.pop$age==0] = 0.5 #we need this so that the first agegroups is set to 1
   sim.pop$age[sim.pop$age>85] = 85 
-  sim.pop$sex[sim.pop$sex=="male"] = mc$MALE #'@MS: I am trying to use these variables throughout
+  sim.pop$sex[sim.pop$sex=="male"] = mc$MALE 
   sim.pop$sex[sim.pop$sex=="female"] = mc$FEMALE
   sim.pop$ncd[sim.pop$hypertension==0 & sim.pop$diabetes==0] = mc$NCD.NEG #0, neither 
   sim.pop$ncd[sim.pop$hypertension==0 & sim.pop$diabetes==1] = mc$NCD.DIAB #1, diabetic
@@ -42,8 +42,6 @@ hivPrev2015 = hiv.output.for.ncd$population["2015",,,]
 write.csv(c(hivPrev2015),file="data/hivPrev2015.csv")
 
 
-#'@MS: I revised this to be a more generalizable function that can be used for each timestep as well
-#'@MS: I defined these dimensions in the globalvariables so that they're accessible throughout the code
 # Transform 1D data on HIV state sizes (hiv.pop) to proportion of people in different HIV states by age/sex
 get.hiv.probabilities = function(hiv.pop){
   #transform 1D data to correct array dimensions
@@ -58,6 +56,9 @@ get.hiv.probabilities = function(hiv.pop){
                   dim = sapply(hiv.dim.names.1,length),
                   dimnames = hiv.dim.names.1)
   #' @MS: how can we switch array dimensions, for example to hiv.status, age and sex?
+  #' @PK: we can use the function "aperm" to rearrange array dimensions using the following code: 
+  #' hiv.pop = aperm(hiv.pop, c(3,1,2)) --> reorders the array dimensions as you've specified
+  #' (I could also do this above when I create the hivPrev2015 array before saving it to csv)
   
   #compute proportions of HIV states in each age/sex subgroup
   hiv.probs = 
@@ -87,10 +88,12 @@ set.initial.hiv.status = function(personID #id of a selected population member
   hiv.pop = read.csv("data/hivPrev2015.csv")
   hiv.probs = get.hiv.probabilities(hiv.pop)
   p.probs = hiv.probs[,p$sex,p$agegroup]
-  
-  #'@MS: add a sanity check here to break the code if this doesnt hold
-  # sum(p.probs) == 1
-  
+
+  # break to ensure that sum of p.probs==1
+  if(sum(p.probs)!=1)
+    stop(paste0("p.probs for: age ",dimnames(hiv.probs)[[3]][p$agegroup],
+         ", sex ",dimnames(hiv.probs)[[2]][p$sex], " does not sum to 1"))
+
   rand.hiv.state = sample(x = c(1:length(p.probs)), size = 1, prob = p.probs)
   p$hivState=rand.hiv.state
 }
@@ -119,7 +122,6 @@ model.annual.dynamics<-function(sim){
   mc$TNOW=mc$TNOW+1
   
   ### MODEL HIV DYNAMICS
-  ##'@MS: since we are only allowing for one transition per timestep, I'm moving back along the cascade:
   # calculate current HIV state sizes by age/sex to use below:
   n=length(pop)
   hiv.state.sizes<-array(0,dim=c(mc$NUM.SEXES,mc$NUM.AGE.GROUPS,mc$NUM.HIV.STATES),
