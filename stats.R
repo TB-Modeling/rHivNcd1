@@ -7,10 +7,12 @@ print("Reading Stats... ")
 
 #global statistics
 N=mc$END.YEAR-mc$INITIAL.YEAR+1
+
 gss<-list(
-pop.size=rep(0,N),
-n.births=rep(0,N),
-n.deaths=rep(0,N)
+  pop.size=rep(0,N),
+  n.births=rep(0,N),
+  n.deaths=rep(0,N)
+  #' @MS: add more arrays to keep track of HIV and NCD sizes
 )
 reset.gss<-function(){
   gss$pop.size<<-rep(0,N)

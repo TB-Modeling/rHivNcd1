@@ -38,6 +38,7 @@ cat("Rcpp code compiled \n")
   cat("Generating Population ... ")
   pop<-create.initial.population(n = mc$POP.SIZE)
   # pop<-create.initial.population(n = 100)
+  
   cat("initial states: ")
   array(cReturnHivStates(pop),dimnames = list(mc$DIM.NAMES.HIV))
   array(cReturnNcdStates(pop),dimnames = list(mc$DIM.NAMES.NCD))
@@ -63,8 +64,10 @@ sim<-list(pop=pop,
           gss=gss)
 gss
 for(i in c(mc$INITIAL.YEAR:mc$END.YEAR)){
+  
   sim<-model.annual.dynamics(sim)
-}
+
+  }
 sim$gss
 rm(pop)
 cReturnAgDist(pop)

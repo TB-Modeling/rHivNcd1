@@ -105,10 +105,92 @@ model.annual.dynamics<-function(sim){
   barplot(cReturnAgDist(pop),names.arg = mc$DIM.NAME.AGEGROUP,main=paste("Age distribution tnow=",mc$TNOW))
   
   
-  
-  # model each timestep within the year
+  ################################################################
+  # MODLING TIMESTEP DYNAMICS
   for(i in (1:mc$ANNUAL.TIMESTEPS)){
   mc$TNOW=mc$TNOW+1
+  
+  ### MODEL HIV DYNAMICS
+  ##'@MS: since we are only allowing for one transition per timestep, I'm moving back along the cascade:
+  # calculate current HIV state sizes by age/sex to use below:
+  n=length(pop)
+  hiv.state.sizes<-array(0,dim=c(mc$NUM.SEXES,mc$NUM.AGE.GROUPS,mc$NUM.HIV.STATES),
+                  dimnames = list(mc$DIM.NAMES.SEX,mc$DIM.NAME.AGEGROUP,mc$DIM.NAMES.HIV))
+  invisible(lapply(c(1:n),function(x){
+    hiv.state.sizes[ pop[[x]]$sex, pop[[x]]$agegroup, pop[[x]]$hivState]<<-hiv.state.sizes[ pop[[x]]$sex, pop[[x]]$agegroup, pop[[x]]$hivState]+1
+  }))
+  #'@MS: I completed the incidence as an example below. you can complete the other sections based on that
+  #1- ENGAGEMENT
+  {
+    n.hiv.uneng<-hiv.state.sizes[,,"HIV.UNENG"]
+    
+    
+    }
+  
+  #2- DISENGAGEMENT
+  {
+  n.hiv.eng<-hiv.state.sizes[,,"HIV.ENG"]
+  
+  }
+  #3- DIAGNOSIS
+  {
+    n.hiv.undiag<-hiv.state.sizes[,,"HIV.UNDIAG"]
+  
+    }
+  #4- INCIDENCE
+  {#number of HIV negative persons eligible for new incidence
+  n.hiv.neg<-hiv.state.sizes[,,"HIV.NEG"]
+  # projected incidence by the hiv model
+  temp<-rep(10, 17 *2) #dummy HIV incidence values for all sex/agegroups #'@MS: to be replaced with correct values
+  target.inc=array(temp,dim = c(2,17),dimnames = list(mc$DIM.NAMES.SEX,mc$DIM.NAME.AGEGROUP))
+  # calculate the probability of incidence for each subgroup
+  prob.inc=target.inc/n.hiv.neg
+  prob.inc[prob.inc==Inf]<-0
+  # model random events based on probabilities
+  lapply(c(1:n),function(x){
+    p=pop[[x]] 
+    p.prob= prob.inc[p$sex, p$agegroup]
+    if (runif(1)<p.prob){
+      p$bMarkedHivInc=T
+    }
+  })
+  }
+  ### model hiv events that are marked:
+  #'@MS:  if you want to keep track of these by sex/age, you can replace them with 2D arrays,
+  #' and create a corresponding array in gss to save it there at the end
+  n.inc=0
+  n.diag=0
+  n.eng=0
+  n.uneng=0
+  lapply(c(1:n),function(x){
+    p=pop[[x]]
+    #sanity check
+    if (p$bMarkedHivInc+p$bMarkedHivDiag+p$bMarkedHivUneng+p$bMarkedHivEng >1) break("can not model more than one hiv transition")
+    #
+    if(p$bMarkedHivInc) {
+      p$hiv.getInfected(mc$TNOW)
+      n.inc=n.inc+1
+    }
+    if(p$bMarkedHivDiag) {
+      p$hiv.getDiagnosed(mc$TNOW)
+      n.diag=n.diag+1
+    }
+    if(p$bMarkedHivUneng) {
+      p$hiv.getUnengage(mc$TNOW)
+      n.uneng=n.uneng+1
+    }
+    if(p$bMarkedHivEng) {
+      p$hiv.getEngaged(mc$TNOW)
+      n.eng=n.eng+1
+    }
+  })
+  
+  
+  ### MODEL NCD DYNAMICS
+  
+  ### MODEL CVD DYNAMICS
+  
+  ### MODEL DEATHS
 
   }
   ################################################################
