@@ -34,6 +34,14 @@ create.initial.population = function(n=0){
   pop
 }
 
+# load hiv sim workspace
+load('hiv_sim.RData')
+
+# distribution of HIV states for each age/sex category
+hivPrev2015 = hiv.output.for.ncd$population["2015",,,]
+write.csv(c(hivPrev2015),file="data/hivPrev2015.csv")
+
+
 #'@MS: I revised this to be a more generalizable function that can be used for each timestep as well
 #'@MS: I defined these dimensions in the globalvariables so that they're accessible throughout the code
 # Transform 1D data on HIV state sizes (hiv.pop) to proportion of people in different HIV states by age/sex
