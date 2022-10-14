@@ -34,7 +34,7 @@ create.initial.population = function(n=0){
   pop
 }
 
-# load hiv sim workspace
+# load hiv sim workspace with: (1) sim object, (2) data manager, (3) extracted data (hiv.output.for.ncd)
 load('hiv_sim.RData')
 
 # distribution of HIV states for each age/sex category
@@ -151,8 +151,10 @@ model.annual.dynamics<-function(sim){
   {#number of HIV negative persons eligible for new incidence
   n.hiv.neg<-hiv.state.sizes[,,"HIV.NEG"]
   # projected incidence by the hiv model
-  temp<-rep(10, 17 *2) #dummy HIV incidence values for all sex/agegroups #'@MS: to be replaced with correct values
-  target.inc=array(temp,dim = c(2,17),dimnames = list(mc$DIM.NAMES.SEX,mc$DIM.NAME.AGEGROUP))
+  target.inc = hiv.output.for.ncd$incidence[as.character(mc$INITIAL.YEAR+mc$YNOW),,] # pull out current year; dimensions are year, age, sex
+  target.inc = aperm(target.inc, c(2,1)) # reorders dimensions to be sex, age
+  dimnames(target.inc) = list(mc$DIM.NAMES.SEX,mc$DIM.NAME.AGEGROUP)
+
   # calculate the probability of incidence for each subgroup
   prob.inc=target.inc/n.hiv.neg
   prob.inc[prob.inc==Inf]<-0
