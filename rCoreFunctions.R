@@ -130,22 +130,66 @@ model.annual.dynamics<-function(sim){
     hiv.state.sizes[ pop[[x]]$sex, pop[[x]]$agegroup, pop[[x]]$hivState]<<-hiv.state.sizes[ pop[[x]]$sex, pop[[x]]$agegroup, pop[[x]]$hivState]+1
   }))
   #'@MS: I completed the incidence as an example below. you can complete the other sections based on that
+  #'@PK: I filled in the rest below
   #1- ENGAGEMENT
   {
     n.hiv.uneng<-hiv.state.sizes[,,"HIV.UNENG"]
+    # projected engagement by the hiv model
+    target.eng = hiv.output.for.ncd$engagement[as.character(mc$INITIAL.YEAR+mc$YNOW),,] # pull out current year; dimensions are year, age, sex
+    target.eng = aperm(target.eng, c(2,1)) # reorders dimensions to be sex, age
+    dimnames(target.eng) = list(mc$DIM.NAMES.SEX,mc$DIM.NAME.AGEGROUP)
     
-    
+    # calculate the probability of engagement for each subgroup
+    prob.eng=target.eng/n.hiv.uneng
+    prob.eng[prob.eng==Inf]<-0
+    # model random events based on probabilities
+    lapply(c(1:n),function(x){
+      p=pop[[x]] 
+      p.prob= prob.eng[p$sex, p$agegroup]
+      if (runif(1)<p.prob){
+        p$bMarkedHivEng=T
+      }
+    })
     }
-  
   #2- DISENGAGEMENT
   {
-  n.hiv.eng<-hiv.state.sizes[,,"HIV.ENG"]
-  
+    n.hiv.eng<-hiv.state.sizes[,,"HIV.ENG"]
+    # projected disengagement by the hiv model
+    target.diseng = hiv.output.for.ncd$disengagement[as.character(mc$INITIAL.YEAR+mc$YNOW),,] # pull out current year; dimensions are year, age, sex
+    target.diseng = aperm(target.diseng, c(2,1)) # reorders dimensions to be sex, age
+    dimnames(target.diseng) = list(mc$DIM.NAMES.SEX,mc$DIM.NAME.AGEGROUP)
+    
+    # calculate the probability of disengagement for each subgroup
+    prob.diseng=target.diseng/n.hiv.eng
+    prob.diseng[prob.diseng==Inf]<-0
+    # model random events based on probabilities
+    lapply(c(1:n),function(x){
+      p=pop[[x]] 
+      p.prob= prob.diseng[p$sex, p$agegroup]
+      if (runif(1)<p.prob){
+        p$bMarkedHivUneng=T
+      }
+    })
   }
   #3- DIAGNOSIS
   {
     n.hiv.undiag<-hiv.state.sizes[,,"HIV.UNDIAG"]
-  
+    # projected diagnosis by the hiv model
+    target.diag = hiv.output.for.ncd$diagnosis[as.character(mc$INITIAL.YEAR+mc$YNOW),,] # pull out current year; dimensions are year, age, sex
+    target.diag = aperm(target.diag, c(2,1)) # reorders dimensions to be sex, age
+    dimnames(target.diag) = list(mc$DIM.NAMES.SEX,mc$DIM.NAME.AGEGROUP)
+    
+    # calculate the probability of diagnosis for each subgroup
+    prob.diag=target.diag/n.hiv.undiag
+    prob.diag[prob.diag==Inf]<-0
+    # model random events based on probabilities
+    lapply(c(1:n),function(x){
+      p=pop[[x]] 
+      p.prob= prob.diag[p$sex, p$agegroup]
+      if (runif(1)<p.prob){
+        p$bMarkedHivDiag=T
+      }
+    })
     }
   #4- INCIDENCE
   {#number of HIV negative persons eligible for new incidence
