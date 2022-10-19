@@ -91,11 +91,12 @@ Person<-R6Class("Person",
         hyp.getInfected=function(tnow){
           self$ncdState=mc$NCD.HYP
           self$tHypInc=tnow
-        },
-        #run a function when the object is garbage collected
-        finalize = function() {
-          print("Finalizer has been called!")
         }
+        #' @JP: we need to check this
+        # #run a function when the object is garbage collected
+        # finalize = function() {
+        #   print("Finalizer has been called!")
+        # }
       
         ),
       

@@ -45,8 +45,6 @@ cat("Rcpp code compiled \n")
   array(unlist(cReturnHivNcdStates(pop)),dim = c(4,4),dimnames = list(
     mc$DIM.NAMES.NCD,
     mc$DIM.NAMES.HIV))
-  #'@MS: since you have more experience with array operations in R, 
-  #'can you explain to me how unlist and array work hand in hand to get the dim order correctly?
   barplot(cReturnAgDist(pop),names.arg = mc$DIM.NAME.AGEGROUP,main=paste("Age distribution tnow=",mc$TNOW))
   ##############
   # Set initial HIV status in 2015

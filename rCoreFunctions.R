@@ -60,6 +60,8 @@ get.hiv.probabilities = function(hiv.pop){
   #' hiv.pop = aperm(hiv.pop, c(3,1,2)) --> reorders the array dimensions as you've specified
   #' (I could also do this above when I create the hivPrev2015 array before saving it to csv)
   
+  #' @MS: replace the below part using aperm first and then divide by column sums (people in each age/sex)
+  
   #compute proportions of HIV states in each age/sex subgroup
   hiv.probs = 
     sapply(1:length(hiv.dim.names.1$age), function(age){
@@ -82,6 +84,7 @@ get.hiv.probabilities = function(hiv.pop){
 # model initial HIV status 
 set.initial.hiv.status = function(personID #id of a selected population member
 ){
+  
   p<-pop[[personID]]
   
   #read 1D data from hiv outputs
@@ -90,9 +93,14 @@ set.initial.hiv.status = function(personID #id of a selected population member
   p.probs = hiv.probs[,p$sex,p$agegroup]
 
   # break to ensure that sum of p.probs==1
-  if(sum(p.probs)!=1)
-    stop(paste0("p.probs for: age ",dimnames(hiv.probs)[[3]][p$agegroup],
-         ", sex ",dimnames(hiv.probs)[[2]][p$sex], " does not sum to 1"))
+  if(round(sum(p.probs),0)!=1){
+    stop(paste0("Error: p.probs for: age ",dimnames(hiv.probs)[[3]][p$agegroup],
+                ", sex ",dimnames(hiv.probs)[[2]][p$sex], " does not sum to 1"))
+  }
+
+    
+  
+
 
   rand.hiv.state = sample(x = c(1:length(p.probs)), size = 1, prob = p.probs)
   p$hivState=rand.hiv.state
@@ -129,6 +137,7 @@ model.annual.dynamics<-function(sim){
   invisible(lapply(c(1:n),function(x){
     hiv.state.sizes[ pop[[x]]$sex, pop[[x]]$agegroup, pop[[x]]$hivState]<<-hiv.state.sizes[ pop[[x]]$sex, pop[[x]]$agegroup, pop[[x]]$hivState]+1
   }))
+  
   #'@MS: I completed the incidence as an example below. you can complete the other sections based on that
   #'@PK: I filled in the rest below
   #1- ENGAGEMENT
@@ -191,9 +200,10 @@ model.annual.dynamics<-function(sim){
       }
     })
     }
+  #' @MS: make sure this one works/makes sense before repeating for other transitions 
   #4- INCIDENCE
   {#number of HIV negative persons eligible for new incidence
-  n.hiv.neg<-hiv.state.sizes[,,"HIV.NEG"]
+  n.hiv.neg<-hiv.state.sizes[,,"HIV.NEG"] #'@MS: this should come from the HIV model, not this simulated population - fix for all above as well 
   # projected incidence by the hiv model
   target.inc = hiv.output.for.ncd$incidence[as.character(mc$INITIAL.YEAR+mc$YNOW),,] # pull out current year; dimensions are year, age, sex
   target.inc = aperm(target.inc, c(2,1)) # reorders dimensions to be sex, age
