@@ -39,7 +39,6 @@ load('hiv_sim.RData')
 
 # distribution of HIV states for each age/sex category
 hivPrev2015 = hiv.output.for.ncd$population["2015",,,]
-write.csv(c(hivPrev2015),file="data/hivPrev2015.csv")
 
 
 # Transform 1D data on HIV state sizes (hiv.pop) to proportion of people in different HIV states by age/sex
@@ -49,33 +48,20 @@ get.hiv.probabilities = function(hiv.pop){
   sexes = mc$DIM.NAMES.SEX
   hiv.status = mc$DIM.NAMES.HIV
   
-  hiv.dim.names.1 = list(age = ages,
-                         sex = sexes,
-                         hiv.status = hiv.status)
-  hiv.pop = array(hiv.pop[,2],
-                  dim = sapply(hiv.dim.names.1,length),
-                  dimnames = hiv.dim.names.1)
-  #' @MS: how can we switch array dimensions, for example to hiv.status, age and sex?
-  #' @PK: we can use the function "aperm" to rearrange array dimensions using the following code: 
-  #' hiv.pop = aperm(hiv.pop, c(3,1,2)) --> reorders the array dimensions as you've specified
-  #' (I could also do this above when I create the hivPrev2015 array before saving it to csv)
-  
-  #' @MS: replace the below part using aperm first and then divide by column sums (people in each age/sex)
+  hiv.dim.names = list(hiv.status = hiv.status,
+                       age = ages,
+                       sex = sexes)
   
   #compute proportions of HIV states in each age/sex subgroup
   hiv.probs = 
-    sapply(1:length(hiv.dim.names.1$age), function(age){
-      sapply(1:length(hiv.dim.names.1$sex), function(sex){
-        hiv.pop[age,sex,]/sum(hiv.pop[age,sex,])
+    sapply(1:length(hiv.dim.names$age), function(age){
+      sapply(1:length(hiv.dim.names$sex), function(sex){
+        hiv.pop[,age,sex]/sum(hiv.pop[,age,sex])
       })
     })
-  #reorder the dimensions
-  hiv.dim.names.2 = list(hiv.status = hiv.status,
-                         sex = sexes,
-                         age = ages
-  )
-  dim(hiv.probs) = sapply(hiv.dim.names.2,length)
-  dimnames(hiv.probs) = hiv.dim.names.2
+
+  dim(hiv.probs) = sapply(hiv.dim.names,length)
+  dimnames(hiv.probs) = hiv.dim.names
   
   hiv.probs
   
@@ -88,19 +74,15 @@ set.initial.hiv.status = function(personID #id of a selected population member
   p<-pop[[personID]]
   
   #read 1D data from hiv outputs
-  hiv.pop = read.csv("data/hivPrev2015.csv")
+  hiv.pop = hivPrev2015
   hiv.probs = get.hiv.probabilities(hiv.pop)
-  p.probs = hiv.probs[,p$sex,p$agegroup]
+  p.probs = hiv.probs[,p$agegroup,p$sex]
 
   # break to ensure that sum of p.probs==1
   if(round(sum(p.probs),0)!=1){
-    stop(paste0("Error: p.probs for: age ",dimnames(hiv.probs)[[3]][p$agegroup],
-                ", sex ",dimnames(hiv.probs)[[2]][p$sex], " does not sum to 1"))
+    stop(paste0("Error: p.probs for: age ",dimnames(hiv.probs)[[2]][p$agegroup],
+                ", sex ",dimnames(hiv.probs)[[3]][p$sex], " does not sum to 1"))
   }
-
-    
-  
-
 
   rand.hiv.state = sample(x = c(1:length(p.probs)), size = 1, prob = p.probs)
   p$hivState=rand.hiv.state
@@ -204,6 +186,7 @@ model.annual.dynamics<-function(sim){
   #4- INCIDENCE
   {#number of HIV negative persons eligible for new incidence
   n.hiv.neg<-hiv.state.sizes[,,"HIV.NEG"] #'@MS: this should come from the HIV model, not this simulated population - fix for all above as well 
+  n.hiv.neg = hiv.output.for.ncd$population[as.character(mc$INITIAL.YEAR+mc$YNOW),,,"hiv_negative"]
   # projected incidence by the hiv model
   target.inc = hiv.output.for.ncd$incidence[as.character(mc$INITIAL.YEAR+mc$YNOW),,] # pull out current year; dimensions are year, age, sex
   target.inc = aperm(target.inc, c(2,1)) # reorders dimensions to be sex, age
