@@ -120,9 +120,6 @@ model.annual.dynamics<-function(sim){
     hiv.state.sizes[ pop[[x]]$sex, pop[[x]]$agegroup, pop[[x]]$hivState]<<-hiv.state.sizes[ pop[[x]]$sex, pop[[x]]$agegroup, pop[[x]]$hivState]+1
   }))
   
-  #'@PK: updated to pull numbers of uninfected, undiagnosed, unengaged, etc. for each transition to come from hiv model,
-  #'so that "prob.x = target.x/n.x" are from the same source (hiv model) and makes sense
-  #' Also made all dimension orders year, hiv status, age, sex (was doing sex, age before but changed to be consistent)
   #1- ENGAGEMENT
   {
     n.hiv.uneng = hiv.output.for.ncd$population[as.character(mc$INITIAL.YEAR+mc$YNOW),"diagnosed_unengaged",,]
@@ -136,9 +133,11 @@ model.annual.dynamics<-function(sim){
     # model random events based on probabilities
     lapply(c(1:n),function(x){
       p=pop[[x]] 
-      p.prob= prob.eng[p$agegroup,p$sex]
-      if (runif(1)<p.prob){
-        p$bMarkedHivEng=T
+      if(p$hivState==mc$HIV.UNENG){
+        p.prob= prob.eng[p$agegroup,p$sex]
+        if (runif(1)<p.prob){
+          p$bMarkedHivEng=T
+      }
       }
     })
     }
@@ -155,9 +154,11 @@ model.annual.dynamics<-function(sim){
     # model random events based on probabilities
     lapply(c(1:n),function(x){
       p=pop[[x]] 
-      p.prob= prob.diseng[p$agegroup,p$sex]
-      if (runif(1)<p.prob){
-        p$bMarkedHivUneng=T
+      if(p$hivState==mc$HIV.ENG){
+        p.prob= prob.diseng[p$agegroup,p$sex]
+        if (runif(1)<p.prob){
+          p$bMarkedHivUneng=T
+      }
       }
     })
   }
@@ -174,9 +175,11 @@ model.annual.dynamics<-function(sim){
     # model random events based on probabilities
     lapply(c(1:n),function(x){
       p=pop[[x]] 
-      p.prob= prob.diag[p$agegroup,p$sex]
-      if (runif(1)<p.prob){
-        p$bMarkedHivDiag=T
+      if(p$hivState==mc$HIV.UNDIAG){
+        p.prob= prob.diag[p$agegroup,p$sex]
+        if (runif(1)<p.prob){
+          p$bMarkedHivDiag=T
+      }
       }
     })
     }
@@ -193,12 +196,17 @@ model.annual.dynamics<-function(sim){
   prob.inc[prob.inc==Inf]<-0
   # model random events based on probabilities
   lapply(c(1:n),function(x){
+    if(x==3)
+      browser()
     p=pop[[x]] 
+    if(p$hivState==mc$HIV.NEG){
     p.prob= prob.inc[p$agegroup,p$sex]
     if (runif(1)<p.prob){
       p$bMarkedHivInc=T
     }
+    }
   })
+  
   }
   ### model hiv events that are marked:
   #'@MS:  if you want to keep track of these by sex/age, you can replace them with 2D arrays,
@@ -209,6 +217,8 @@ model.annual.dynamics<-function(sim){
   n.uneng=0
   lapply(c(1:n),function(x){
     p=pop[[x]]
+    print(x)
+    print(paste(p$bMarkedHivInc,p$bMarkedHivDiag,p$bMarkedHivUneng,p$bMarkedHivEng))
     #sanity check
     if (p$bMarkedHivInc+p$bMarkedHivDiag+p$bMarkedHivUneng+p$bMarkedHivEng >1) break("can not model more than one hiv transition")
     #
@@ -227,6 +237,7 @@ model.annual.dynamics<-function(sim){
     if(p$bMarkedHivEng) {
       p$hiv.getEngaged(mc$TNOW)
       n.eng=n.eng+1
+      
     }
   })
   
