@@ -220,7 +220,8 @@ model.annual.dynamics<-function(sim){
     print(x)
     print(paste(p$bMarkedHivInc,p$bMarkedHivDiag,p$bMarkedHivUneng,p$bMarkedHivEng))
     #sanity check
-    if (p$bMarkedHivInc+p$bMarkedHivDiag+p$bMarkedHivUneng+p$bMarkedHivEng >1) break("can not model more than one hiv transition")
+    if (p$bMarkedHivInc+p$bMarkedHivDiag+p$bMarkedHivUneng+p$bMarkedHivEng >1) 
+      stop("can not model more than one hiv transition")
     #
     if(p$bMarkedHivInc) {
       p$hiv.getInfected(mc$TNOW)
