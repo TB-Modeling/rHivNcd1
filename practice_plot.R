@@ -79,23 +79,22 @@ array(unlist(cReturnHivNcdStates(pop)),dim = c(4,4),dimnames = list(
 array(cReturnHivStates(pop),dimnames = list(mc$DIM.NAMES.HIV))
 
 
-# trying to write function to return age/sex/HIV - need help 
-if(1==2){
-  # // [[Rcpp::export]]
-  # vector<vector<double>> cReturnSexAgeHivDist(List &pop){
-  #   vector<vector<vector<double>>> res(2*NUM_HIV_STATES,vector<double>(NUM_AGE_GROUPS,0));
-  #   const int popsize = pop.size();
-  #   //Loop through the population
-  #   for (int i = 0; i < popsize; i++) {
-  #     Environment p = pop[i];
-  #     // if (as<int>(p["agegroup"])>NUM_AGE_GROUPS) throw logic_error(errAgeDist); //@JP: this doesnt really work
-  #     // else{
-  #       res[as<int>(p["sex"])-1][as<int>(p["agegroup"])-1][as<int>(p["hivState"])-1]++; 
-  #     }
-  #     // }
-  #   return(res);
-  # }
-  # 
-}
+#' @PK I'm trying to write function to return age/sex/HIV - need help 
+
+# // [[Rcpp::export]]
+# vector<vector<double>> cReturnSexAgeHivDist(List &pop){
+#   vector<vector<vector<double>>> res(2*NUM_HIV_STATES,vector<double>(NUM_AGE_GROUPS,0));
+#   const int popsize = pop.size();
+#   //Loop through the population
+#   for (int i = 0; i < popsize; i++) {
+#     Environment p = pop[i];
+#     // if (as<int>(p["agegroup"])>NUM_AGE_GROUPS) throw logic_error(errAgeDist); //@JP: this doesnt really work
+#     // else{
+#       res[as<int>(p["sex"])-1][as<int>(p["agegroup"])-1][as<int>(p["hivState"])-1]++;
+#     }
+#     // }
+#   return(res);
+# }
+
 
 
