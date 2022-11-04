@@ -65,23 +65,23 @@ Person<-R6Class("Person",
         #HIV transitions:
         hiv.getInfected=function(tnow){
           self$hivState=mc$HIV.UNDIAG
-          tHivInc=tnow
-          bMarkedHivInc=F
+          self$tHivInc=tnow
+          self$bMarkedHivInc=F
         },
         hiv.getDiagnosed=function(tnow){
           self$hivState=mc$HIV.UNENG
-          tHivDiag=tnow
-          bMarkedHivDiag=F
+          self$tHivDiag=tnow
+          self$bMarkedHivDiag=F
         },
         hiv.getEngaged=function(tnow){
           self$hivState=mc$HIV.ENG
-          tHivEng=tnow
-          bMarkedHivEng=F
+          self$tHivEng=tnow
+          self$bMarkedHivEng=F
         },
         hiv.getUnengage=function(tnow){
           self$hivState=mc$HIV.UNENG
-          tHivUneng=tnow
-          bMarkedHivUneng=F
+          self$tHivUneng=tnow
+          self$bMarkedHivUneng=FALSE
         },
         #NCD transitions
         diab.getInfected=function(tnow){
