@@ -15,7 +15,7 @@ source("stats.R")
 source("rCoreFunctions.R")
 source("rHelperFunctions.R")
 source("globalVariables.R")
-source("hivInputs.R")
+# source("hivInputs.R")
 
 
 ##COMPILE THE Rcpp##
@@ -37,7 +37,7 @@ cat("HIV data loaded")
   reset.gss()
   
   mc$TNOW=0
-  mc$YNOW=0
+  mc$YNOW=1
   mc$CYNOW=mc$INITIAL.YEAR
   mc$ANNUAL.TIMESTEPS=12 #modeling monthly dynamics
   
@@ -54,7 +54,7 @@ cat("HIV data loaded")
   array(unlist(cReturnHivNcdStates(pop)),dim = c(4,4),dimnames = list(
     mc$DIM.NAMES.NCD,
     mc$DIM.NAMES.HIV))
-  barplot(cReturnAgDist(pop),names.arg = mc$DIM.NAME.AGEGROUP,main=paste("Age distribution tnow=",mc$TNOW))
+  barplot(cReturnAgDist(pop),names.arg = mc$DIM.NAMES.AGE,main=paste("Age distribution year=",mc$CYNOW))
   ##############
   # Set initial HIV status in 2015
   #'@JP: this is super slow, how can we rewrite to be faster?
@@ -70,18 +70,12 @@ sim<-list(pop=pop,
           mc=mc,
           gss=gss)
 
-return.gss(statName = gss$n.hiv.inc)
-
-model.annual.dynamics(sim)
-
-
-
 
 for(i in c(mc$INITIAL.YEAR:mc$END.YEAR)){
   
   sim<-model.annual.dynamics(sim)
 
-  }
-sim$gss
-rm(pop)
-cReturnAgDist(pop)
+}
+
+
+

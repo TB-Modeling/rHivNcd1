@@ -10,39 +10,71 @@ print("Reading Stats... ")
 DIM.N=mc$END.YEAR-mc$INITIAL.YEAR+1
 DIM.NAMES.N=c(mc$INITIAL.YEAR:mc$END.YEAR)
 
-vtemp=rep(0,DIM.N)
-vvtemp=array(rep(0,mc$DIM.SEX*mc$DIM.AGE*DIM.N),  
-             dim = c(mc$DIM.SEX,mc$DIM.AGE,DIM.N),
-             dimnames=list(mc$DIM.NAMES.SEX,
-                           mc$DIM.NAMES.AGE,
+v1temp=rep(0,DIM.N)
+v3temp=array(rep(0,mc$DIM.AGE*mc$DIM.SEX*DIM.N),  
+             dim = c(mc$DIM.AGE,
+                     mc$DIM.SEX,
+                     DIM.N),
+             dimnames=list(mc$DIM.NAMES.AGE,
+                           mc$DIM.NAMES.SEX,
                            DIM.NAMES.N))
+
+
+v4temp=array(rep(0,mc$DIM.AGE*mc$DIM.SEX*mc$DIM.HIV*DIM.N),  
+             dim = c(mc$DIM.AGE,
+                     mc$DIM.SEX,
+                     mc$DIM.HIV,
+                     DIM.N),
+             dimnames=list(mc$DIM.NAMES.AGE,
+                           mc$DIM.NAMES.SEX,
+                           mc$DIM.NAMES.HIV,
+                           DIM.NAMES.N))
+
 gss<-list(
   #1D arrays for entire population over time
-  pop.size=vtemp,
-  n.births=vtemp,
-  n.deaths=vtemp,
+  pop.size=v1temp,
+  n.births=v1temp,
+  n.deaths=v1temp,
   
-  #3D arrays by sex and age over time
-  n.hiv.inc=vvtemp,
-  n.hiv.diag=vvtemp,
-  n.hiv.eng=vvtemp,
-  n.hiv.uneng=vvtemp
+  #3D arrays by age, sex over time
+  n.hiv.inc=v3temp,
+  n.hiv.diag=v3temp,
+  n.hiv.eng=v3temp,
+  n.hiv.uneng=v3temp,
+  
+  # 4D arrays by age, sex and hiv state over time
+  n.hiv.prev=v4temp
 )
 reset.gss<-function(){
-  gss$pop.size=vtemp
-  gss$n.births=vtemp
-  gss$n.deaths=vtemp
+  gss$pop.size=v1temp
+  gss$n.births=v1temp
+  gss$n.deaths=v1temp
   
-  gss$n.hiv.inc=vvtemp
-  gss$n.hiv.diag=vvtemp
-  gss$n.hiv.eng=vvtemp
-  gss$n.hiv.uneng=vvtemp
+  gss$n.hiv.inc=v3temp
+  gss$n.hiv.diag=v3temp
+  gss$n.hiv.eng=v3temp
+  gss$n.hiv.uneng=v3temp
+  
+  
+  gss$n.hiv.prev=v4temp
+  
 }
 #return specific Stats
 return.gss<-function(statName){
-   print(eval(parse(text = deparse(substitute(statName)))))
+  print(eval(parse(text = deparse(substitute(statName)))))
 }
 
+#return hiv.state sizes by age and sex
+return.gss.hiv.state.sizes<-function(pop){
+  n=length(pop)
+  hiv.state.sizes<-array(0,
+                         dim=c(mc$DIM.AGE,mc$DIM.SEX,mc$DIM.HIV),
+                         dimnames = list(mc$DIM.NAMES.AGE,mc$DIM.NAMES.SEX,mc$DIM.NAMES.HIV))
+  invisible(lapply(c(1:n),function(x){
+    hiv.state.sizes[  pop[[x]]$agegroup,pop[[x]]$sex, pop[[x]]$hivState] <<- hiv.state.sizes[  pop[[x]]$agegroup,pop[[x]]$sex, pop[[x]]$hivState]+1  }))
+  
+  hiv.state.sizes
+}
 
 #list of annual statistics that are collected throughout the simulation
 # astats<-list(
