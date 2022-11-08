@@ -12,7 +12,7 @@ plot.hiv.distribution = function(hiv.positive.population.only=T,
   }
   
   years = dimnames(pop.from.hiv.model)[[1]]
-  ages = mc$DIM.NAME.AGEGROUP
+  ages = mc$DIM.NAMES.AGE
   sexes = c("FEMALE","MALE")
   
   full.dim.names = list(year = years,
@@ -69,7 +69,7 @@ plot.hiv.distribution = function(hiv.positive.population.only=T,
 
 
 array(unlist(cReturnSexAgeDist(pop)),dim = c(17,2),dimnames = list(
-  mc$DIM.NAME.AGEGROUP,
+  mc$DIM.NAMES.AGE,
   mc$DIM.NAMES.SEX))
 
 array(unlist(cReturnHivNcdStates(pop)),dim = c(4,4),dimnames = list(
@@ -96,5 +96,7 @@ array(cReturnHivStates(pop),dimnames = list(mc$DIM.NAMES.HIV))
 #   return(res);
 # }
 
-
-
+#return hiv state sizes for the current year
+return.gss.hiv.state.sizes(pop)
+#return hiv state sizes for the all years
+return.gss(gss$n.hiv.prev)
