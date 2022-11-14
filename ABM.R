@@ -29,6 +29,7 @@ cat("Rcpp code compiled \n")
 load('data/hiv_sim.RData')
 # distribution of HIV states for each age/sex category
 hivPrev2015 = hiv.output.for.ncd$population["2015",,,]
+dimnames(hivPrev2015)[[3]] = c("FEMALE","MALE")
 cat("HIV data loaded")
 
 ##########################################################################
