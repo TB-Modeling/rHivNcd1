@@ -13,8 +13,8 @@ create.initial.population = function(n=0){
   
   sim.pop$age[sim.pop$age==0] = 0.5 #we need this so that the first agegroups is set to 1
   sim.pop$age[sim.pop$age>85] = 85 
-  sim.pop$sex[sim.pop$sex=="male"] = mc$MALE 
-  sim.pop$sex[sim.pop$sex=="female"] = mc$FEMALE
+  sim.pop$sex[sim.pop$sex=="MALE"] = mc$MALE 
+  sim.pop$sex[sim.pop$sex=="FEMALE"] = mc$FEMALE
   sim.pop$ncd[sim.pop$hypertension==0 & sim.pop$diabetes==0] = mc$NCD.NEG #0, neither 
   sim.pop$ncd[sim.pop$hypertension==0 & sim.pop$diabetes==1] = mc$NCD.DIAB #1, diabetic
   sim.pop$ncd[sim.pop$hypertension==1 & sim.pop$diabetes==0] = mc$NCD.HYP #2, hypertensive
@@ -97,27 +97,23 @@ model.annual.dynamics<-function(sim){
   
   {
     ##Probability of engagement--------
-    n.hiv.uneng = hiv.output.for.ncd$population[as.character(mc$CYNOW-1),"diagnosed_unengaged",,] #'@MS: shouldn't we use the last year's population for denom here?
-    target.eng = hiv.output.for.ncd$engagement[as.character(mc$CYNOW),,] # pull out current year; dimensions are year, age, sex
-    prob.eng=target.eng/n.hiv.uneng
+    prob.eng=target.probabilities$prob.eng[as.character(mc$CYNOW),,]
     if(sum(prob.eng>1)>1)     
       stop(paste("Error: probability of engagement >1 in year ",mc$CYNOW))
     prob.eng[prob.eng==Inf]<-0
     prob.eng<-prob.eng/mc$ANNUAL.TIMESTEPS
     
     ##Probability of disengagement--------
-    n.hiv.eng = hiv.output.for.ncd$population[as.character(mc$CYNOW-1),"engaged",,]
-    target.diseng = hiv.output.for.ncd$disengagement[as.character(mc$CYNOW),,] # pull out current year; dimensions are year, age, sex
-    prob.diseng=target.diseng/n.hiv.eng
-    if(sum(prob.diseng>1)>1)     stop(paste("Error: probability of disengagement >1 in year ",mc$CYNOW))
+    prob.diseng=target.probabilities$prob.diseng[as.character(mc$CYNOW),,]
+    if(sum(prob.diseng>1)>1)     
+      stop(paste("Error: probability of disengagement >1 in year ",mc$CYNOW))
     prob.diseng[prob.diseng==Inf]<-0
     prob.diseng<-prob.diseng/mc$ANNUAL.TIMESTEPS
     
     ##Probability of diagnosis--------
-    n.hiv.undiag = hiv.output.for.ncd$population[as.character(mc$CYNOW-1),"undiagnosed",,]
-    target.diag = hiv.output.for.ncd$diagnosis[as.character(mc$CYNOW),,] # pull out current year; dimensions are year, age, sex
-    prob.diag=target.diag/n.hiv.undiag
-    if(sum(prob.diag>1)>1)     stop(paste("Error: probability of prob.diag >1 in year ",mc$CYNOW))
+    prob.diag = target.probabilities$prob.diag[as.character(mc$CYNOW),,]
+    if(sum(prob.diag>1)>1)     
+      stop(paste("Error: probability of prob.diag >1 in year ",mc$CYNOW))
     prob.diag[prob.diag==Inf]<-0
     prob.diag<-prob.diag/mc$ANNUAL.TIMESTEPS
     
