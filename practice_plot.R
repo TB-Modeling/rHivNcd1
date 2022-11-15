@@ -1,17 +1,29 @@
 library(ggplot2)
 
 plot.hiv.distribution = function(hiv.positive.population.only=T,
-                                 strata="total"){
+                                 strata="total",
+                                 years=as.character(c(2015:2030))){
   
+  # HIV model output 
   if(hiv.positive.population.only) {
-    pop.from.hiv.model = hiv.output.for.ncd$population[,-1,,]  
+    pop.from.hiv.model = hiv.output.for.ncd$population[years,-1,,]  
     hiv.status = mc$DIM.NAMES.HIV[-1]
   } else {
-    pop.from.hiv.model = hiv.output.for.ncd$population
+    pop.from.hiv.model = hiv.output.for.ncd$population[years,,,]
     hiv.status = mc$DIM.NAMES.HIV
   }
   
-  years = dimnames(pop.from.hiv.model)[[1]]
+  # NCD model output
+  if(hiv.positive.population.only) {
+    pop.from.ncd.model = return.gss(gss$n.hiv.prev)
+    pop.from.ncd.model = aperm(pop.from.ncd.model, c(4,3,1,2))
+    pop.from.ncd.model = pop.from.ncd.model[,-1,,]
+  } else {
+    pop.from.ncd.model = return.gss(gss$n.hiv.prev)
+    pop.from.ncd.model = aperm(pop.from.ncd.model, c(4,3,1,2))
+  }
+  
+  years = years
   ages = mc$DIM.NAMES.AGE
   sexes = c("FEMALE","MALE")
   
@@ -21,33 +33,70 @@ plot.hiv.distribution = function(hiv.positive.population.only=T,
                         sex = sexes)
   hiv.dim.names =  full.dim.names[-1]
   
-  hiv.distr = array(0,
-                    dim = sapply(full.dim.names,length),
-                    dimnames = full.dim.names)
+  
+  # HIV model probabilities
+  hiv.distr.from.hiv.model = array(0,
+                                   dim = sapply(full.dim.names,length),
+                                   dimnames = full.dim.names)
   
   for(i in 1:length(years)){
-    hiv.probs = 
+    hiv.probs.from.hiv.model = 
       sapply(1:length(hiv.dim.names$age), function(age){
         sapply(1:length(hiv.dim.names$sex), function(sex){
           rowSums(pop.from.hiv.model[i,,,],1)/sum(pop.from.hiv.model[i,,,])
         })
       })
     
-    dim(hiv.probs) = sapply(hiv.dim.names,length)
-    dimnames(hiv.probs) = hiv.dim.names
+    dim(hiv.probs.from.hiv.model) = sapply(hiv.dim.names,length)
+    dimnames(hiv.probs.from.hiv.model) = hiv.dim.names
     
     # test
     # colSums(hiv.probs,1)
     
-    hiv.distr[i,,,] = hiv.probs
+    hiv.distr.from.hiv.model[i,,,] = round(hiv.probs.from.hiv.model,5)
   }
   
-  df.for.plot = reshape2::melt(hiv.distr)
+  # NCD model probabilities
+  hiv.distr.from.ncd.model = array(0,
+                                   dim = sapply(full.dim.names,length),
+                                   dimnames = full.dim.names)
+  
+  for(i in 1:length(years)){
+    hiv.probs.from.ncd.model = 
+      sapply(1:length(hiv.dim.names$age), function(age){
+        sapply(1:length(hiv.dim.names$sex), function(sex){
+          rowSums(pop.from.ncd.model[i,,,],1)/sum(pop.from.ncd.model[i,,,])
+        })
+      })
+    
+    dim(hiv.probs.from.ncd.model) = sapply(hiv.dim.names,length)
+    dimnames(hiv.probs.from.ncd.model) = hiv.dim.names
+    
+    # test
+    # colSums(hiv.probs,1)
+    
+    hiv.distr.from.ncd.model[i,,,] = round(hiv.probs.from.ncd.model,5)
+  }
+  
+  hiv.df.for.plot = reshape2::melt(hiv.distr.from.hiv.model)
+  hiv.df.for.plot$model = "hiv"
+  
+  ncd.df.for.plot = reshape2::melt(hiv.distr.from.ncd.model)
+  ncd.df.for.plot$model = "ncd"
+  
+  df.for.plot = rbind(hiv.df.for.plot,ncd.df.for.plot)
   
   if(strata=="total"){
     # total
     plot = ggplot(df.for.plot, aes(fill=hiv.status, x = year, y = value)) + 
       geom_bar(position="fill", stat="identity") 
+  }
+  
+  if(strata=="model"){
+    # total
+    plot = ggplot(df.for.plot, aes(fill=hiv.status, x = year, y = value)) + 
+      geom_bar(position="fill", stat="identity")  + 
+      facet_wrap(~model, scales = "free_y")
   }
   
   if(strata=="age"){
@@ -68,35 +117,10 @@ plot.hiv.distribution = function(hiv.positive.population.only=T,
 }
 
 
-array(unlist(cReturnSexAgeDist(pop)),dim = c(17,2),dimnames = list(
-  mc$DIM.NAMES.AGE,
-  mc$DIM.NAMES.SEX))
-
-array(unlist(cReturnHivNcdStates(pop)),dim = c(4,4),dimnames = list(
-  mc$DIM.NAMES.NCD,
-  mc$DIM.NAMES.HIV))
-
-array(cReturnHivStates(pop),dimnames = list(mc$DIM.NAMES.HIV))
-
-
-#' @PK I'm trying to write function to return age/sex/HIV - need help 
-
-# // [[Rcpp::export]]
-# vector<vector<double>> cReturnSexAgeHivDist(List &pop){
-#   vector<vector<vector<double>>> res(2*NUM_HIV_STATES,vector<double>(NUM_AGE_GROUPS,0));
-#   const int popsize = pop.size();
-#   //Loop through the population
-#   for (int i = 0; i < popsize; i++) {
-#     Environment p = pop[i];
-#     // if (as<int>(p["agegroup"])>NUM_AGE_GROUPS) throw logic_error(errAgeDist); //@JP: this doesnt really work
-#     // else{
-#       res[as<int>(p["sex"])-1][as<int>(p["agegroup"])-1][as<int>(p["hivState"])-1]++;
-#     }
-#     // }
-#   return(res);
-# }
+plot.hiv.distribution(strata="model")
 
 #return hiv state sizes for the current year
-return.gss.hiv.state.sizes(pop)
+current.year.hiv.state.sizes = return.gss.hiv.state.sizes(pop)
 #return hiv state sizes for the all years
-return.gss(gss$n.hiv.prev)
+all.years.hiv.state.sizes = return.gss(gss$n.hiv.prev)
+
