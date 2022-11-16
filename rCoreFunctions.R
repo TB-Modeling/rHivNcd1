@@ -246,7 +246,7 @@ model.annual.dynamics<-function(sim){
   
   # Record annual statatistics --------
   gss$pop.size[mc$YNOW]=length(pop)
-  gss$n.hiv.prev[,,,as.character(mc$CYNOW)]= return.gss.hiv.state.sizes(pop)
+  gss$n.hiv.prev[,,,mc$YNOW]= return.gss.hiv.state.sizes(pop)
   
   # END OF YEAR----
   #'@MS: for now, we let the TNOW increase over time and use it to record the event times for agents
