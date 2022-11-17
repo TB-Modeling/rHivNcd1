@@ -102,17 +102,17 @@ plot.hiv.distribution = function(hiv.positive.population.only=T,
         plot = ggplot() + 
           geom_line(data=df.for.plot, aes(x = year, y = value ,color=model)) + 
           facet_wrap(~hiv.status, scales = "free_y") + 
-          ylim(0,1)
+          ylim(0,NA)
       } else if(strata=="age"){
         plot = ggplot() + 
           geom_line(data=df.for.plot, aes(x = year, y = value ,color=model)) + 
           facet_wrap(~hiv.status+age, scales = "free_y") + 
-          ylim(0,1)
+          ylim(0,NA)
       } else if(strata=="sex"){
         plot = ggplot() + 
           geom_line(data=df.for.plot, aes(x = year, y = value ,color=model)) + 
           facet_wrap(~hiv.status+sex, scales = "free_y") + 
-          ylim(0,1)
+          ylim(0,NA)
       }
       
       # BAR PLOTS # 
@@ -141,17 +141,17 @@ plot.hiv.distribution = function(hiv.positive.population.only=T,
         plot = ggplot() + 
           geom_line(data=df.for.plot, aes(x = year, y = value)) + 
           facet_wrap(~hiv.status, scales = "free_y") + 
-          ylim(0,1)
+          ylim(0,NA)
       } else if(strata=="age"){
         plot = ggplot() + 
           geom_line(data=df.for.plot, aes(x = year, y = value)) + 
           facet_wrap(~hiv.status+age, scales = "free_y") + 
-          ylim(0,1)
+          ylim(0,NA)
       } else if(strata=="sex"){
         plot = ggplot() + 
           geom_line(data=df.for.plot, aes(x = year, y = value)) + 
           facet_wrap(~hiv.status+sex, scales = "free_y") + 
-          ylim(0,1)
+          ylim(0,NA)
       }
       
       # BAR PLOTS # 
@@ -248,24 +248,27 @@ print.plot.only = capture.output({
 
 # can cycle through plots 1-12 here, suppresses gss output 
 
-# Line plots
-# HIV positive population only 
-print(plot1) #total
-print(plot2) #sex
-print(plot3) #age
-# Including HIV negative 
-print(plot4) #total
-print(plot5) #sex
-print(plot6) #age
+if(1==2){
+  # Line plots
+  # HIV positive population only 
+  print(plot1) #total
+  print(plot2) #sex
+  print(plot3) #age
+  # Including HIV negative 
+  print(plot4) #total
+  print(plot5) #sex
+  print(plot6) #age
+  
+  #Bar plots - less helpful for comparing 
+  # HIV positive population only 
+  print(plot7) #total
+  print(plot8) #sex
+  print(plot9) #age
+  # Including HIV negative 
+  print(plot10) #total
+  print(plot11) #sex
+  print(plot12) #age
+}
 
-#Bar plots - less helpful for comparing 
-# HIV positive population only 
-print(plot7) #total
-print(plot8) #sex
-print(plot9) #age
-# Including HIV negative 
-print(plot10) #total
-print(plot11) #sex
-print(plot12) #age
 
 
