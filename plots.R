@@ -1,9 +1,9 @@
 library(ggplot2)
 
-plot.hiv.distribution = function(hiv.positive.population.only=T,
-                                 compare.models=T,
-                                 strata="total",
-                                 graph.type="line",
+plot.hiv.distribution = function(hiv.positive.population.only=T, # T removes HIV negative population from plots; F keeps them in
+                                 compare.models=T, # T compares between HIV and NCD models (F actually doesn't work right now)
+                                 strata="total", # total, age, or sex
+                                 graph.type="line", # line (easier to compare between models) or bar
                                  years=as.character(c(2015:2030))){
   
   
