@@ -96,6 +96,25 @@ model.annual.dynamics<-function(sim){
   cat("Beginning the year ... ",mc$CYNOW,"\n")
   
   {
+    #'@PK - I added HIV and non-HIV mortality here (1)
+    ##Probability of HIV mortality--------
+    n.hiv.pos = apply(hiv.output.for.ncd$population[as.character(mc$CYNOW-1),-1,,],c(2:3),sum) # extract all but hiv.negative, sum over hiv states
+    target.hiv.mort = hiv.output.for.ncd$hiv.mortality[as.character(mc$CYNOW),,] # pull out current year; dimensions are year, age, sex
+    prob.hiv.mort=target.hiv.mort/n.hiv.pos
+    if(sum(prob.hiv.mort>1)>1)
+      stop(paste("Error: probability of prob.hiv.mort >1 in year ",mc$CYNOW))
+    prob.hiv.mort[prob.hiv.mort==Inf]<-0
+    prob.hiv.mort<-prob.hiv.mort/mc$ANNUAL.TIMESTEPS
+    
+    ##Probability of general mortality--------
+    n.pop = apply(hiv.output.for.ncd$population[as.character(mc$CYNOW-1),,,],c(2:3),sum) # extract all population, sum over hiv states
+    target.general.mort = hiv.output.for.ncd$non.hiv.mortality[as.character(mc$CYNOW),,] # pull out current year; dimensions are year, age, sex
+    prob.general.mort=target.general.mort/n.pop
+    if(sum(prob.general.mort>1)>1)
+      stop(paste("Error: probability of prob.general.mort >1 in year ",mc$CYNOW))
+    prob.general.mort[prob.general.mort==Inf]<-0
+    prob.general.mort<-prob.general.mort/mc$ANNUAL.TIMESTEPS
+    
     ##Probability of engagement--------
     prob.eng=target.probabilities$prob.eng[as.character(mc$CYNOW),,]
     if(sum(prob.eng>1)>1)     
@@ -121,7 +140,8 @@ model.annual.dynamics<-function(sim){
     n.hiv.neg = hiv.output.for.ncd$population[as.character(mc$CYNOW-1),"hiv_negative",,]
     target.inc = hiv.output.for.ncd$incidence[as.character(mc$CYNOW),,] # pull out current year; dimensions are year, age, sex
     prob.inc=target.inc/n.hiv.neg
-    if(sum(prob.inc>1)>1)     stop(paste("Error: probability of prob.inc >1 in year ",mc$CYNOW))
+    if(sum(prob.inc>1)>1)
+      stop(paste("Error: probability of prob.inc >1 in year ",mc$CYNOW))
     prob.inc[prob.inc==Inf]<-0
     prob.inc<-prob.inc/mc$ANNUAL.TIMESTEPS
   }
@@ -161,6 +181,27 @@ model.annual.dynamics<-function(sim){
               stop(paste("Error: Person ",x," hivState is ",p$hivState," and it didnt meet anuy criteria"))
             }}}}
     })
+    
+    # MORTALITY
+    #'@PK - I added HIV and non-HIV mortality here (2)
+    lapply(c(1:n),function(x){
+      p=pop[[x]] 
+      
+      # HIV MORTALITY
+      if(p$hivState!=mc$HIV.NEG){ # all HIV positive
+        p.prob = prob.hiv.mort[p$agegroup,p$sex]
+        if(runif(1)<p.prob)
+          p$bMarkedDead=T
+      }
+      
+      # GENERAL MORTALITY 
+      #'@PK - no if statement here since this is applied to all agents, correct?
+      p.prob = prob.general.mort[p$agegroup,p$sex]
+      if(runif(1)<p.prob)
+        p$bMarkedDead=T
+        
+    })
+    
     print(paste("Timestep: ",mc$TNOW," ---"))
     # Model marked events and record statistics ----
     n.inc=0
