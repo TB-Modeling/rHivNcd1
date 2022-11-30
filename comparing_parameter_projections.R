@@ -4,15 +4,28 @@ years = as.character(c(2015:2030))
 prob.diag.estimated = hiv.output.for.ncd$diagnosis[years,,]/(hiv.output.for.ncd$diagnosis[years,,] + hiv.output.for.ncd$population[years,"undiagnosed",,])
 prob.diag.from.params = target.probabilities$prob.diag[years,,]
 
+
+
 prob.diag.estimated/prob.diag.from.params
 
 avg.estimated.diag = apply(prob.diag.estimated,1,mean)
 avg.from.params.diag = apply(prob.diag.from.params,1,mean)
 
+
 # compare average probability of diagnosis from estimated method versus from parameters
 qplot(c(2015:2030,2015:2030),c(avg.estimated.diag,avg.from.params.diag),
       color=rep(c("est","params"),each=length(avg.estimated.diag)),geom="line") + ylim(0,NA)
 
+
+# comparing rates instead
+diag.rate.from.params = -log(1-prob.diag.from.params)
+diag.rate.estimated = hiv.output.for.ncd$diagnosis[years,,]/(hiv.output.for.ncd$population[years,"undiagnosed",,])
+
+avg.estimated.diag.rate = apply(diag.rate.estimated,1,mean)
+avg.from.params.diag.rate = apply(diag.rate.from.params,1,mean)
+
+qplot(c(2015:2030,2015:2030),c(avg.estimated.diag.rate,avg.from.params.diag.rate),
+      color=rep(c("est","params"),each=length(avg.estimated.diag)),geom="line") + ylim(0,NA)
 
 # compare engagement probability
 prob.eng.estimated = hiv.output.for.ncd$engagement[years,,]/(hiv.output.for.ncd$engagement[years,,] + hiv.output.for.ncd$population[years,"diagnosed_unengaged",,])
