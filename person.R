@@ -50,11 +50,12 @@ Person<-R6Class("Person",
         tNcdscreened=F,
         ################################
         #define public functions here:
-        initialize=function(id=NA,sex=NA,age=NA,tborn=0,ncdState=NA,tDiabInc=NA,tHypInc=NA){
+        initialize=function(id=NA,sex=NA,age=NA,tborn=0,hivState=NA,ncdState=NA,tDiabInc=NA,tHypInc=NA){
           self$id<-id
           self$sex<-sex
           self$age<-age
           self$tborn<-tborn
+          self$hivState<-hivState
           self$ncdState<-ncdState
           self$tDiabInc<-tDiabInc
           self$tHypInc<-tHypInc

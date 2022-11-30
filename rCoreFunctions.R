@@ -96,7 +96,6 @@ model.annual.dynamics<-function(sim){
   cat("Beginning the year ... ",mc$CYNOW,"\n")
   
   {
-    #'@PK - I added HIV and non-HIV mortality here (1)
     ##Probability of HIV mortality--------
     n.hiv.pos = apply(hiv.output.for.ncd$population[as.character(mc$CYNOW-1),-1,,],c(2:3),sum) # extract all but hiv.negative, sum over hiv states
     target.hiv.mort = hiv.output.for.ncd$hiv.mortality[as.character(mc$CYNOW),,] # pull out current year; dimensions are year, age, sex
@@ -183,7 +182,6 @@ model.annual.dynamics<-function(sim){
     })
     
     # MORTALITY
-    #'@PK - I added HIV and non-HIV mortality here (2)
     lapply(c(1:n),function(x){
       p=pop[[x]] 
       
@@ -195,7 +193,6 @@ model.annual.dynamics<-function(sim){
       }
       
       # GENERAL MORTALITY 
-      #'@PK - no if statement here since this is applied to all agents, correct?
       p.prob = prob.general.mort[p$agegroup,p$sex]
       if(runif(1)<p.prob)
         p$bMarkedDead=T
@@ -279,7 +276,8 @@ model.annual.dynamics<-function(sim){
     vIds = c((mc$lastID+1): (mc$lastID+n.births))
     mc$lastID=mc$lastID+n.births
     vSexes = sample(c(mc$MALE,mc$FEMALE),n.births,prob = c(.5,.5),replace = T)
-    pop1 = (mapply(Person$new, vIds,vSexes,0,mc$TNOW,mc$NCD.NEG)) #'@JP: do we need to delete pop1 and open memory?
+    pop1 = (mapply(Person$new, vIds,vSexes,0,mc$TNOW,mc$HIV.NEG,mc$NCD.NEG)) #'@JP: do we need to delete pop1 and open memory?
+    #'@MS: in line above where mc$HIV.NEG is, need to decide their HIV state - two separate loops for HIV negative births and then HIV positive births
     pop<-c(pop,pop1)
     #
     gss$n.births[mc$YNOW]=n.births
