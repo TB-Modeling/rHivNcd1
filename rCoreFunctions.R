@@ -1,16 +1,59 @@
 #
 #  R HIVNCD 2022
-#  R Core functions
+#  rCoreFunctions.R class
 #  
 #####################################
-print("Reading R Core Functions... ")
+print("Sourcing rCoreFunctions.R ... ")
+
+
+# a general function to return distributions
+print("return.pop.distribution")
+return.pop.distribution<-function(var, # options: sex, agegroup, hiv, ncd
+                    type="freq" #options: freq (default), prop 
+                    ){
+  
+  if(var=="sex"){
+    v=c(1:mc$DIM.SEX)
+    res<-unlist(lapply(pop,function(x) {return (x$sex)}))
+    res=lapply(v,function(x){return(length(res[res==v[x]]))})
+    names(res)=mc$DIM.NAMES.SEX
+  }
+  if(var=="agegroup"){
+    v=c(1:mc$DIM.AGE)
+    res<-unlist(lapply(pop,function(x) {return (x$agegroup)}))
+    res=lapply(v,function(x){return(length(res[res==v[x]]))})
+    names(res)=mc$DIM.NAMES.AGE
+  }
+  if(var=="hiv"){
+    v=c(1:mc$DIM.HIV)
+    res<-unlist(lapply(pop,function(x) {return (x$hivState)}))
+    res=lapply(v,function(x){return(length(res[res==v[x]]))})
+    names(res)=mc$DIM.NAMES.HIV
+  }
+  if(var=="ncd"){
+    v=c(1:mc$DIM.NCD)
+    res<-unlist(lapply(pop,function(x) {return (x$ncdState)}))
+    res=lapply(v,function(x){return(length(res[res==v[x]]))})
+    names(res)=mc$DIM.NAMES.NCD
+  }
+  if(var=="hiv.ncd"){
+    v=c(1: (mc$DIM.HIV*mc$DIM.NCD))
+    res<-unlist(lapply(pop,function(x) {return (c(x$hivState*x$ncdState))}))
+    res=lapply(v,function(x){return(length(res[res==v[x]]))})
+    names(res)=paste(unlist(lapply(mc$DIM.NAMES.HIV,rep,mc$DIM.NCD)) ,"/",mc$DIM.NAMES.NCD)
+  }
+  ##
+  if(type=="freq") {return (unlist(res))}
+  if(type=="prop") {return (unlist(res)/sum(unlist(res)) )}
+}
+
 
 #creates the initial population
 print("create.initial.population")
 create.initial.population = function(n=0){
   cat("Generating Population in year=",mc$CYNOW,"\n")
   sim.pop = read.csv("data/stepSimPop2015.csv")
-  
+  # sim.pop[1,]
   sim.pop$age[sim.pop$age==0] = 0.5 #we need this so that the first agegroups is set to 1
   sim.pop$age[sim.pop$age>85] = 85 
   sim.pop$sex[sim.pop$sex=="MALE"] = mc$MALE 
@@ -26,9 +69,17 @@ create.initial.population = function(n=0){
   vIds = sim.pop$X
   vAges = sim.pop$age
   vSexes = as.numeric(sim.pop$sex)
-  vncdState = sim.pop$ncd
+  vNcdState = sim.pop$ncd
+  vHivState = rep(mc$HIV.NEG,n)
+  vtDiabInc= c(sim.pop$ncd%in%c(mc$NCD.DIAB,mc$NCD.DIAB_HYP))*-1
+  vtHypInc= c(sim.pop$ncd%in%c(mc$NCD.HYP,mc$NCD.DIAB_HYP))*-1
   
-  pop = (mapply(Person$new, vIds,vSexes,vAges,mc$TNOW,vncdState))
+  pop = (mapply(Person$new, vIds,vSexes,vAges,mc$TNOW,
+                vHivState,
+                vNcdState,
+                vtDiabInc,
+                vtHypInc
+                ))
   pop = unlist(pop)
   
   cat(length(vIds),"persons generated.","\n")
@@ -85,7 +136,7 @@ set.initial.hiv.status = function(personID #id of a selected population member
 }
 
 # model one simulated year
-cat("model.annual.dynamics")
+print("model.annual.dynamics")
 model.annual.dynamics<-function(sim){
   pop=sim$pop
   mc=sim$mc
@@ -96,7 +147,7 @@ model.annual.dynamics<-function(sim){
   cat("Beginning the year ... ",mc$CYNOW,"\n")
   
   {
-    ##Probability of HIV mortality--------
+    ##Probability of HIV mortality (estimated via # events/ elig pop) --------
     n.hiv.pos = apply(hiv.output.for.ncd$population[as.character(mc$CYNOW-1),-1,,],c(2:3),sum) # extract all but hiv.negative, sum over hiv states
     target.hiv.mort = hiv.output.for.ncd$hiv.mortality[as.character(mc$CYNOW),,] # pull out current year; dimensions are year, age, sex
     prob.hiv.mort=target.hiv.mort/n.hiv.pos
@@ -105,7 +156,7 @@ model.annual.dynamics<-function(sim){
     prob.hiv.mort[prob.hiv.mort==Inf]<-0
     prob.hiv.mort<-prob.hiv.mort/mc$ANNUAL.TIMESTEPS
     
-    ##Probability of general mortality--------
+    ##Probability of general mortality (estimated via # events/ elig pop) --------
     n.pop = apply(hiv.output.for.ncd$population[as.character(mc$CYNOW-1),,,],c(2:3),sum) # extract all population, sum over hiv states
     target.general.mort = hiv.output.for.ncd$non.hiv.mortality[as.character(mc$CYNOW),,] # pull out current year; dimensions are year, age, sex
     prob.general.mort=target.general.mort/n.pop
@@ -114,28 +165,7 @@ model.annual.dynamics<-function(sim){
     prob.general.mort[prob.general.mort==Inf]<-0
     prob.general.mort<-prob.general.mort/mc$ANNUAL.TIMESTEPS
     
-    ##Probability of engagement--------
-    prob.eng=target.probabilities$prob.eng[as.character(mc$CYNOW),,]
-    if(sum(prob.eng>1)>1)     
-      stop(paste("Error: probability of engagement >1 in year ",mc$CYNOW))
-    prob.eng[prob.eng==Inf]<-0
-    prob.eng<-prob.eng/mc$ANNUAL.TIMESTEPS
-    
-    ##Probability of disengagement--------
-    prob.diseng=target.probabilities$prob.diseng[as.character(mc$CYNOW),,]
-    if(sum(prob.diseng>1)>1)     
-      stop(paste("Error: probability of disengagement >1 in year ",mc$CYNOW))
-    prob.diseng[prob.diseng==Inf]<-0
-    prob.diseng<-prob.diseng/mc$ANNUAL.TIMESTEPS
-    
-    ##Probability of diagnosis--------
-    prob.diag = target.probabilities$prob.diag[as.character(mc$CYNOW),,]
-    if(sum(prob.diag>1)>1)     
-      stop(paste("Error: probability of prob.diag >1 in year ",mc$CYNOW))
-    prob.diag[prob.diag==Inf]<-0
-    prob.diag<-prob.diag/mc$ANNUAL.TIMESTEPS
-    
-    ##Probability of incidence--------
+    ##Probability of incidence (estimated via # events/ elig pop) --------
     n.hiv.neg = hiv.output.for.ncd$population[as.character(mc$CYNOW-1),"hiv_negative",,]
     target.inc = hiv.output.for.ncd$incidence[as.character(mc$CYNOW),,] # pull out current year; dimensions are year, age, sex
     prob.inc=target.inc/n.hiv.neg
@@ -143,6 +173,28 @@ model.annual.dynamics<-function(sim){
       stop(paste("Error: probability of prob.inc >1 in year ",mc$CYNOW))
     prob.inc[prob.inc==Inf]<-0
     prob.inc<-prob.inc/mc$ANNUAL.TIMESTEPS
+    
+    ##Probability of engagement (direct input to HIV model) --------
+    prob.eng=target.probabilities$prob.eng[as.character(mc$CYNOW),,]
+    if(sum(prob.eng>1)>1)     
+      stop(paste("Error: probability of engagement >1 in year ",mc$CYNOW))
+    prob.eng[prob.eng==Inf]<-0
+    prob.eng<-prob.eng/mc$ANNUAL.TIMESTEPS
+    
+    ##Probability of disengagement (direct input to HIV model) --------
+    prob.diseng=target.probabilities$prob.diseng[as.character(mc$CYNOW),,]
+    if(sum(prob.diseng>1)>1)     
+      stop(paste("Error: probability of disengagement >1 in year ",mc$CYNOW))
+    prob.diseng[prob.diseng==Inf]<-0
+    prob.diseng<-prob.diseng/mc$ANNUAL.TIMESTEPS
+    
+    ##Probability of diagnosis (direct input to HIV model) --------
+    prob.diag = target.probabilities$prob.diag[as.character(mc$CYNOW),,]
+    if(sum(prob.diag>1)>1)     
+      stop(paste("Error: probability of prob.diag >1 in year ",mc$CYNOW))
+    prob.diag[prob.diag==Inf]<-0
+    prob.diag<-prob.diag/mc$ANNUAL.TIMESTEPS
+    
   }
   #----------------
   # MODLING TIMESTEP DYNAMICS -----
@@ -150,9 +202,10 @@ model.annual.dynamics<-function(sim){
     mc$TNOW=mc$TNOW+1
     n=length(pop)
     # Evaluate prob of events ----
-    lapply(c(1:n),function(x){
+    # Probability of events and mortality are evaluated simultaneously and a person can be marked for both
+    invisible(lapply(c(1:n),function(x){
       p=pop[[x]] 
-      
+      #1-ENGAGEMENT
       if (p$hivState == mc$HIV.UNENG) {
         p.prob= prob.eng[p$agegroup,p$sex]
         if (runif(1) < p.prob)
@@ -179,32 +232,33 @@ model.annual.dynamics<-function(sim){
               browser()
               stop(paste("Error: Person ",x," hivState is ",p$hivState," and it didnt meet anuy criteria"))
             }}}}
-    })
-    
-    # MORTALITY
-    lapply(c(1:n),function(x){
-      p=pop[[x]] 
       
       # HIV MORTALITY
       if(p$hivState!=mc$HIV.NEG){ # all HIV positive
         p.prob = prob.hiv.mort[p$agegroup,p$sex]
         if(runif(1)<p.prob)
-          p$bMarkedDead=T
+          p$bMarkedDead.hiv=T
       }
       
       # GENERAL MORTALITY 
       p.prob = prob.general.mort[p$agegroup,p$sex]
       if(runif(1)<p.prob)
-        p$bMarkedDead=T
-        
-    })
-    
+        p$bMarkedDead.gen=T
+      
+      }))
+    ################################################################################################
+    # modeling the events
+    # here the order in which the events are modeled will matter for collecting statistics
+    # assuming that HIV.cascade.events take place first, then mortality, aging and births 
     print(paste("Timestep: ",mc$TNOW," ---"))
     # Model marked events and record statistics ----
     n.inc=0
     n.diag=0
     n.eng=0
     n.uneng=0
+    
+    n=length(pop)
+   # 1- Modeling Hiv cascade events  
     lapply(c(1:n),function(x){
       p=pop[[x]] 
       if (p$bMarkedHivInc+p$bMarkedHivDiag+p$bMarkedHivUneng+p$bMarkedHivEng >1){
@@ -213,59 +267,64 @@ model.annual.dynamics<-function(sim){
       }
       #
       if(p$bMarkedHivInc==TRUE) {
-        # browser()
         p$hiv.getInfected(mc$TNOW)
         gss$n.hiv.inc[p$agegroup,p$sex,as.character(mc$CYNOW)] = gss$n.hiv.inc[p$agegroup,p$sex,as.character(mc$CYNOW)]+1
         n.inc<<-n.inc+1
       }
       if(p$bMarkedHivDiag==TRUE) {
-        # browser()
         p$hiv.getDiagnosed(mc$TNOW)
         gss$n.hiv.diag[p$agegroup,p$sex,as.character(mc$CYNOW)] = gss$n.hiv.diag[p$agegroup,p$sex,as.character(mc$CYNOW)]+1
         n.diag<<-n.diag+1
       }
       if(p$bMarkedHivUneng==TRUE) {
-        # browser()
         p$hiv.getUnengage(mc$TNOW)
         gss$n.hiv.uneng[p$agegroup,p$sex,as.character(mc$CYNOW)] = gss$n.hiv.uneng[p$agegroup,p$sex,as.character(mc$CYNOW)]+1
         n.eng<<-n.eng+1
       }
       if(p$bMarkedHivEng==TRUE) {
-        # browser()
         p$hiv.getEngaged(mc$TNOW)
         gss$n.hiv.eng[p$agegroup,p$sex,as.character(mc$CYNOW)] = gss$n.hiv.eng[p$agegroup,p$sex,as.character(mc$CYNOW)]+1
         n.uneng<<-n.uneng+1
       }
     })
     print(paste("Total incidence= ",n.inc," diag= ",n.diag," eng= ",n.eng," uneng= ",n.uneng))
-    
   }
-  ################################################################
-  # MODEL AGING --------
-  # barplot(cReturnAgDist(pop),names.arg = mc$DIM.NAMES.AGE,main=paste("Age distribution year=",mc$CYNOW))
-  # print(cReturnAgDist(pop))
-  # browser()
-  invisible(lapply(pop,function(x){x$incAge}))
+  # 2- Modeling Hiv and non-HIV deaths
+  death.status=unlist(invisible(lapply(c(1:n),function(x){
+    return(pop[[x]]$bMarkedDead.hiv)  })))
+  n.deaths.hiv<-sum(death.status)
+  gss$n.deaths.hiv[mc$YNOW]=n.deaths.hiv
+    pop<-pop[!death.status] #only keep those who are alive
   
-  ## MODEL DEATHS --------
-  ### Aging out:
+    death.status=unlist(invisible(lapply(c(1:n),function(x){
+      return(pop[[x]]$bMarkedDead.gen)  })))
+    n.deaths.gen<-sum(death.status)
+    gss$n.deaths.gen[mc$YNOW]=n.deaths.gen
+    pop<-pop[!death.status] #only keep those who are alive
+    
+    cat(n.deaths.hiv," persons died of hiv and",n.deaths.gen," died of non-hiv causes ","\n")
+  
+    ################################################################
+  # MODEL AGING --------
+  invisible(lapply(pop,function(x){x$incAge}))
+      # Aging out:
   n.ageout=sum(unlist(invisible(lapply(pop,function(x){
     if(x$age>mc$MAX.AGE) {
-      x$bMarkedDead=T;
+      x$bMarkedDead.ageout=T;
       return(1)
     }}))))
   cat(n.ageout," persons are aging out","\n")
-  #Kill those dead
-  npop<-length(pop)
-  death.status=unlist(invisible(lapply(c(1:npop),function(x){
-    return(pop[[x]]$bMarkedDead)
+
+    #Kill those dead
+  n<-length(pop)
+  death.status=unlist(invisible(lapply(c(1:n),function(x){
+    return(pop[[x]]$bMarkedDead.ageout)
   })))
-  n.deaths<-sum(death.status)
-  gss$n.deaths[mc$YNOW]=n.deaths
-  cat(n.deaths," persons are marked dead","\n")
-  #only keep those who are alive
-  pop<-pop[!death.status] #'@JP: should we delete these dead people?
-  
+  n.deaths.ageout<-sum(death.status)
+  gss$n.deaths.ageout[mc$YNOW]=n.deaths
+  cat(n.deaths.ageout," persons are marked dead","\n")
+  pop<-pop[!death.status]   #only keep those who are alive #'@JP: should we delete people directly?
+
   cat("current pop size is ",length(pop),"\n")
   ##
   ## MODEL BIRTHS --------

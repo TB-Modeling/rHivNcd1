@@ -1,3 +1,10 @@
+#
+#  R HIVNCD 2022
+#  Plots
+#  
+#####################################
+print("Sourcing Plot.R ... ")
+
 library(ggplot2)
 
 plot.hiv.distribution = function(hiv.positive.population.only=T, # T removes HIV negative population from plots; F keeps them in

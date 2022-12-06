@@ -1,16 +1,21 @@
 #
 #  R HIVNCD 2022
-#  Stat class
+#  Stat.R
 #  
 #####################################
-print("Reading Stats... ")
+print("Sourcing Stat.R ... ")
+
+
 #' @MS: add more arrays to keep track of HIV and NCD sizes
 
 #global statistics
 DIM.N=mc$END.YEAR-mc$INITIAL.YEAR+1
 DIM.NAMES.N=c(mc$INITIAL.YEAR:mc$END.YEAR)
 
+#temporary epty arrays to initialize stats
+#1D
 v1temp=rep(0,DIM.N)
+#3D
 v3temp=array(rep(0,mc$DIM.AGE*mc$DIM.SEX*DIM.N),  
              dim = c(mc$DIM.AGE,
                      mc$DIM.SEX,
@@ -18,8 +23,7 @@ v3temp=array(rep(0,mc$DIM.AGE*mc$DIM.SEX*DIM.N),
              dimnames=list(mc$DIM.NAMES.AGE,
                            mc$DIM.NAMES.SEX,
                            DIM.NAMES.N))
-
-
+#4D
 v4temp=array(rep(0,mc$DIM.AGE*mc$DIM.SEX*mc$DIM.HIV*DIM.N),  
              dim = c(mc$DIM.AGE,
                      mc$DIM.SEX,
@@ -34,7 +38,10 @@ gss<-list(
   #1D arrays for entire population over time
   pop.size=v1temp,
   n.births=v1temp,
-  n.deaths=v1temp,
+  n.deaths.hiv=v1temp,
+  n.deaths.cvd=v1temp,
+  n.deaths.ageout=v1temp,
+  n.deaths.gen=v1temp,
   
   #3D arrays by age, sex over time
   n.hiv.inc=v3temp,
@@ -48,7 +55,10 @@ gss<-list(
 reset.gss<-function(){
   gss$pop.size=v1temp
   gss$n.births=v1temp
-  gss$n.deaths=v1temp
+  gss$n.deaths.hiv=v1temp
+  gss$n.deaths.cvd=v1temp
+  gss$n.deaths.ageout=v1temp
+  gss$n.deaths.gen=v1temp
   
   gss$n.hiv.inc=v3temp
   gss$n.hiv.diag=v3temp

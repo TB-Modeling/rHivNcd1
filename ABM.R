@@ -6,72 +6,67 @@
 # Rcpp for C++ integration
 library(Rcpp)
 
-#Initial Setup for random seed
-set.seed(1)
+##SOURCE R FILES##   #' @PK: add a wrapper to enclose all these later on
 
-##SOURCE R FILES##
+source("globalVariables.R")
 source("person.R")
 source("stats.R")
+source("driver.R")
 source("rCoreFunctions.R")
 source("rHelperFunctions.R")
-source("globalVariables.R")
-# source("hivInputs.R")
+# source("plots.R") @MS: generates an error
 
 
 ##COMPILE THE Rcpp##
-cat("Compiling C++ ... ")
-sourceCpp("cHelperFunctions.cpp")
-# sourceCpp("cCoreFunctions.cpp")
-cat("Rcpp code compiled \n")
+# cat("Compiling C++ ... ")
+# sourceCpp("cHelperFunctions.cpp")
+# # sourceCpp("cCoreFunctions.cpp")
+# cat("Rcpp code compiled \n")
 
-##LOAD DATA ##
-# load hiv sim workspace with: (1) sim object, (2) data manager, (3) extracted data (hiv.output.for.ncd)
-load('data/hiv_sim.RData')
-# distribution of HIV states for each age/sex category
-hivPrev2015 = hiv.output.for.ncd$population["2015",,,]
-dimnames(hivPrev2015)[[3]] = c("FEMALE","MALE")
-cat("HIV data loaded")
+#run the model 
+run.simulation(rep=1)
 
 ##########################################################################
 # Set global variables 
 {
-  reset.gss()
+  set.seed(1)
   
+  reset.gss()
   mc$TNOW=0
   mc$YNOW=1
   mc$CYNOW=mc$INITIAL.YEAR
   mc$ANNUAL.TIMESTEPS=12 #modeling monthly dynamics
-  
   pop=NULL
+  
   ##############
   #Create initial population 
   cat("Generating Population ... ")
   pop<-create.initial.population(n = mc$POP.SIZE)
-  # pop<-create.initial.population(n = 100)
   
   cat("initial states: ")
-  array(cReturnHivStates(pop),dimnames = list(mc$DIM.NAMES.HIV))
-  array(cReturnNcdStates(pop),dimnames = list(mc$DIM.NAMES.NCD))
-  array(unlist(cReturnHivNcdStates(pop)),dim = c(4,4),dimnames = list(
-    mc$DIM.NAMES.NCD,
-    mc$DIM.NAMES.HIV))
-  barplot(cReturnAgDist(pop),names.arg = mc$DIM.NAMES.AGE,main=paste("Age distribution year=",mc$CYNOW))
+  return.pop.distribution(var = "sex")
+  return.pop.distribution(var = "agegroup")
+  return.pop.distribution(var = "hiv")
+  return.pop.distribution(var = "ncd")
+  
   ##############
   # Set initial HIV status in 2015
   #'@JP: this is super slow, how can we rewrite to be faster?
   invisible(mapply(set.initial.hiv.status,c(1:length(pop)))) 
-  array(unlist(cReturnHivNcdStates(pop)),dim = c(4,4),dimnames = list(
-    mc$DIM.NAMES.NCD,
-    mc$DIM.NAMES.HIV))
-}
-#######################################################
+  return.pop.distribution(var = "hiv")
+  return.pop.distribution(var = "hiv.ncd")
+
+  #######################################################
 ## RUN:
 #initial sim obj
 sim<-list(pop=pop,
           mc=mc,
           gss=gss)
 
-
+  # barplot(cReturnAgDist(pop),names.arg = mc$DIM.NAMES.AGE,main=paste("Age distribution year=",mc$CYNOW))
+  # print(cReturnAgDist(pop))
+  # browser()
+  
 for(i in c(mc$INITIAL.YEAR:mc$END.YEAR)){
   
   sim<-model.annual.dynamics(sim)

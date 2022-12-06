@@ -1,9 +1,9 @@
 #
 #  R HIVNCD 2022
-#  Variable definitions
+#  GlobalVariables.R
 #  
 #####################################
-print("Reading global variables... ")
+print("Sourcing GlobalVariables.R ... ")
 
 
 mc<-list(
@@ -60,3 +60,12 @@ mc<-list(
   DIM.NAMES.HIV=c("HIV.NEG","HIV.UNDIAG","HIV.UNENG", "HIV.ENG"),
   DIM.NAMES.NCD=c("NCD.NEG","NCD.DIAB","NCD.HYP","NCD.DIAB_HYP")
 )
+
+{#load hiv sim workspace with: (1) sim object, (2) data manager, (3) extracted data (hiv.output.for.ncd)
+load('data/hiv_sim.RData')
+#distribution of HIV states for each age/sex category
+hivPrev2015 = hiv.output.for.ncd$population["2015",,,]
+dimnames(hivPrev2015)[[3]] = c("FEMALE","MALE") # @MS: can you change this in the input file and save it again? just want to make sure that we dont have to do this everytime we read the data
+
+cat("Input data loaded \n")
+}
