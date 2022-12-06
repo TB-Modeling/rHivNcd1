@@ -8,7 +8,7 @@
 
 ##SOURCE R FILES##   #' @PK: add a wrapper to enclose all these later on
 rm(list=ls())
-set.seed(1)
+
 
 source("globalVariables.R")
 source("person.R")
@@ -26,9 +26,15 @@ source("rHelperFunctions.R")
 # cat("Rcpp code compiled \n")
 
 #run the model 
-res<-run.simulation(rep=1)
+res<-run.simulation(rep=2)
+sim1<-res[[1]]
+sim2<-res[[2]]
 
-sim<-res[[1]]
+sim1$gss$n.births==sim2$gss$n.births
+
+
+
+
 
 
 #@JP: I wanted to make population accessible t all classes, so I made a null object in globalvariables and filled that when I created the population. 

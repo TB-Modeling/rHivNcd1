@@ -13,7 +13,7 @@ mc<-list(
   AGE.INTERVAL=5,
   MIN.AGE=0,
   MAX.AGE=85,
-  POP.SIZE=1000,
+  POP.SIZE=100,
   #
   #variables
   YNOW=0, #variable showing current year
