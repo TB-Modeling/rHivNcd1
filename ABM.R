@@ -4,9 +4,11 @@
 #  
 #####################################
 # Rcpp for C++ integration
-library(Rcpp)
+# library(Rcpp)
 
 ##SOURCE R FILES##   #' @PK: add a wrapper to enclose all these later on
+rm(list=ls())
+set.seed(1)
 
 source("globalVariables.R")
 source("person.R")
@@ -24,54 +26,10 @@ source("rHelperFunctions.R")
 # cat("Rcpp code compiled \n")
 
 #run the model 
-run.simulation(rep=1)
+res<-run.simulation(rep=1)
 
-##########################################################################
-# Set global variables 
-{
-  set.seed(1)
-  
-  reset.gss()
-  mc$TNOW=0
-  mc$YNOW=1
-  mc$CYNOW=mc$INITIAL.YEAR
-  mc$ANNUAL.TIMESTEPS=12 #modeling monthly dynamics
-  pop=NULL
-  
-  ##############
-  #Create initial population 
-  cat("Generating Population ... ")
-  pop<-create.initial.population(n = mc$POP.SIZE)
-  
-  cat("initial states: ")
-  return.pop.distribution(var = "sex")
-  return.pop.distribution(var = "agegroup")
-  return.pop.distribution(var = "hiv")
-  return.pop.distribution(var = "ncd")
-  
-  ##############
-  # Set initial HIV status in 2015
-  #'@JP: this is super slow, how can we rewrite to be faster?
-  invisible(mapply(set.initial.hiv.status,c(1:length(pop)))) 
-  return.pop.distribution(var = "hiv")
-  return.pop.distribution(var = "hiv.ncd")
-
-  #######################################################
-## RUN:
-#initial sim obj
-sim<-list(pop=pop,
-          mc=mc,
-          gss=gss)
-
-  # barplot(cReturnAgDist(pop),names.arg = mc$DIM.NAMES.AGE,main=paste("Age distribution year=",mc$CYNOW))
-  # print(cReturnAgDist(pop))
-  # browser()
-  
-for(i in c(mc$INITIAL.YEAR:mc$END.YEAR)){
-  
-  sim<-model.annual.dynamics(sim)
-
-}
+sim<-res[[1]]
 
 
-
+#@JP: I wanted to make population accessible t all classes, so I made a null object in globalvariables and filled that when I created the population. 
+#I'm not sure how that may work for the memory management though, specially if we want to rewrite that pop for a new replication.
