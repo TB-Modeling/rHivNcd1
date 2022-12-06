@@ -3,10 +3,10 @@
 #  Person class
 #  
 #####################################
+print("Sourcing Person.R ... ")
 
 # The R6 library has a lightweight class
 library(R6)
-source("globalVariables.R")
 
 # We create class instances with the Agent$new()
 # function, which calls the 'initialize()' function
@@ -44,7 +44,11 @@ Person<-R6Class("Person",
         bMarkedMi=F,
         bMarkedStroke=F,
         
-        bMarkedDead=F,
+        bMarkedDead.hiv=F,
+        bMarkedDead.cvd=F,
+        bMarkedDead.ageout=F,
+        bMarkedDead.gen=F,
+  
         ncdtrtState=NULL,
         bNcdscreened=F,
         tNcdscreened=F,
