@@ -23,8 +23,8 @@ mc<-list(
   ANNUAL.TIMESTEPS=12, #how many timepsteps in a year?
   lastID=0, #global variable to keep track of person's id
   #
-  MALE=1,
-  FEMALE=2,
+  FEMALE=1,
+  MALE=2,
   #
   HIV.NEG=1,
   HIV.UNDIAG=2, #undiagnosed
@@ -54,7 +54,7 @@ mc<-list(
   DIM.AGE=17,
   DIM.HIV=4,
   DIM.NCD=4,
-  DIM.NAMES.SEX=c("MALE","FEMALE"),
+  DIM.NAMES.SEX=c("FEMALE","MALE"),
   DIM.NAMES.AGE=c("0-4","5-9","10-14","15-19", "20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59",
                       "60-64","65-69","70-74","75-79","80-85"),
   DIM.NAMES.HIV=c("HIV.NEG","HIV.UNDIAG","HIV.UNENG", "HIV.ENG"),
