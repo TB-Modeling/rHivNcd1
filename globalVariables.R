@@ -4,16 +4,16 @@
 #  
 #####################################
 print("Sourcing GlobalVariables.R ... ")
-
+pop<-NULL
 
 mc<-list(
   #constants
   INITIAL.YEAR=2015,
-  END.YEAR=2050,
+  END.YEAR=2030,
   AGE.INTERVAL=5,
   MIN.AGE=0,
   MAX.AGE=85,
-  POP.SIZE=1000,
+  POP.SIZE=100,
   #
   #variables
   YNOW=0, #variable showing current year

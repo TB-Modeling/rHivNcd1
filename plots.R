@@ -11,9 +11,10 @@ plot.hiv.distribution = function(hiv.positive.population.only=T, # T removes HIV
                                  compare.models=T, # T compares between HIV and NCD models (F actually doesn't work right now)
                                  strata="total", # total, age, or sex
                                  graph.type="line", # line (easier to compare between models) or bar
-                                 years=as.character(c(2015:2030))){
+                                 years=as.character(c(2015:2030)),
+                                 ylim.from.zero=T){
   
-  
+  # 1- extract the data from HIV model and the NCD model ----------------
   if(hiv.positive.population.only) {
     # HIV model output 
     pop.from.hiv.model = hiv.output.for.ncd$population[years,-1,,]  
@@ -36,39 +37,37 @@ plot.hiv.distribution = function(hiv.positive.population.only=T, # T removes HIV
     hiv.status = mc$DIM.NAMES.HIV
   }
   
-  years = years
+  dimnames(pop.from.hiv.model)
+  dimnames(pop.from.ncd.model) #'@MS: how should we address incosistencies in dimnames?
+ # 2- prepare freq vs proportions for plotting -----------------
+  {
+    years = years
   ages = mc$DIM.NAMES.AGE
-  sexes = c("FEMALE","MALE")
-  
+  sexes = c("FEMALE","MALE") #'@MS: why are you changing the order here? it's not correct for the ncd outputs
   full.dim.names = list(year = years,
                         hiv.status = hiv.status,
                         age = ages,
                         sex = sexes)
-  hiv.dim.names =  full.dim.names[-1]
-  
+  hiv.dim.names =  full.dim.names[-1]  #'@MS: so exluding years?
   
   # HIV model probabilities
   hiv.distr.from.hiv.model = array(0,
                                    dim = sapply(full.dim.names,length),
                                    dimnames = full.dim.names)
-  
-  for(i in 1:length(years)){
+
+    for(i in 1:length(years)){
     hiv.probs.from.hiv.model = 
       sapply(1:length(hiv.dim.names$age), function(age){
         sapply(1:length(hiv.dim.names$sex), function(sex){
           rowSums(pop.from.hiv.model[i,,,],1)/sum(pop.from.hiv.model[i,,,])
         })
       })
-    
     dim(hiv.probs.from.hiv.model) = sapply(hiv.dim.names,length)
-    dimnames(hiv.probs.from.hiv.model) = hiv.dim.names
-    
-    # test
-    # colSums(hiv.probs,1)
+    dimnames(hiv.probs.from.hiv.model) = hiv.dim.names #'@MS: I think that this is incorrect
     
     hiv.distr.from.hiv.model[i,,,] = round(hiv.probs.from.hiv.model,5)
-  }
-  
+    }
+
   # NCD model probabilities
   hiv.distr.from.ncd.model = array(0,
                                    dim = sapply(full.dim.names,length),
@@ -81,16 +80,15 @@ plot.hiv.distribution = function(hiv.positive.population.only=T, # T removes HIV
           rowSums(pop.from.ncd.model[i,,,],1)/sum(pop.from.ncd.model[i,,,])
         })
       })
-    
     dim(hiv.probs.from.ncd.model) = sapply(hiv.dim.names,length)
     dimnames(hiv.probs.from.ncd.model) = hiv.dim.names
     
-    # test
-    # colSums(hiv.probs,1)
-    
     hiv.distr.from.ncd.model[i,,,] = round(hiv.probs.from.ncd.model,5)
   }
+      
+  }
   
+  # prepare data for plotting
   hiv.df.for.plot = reshape2::melt(hiv.distr.from.hiv.model)
   hiv.df.for.plot$model = "hiv"
   
@@ -108,19 +106,17 @@ plot.hiv.distribution = function(hiv.positive.population.only=T, # T removes HIV
       if(strata=="total"){
         plot = ggplot() + 
           geom_line(data=df.for.plot, aes(x = year, y = value ,color=model)) + 
-          facet_wrap(~hiv.status, scales = "free_y") + 
-          ylim(0,NA)
+          facet_wrap(~hiv.status, scales = "free_y") 
       } else if(strata=="age"){
         plot = ggplot() + 
           geom_line(data=df.for.plot, aes(x = year, y = value ,color=model)) + 
-          facet_wrap(~hiv.status+age, scales = "free_y") + 
-          ylim(0,NA)
+          facet_wrap(~hiv.status+age, scales = "free_y") 
       } else if(strata=="sex"){
         plot = ggplot() + 
           geom_line(data=df.for.plot, aes(x = year, y = value ,color=model)) + 
-          facet_wrap(~hiv.status+sex, scales = "free_y") + 
-          ylim(0,NA)
+          facet_wrap(~hiv.status+sex, scales = "free_y")  
       }
+      if (ylim.from.zero==T) plot=plot+ylim(0,NA)
       
       # BAR PLOTS # 
     } else if(graph.type=="bar"){
@@ -141,39 +137,33 @@ plot.hiv.distribution = function(hiv.positive.population.only=T, # T removes HIV
     
     # NOT COMPARING MODELS # 
   } else { 
-    
     # LINE PLOTS # 
     if(graph.type=="line"){
       if(strata=="total"){
         plot = ggplot() + 
           geom_line(data=df.for.plot, aes(x = year, y = value)) + 
-          facet_wrap(~hiv.status, scales = "free_y") + 
-          ylim(0,NA)
+          facet_wrap(~hiv.status, scales = "free_y") 
       } else if(strata=="age"){
         plot = ggplot() + 
           geom_line(data=df.for.plot, aes(x = year, y = value)) + 
-          facet_wrap(~hiv.status+age, scales = "free_y") + 
-          ylim(0,NA)
+          facet_wrap(~hiv.status+age, scales = "free_y")
       } else if(strata=="sex"){
         plot = ggplot() + 
           geom_line(data=df.for.plot, aes(x = year, y = value)) + 
-          facet_wrap(~hiv.status+sex, scales = "free_y") + 
-          ylim(0,NA)
+          facet_wrap(~hiv.status+sex, scales = "free_y")
       }
+      if (ylim.from.zero==T) plot=plot+ylim(0,NA)
       
       # BAR PLOTS # 
     } else if(graph.type=="bar"){
       if(strata=="total"){
-        # total
         plot = ggplot(df.for.plot, aes(fill=hiv.status, x = year, y = value)) + 
           geom_bar(position="fill", stat="identity") 
       } else if(strata=="age"){
-        # age
         plot = ggplot(df.for.plot, aes(fill=hiv.status, x = year, y = value)) + 
           geom_bar(position="fill", stat="identity") + 
           facet_wrap(~age, scales = "free_y")
       } else if(strata=="sex"){
-        # sex
         plot = ggplot(df.for.plot, aes(fill=hiv.status, x = year, y = value)) + 
           geom_bar(position="fill", stat="identity") + 
           facet_wrap(~sex, scales = "free_y")
@@ -183,7 +173,7 @@ plot.hiv.distribution = function(hiv.positive.population.only=T, # T removes HIV
   plot
 }
 
-# don't know how to suppres the return.gss output otherwise 
+# don't know how to supress the return.gss output otherwise 
 print.plot.only = capture.output({
   
   # LINE PLOTS 
@@ -193,6 +183,7 @@ print.plot.only = capture.output({
                                 strata="total",
                                 graph.type="line")
   
+
   plot2 = plot.hiv.distribution(hiv.positive.population.only=T,
                                 compare.models=T,
                                 strata="sex",
