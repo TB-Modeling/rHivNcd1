@@ -22,7 +22,7 @@ extract.data = function(sim,
                             years=years, 
                             keep.dimensions=keep.dimensions)
   
-  if(data.type=="hiv.prevalence")
+  else if(data.type=="hiv.prevalence")
     rv = extract.population(sim,
                             ages=ages,
                             sexes=sexes,
