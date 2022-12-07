@@ -337,9 +337,11 @@ model.annual.dynamics<-function(sim){
   
   ##
   ## MODEL BIRTHS --------
-  #' @PK - added births here; tracking HIV, non-HIV, and combined in gss
   # non-HIV births
-  n.births.non.hiv=target.parameters$non.hiv.births[as.character(mc$CYNOW)]
+  absolute.n.births.non.hiv=target.parameters$non.hiv.births[as.character(mc$CYNOW)] # total non HIV births from HIV model 
+  non.hiv.births.scalar = absolute.n.births.non.hiv/sum(hiv.output.for.ncd$population[as.character(mc$CYNOW),,,]) # scaled to pop size from HIV model
+  n.births.non.hiv = non.hiv.births.scalar*length(pop) # re-scaled to pop size from NCD model
+  
   if(n.births.non.hiv>0){
     cat(n.births.non.hiv," non-HIV newborns are added","\n")
     vIds = c((mc$lastID+1): (mc$lastID+n.births.non.hiv))
@@ -352,9 +354,12 @@ model.annual.dynamics<-function(sim){
   }
   
   # HIV births - putting into undiagnosed for now
-  n.births.hiv=target.parameters$hiv.births[as.character(mc$CYNOW)]
+  absolute.n.births.hiv=target.parameters$hiv.births[as.character(mc$CYNOW)] # total HIV births from HIV model
+  hiv.births.scalar = absolute.n.births.hiv/sum(hiv.output.for.ncd$population[as.character(mc$CYNOW),,,]) # scaled to pop size from HIV model
+  n.births.hiv = hiv.births.scalar*length(pop) # re-scaled to pop size from NCD mode
+  
   if(n.births.hiv>0){
-    cat(n.births.hiv," newborns are added","\n")
+    cat(n.births.hiv," HIV newborns are added","\n")
     vIds = c((mc$lastID+1): (mc$lastID+n.births.hiv))
     mc$lastID=mc$lastID+n.births.hiv
     vSexes = sample(c(mc$MALE,mc$FEMALE),n.births.hiv,prob = c(.5,.5),replace = T)
