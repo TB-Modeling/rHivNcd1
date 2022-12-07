@@ -14,25 +14,27 @@ DIM.NAMES.N=c(mc$INITIAL.YEAR:mc$END.YEAR)
 
 #temporary epty arrays to initialize stats
 #1D
-v1temp=rep(0,DIM.N)
+v1temp=rep(0,DIM.N,
+           dim=DIM.N,
+           dimnames = list(year=DIM.NAMES.N))
 #3D
 v3temp=array(rep(0,mc$DIM.AGE*mc$DIM.SEX*DIM.N),  
              dim = c(mc$DIM.AGE,
                      mc$DIM.SEX,
                      DIM.N),
-             dimnames=list(mc$DIM.NAMES.AGE,
-                           mc$DIM.NAMES.SEX,
-                           DIM.NAMES.N))
+             dimnames=list(age = mc$DIM.NAMES.AGE,
+                           sex = mc$DIM.NAMES.SEX,
+                           year = DIM.NAMES.N))
 #4D
 v4temp=array(rep(0,mc$DIM.AGE*mc$DIM.SEX*mc$DIM.HIV*DIM.N),  
              dim = c(mc$DIM.AGE,
                      mc$DIM.SEX,
                      mc$DIM.HIV,
                      DIM.N),
-             dimnames=list(mc$DIM.NAMES.AGE,
-                           mc$DIM.NAMES.SEX,
-                           mc$DIM.NAMES.HIV,
-                           DIM.NAMES.N))
+             dimnames=list(age = mc$DIM.NAMES.AGE,
+                           sex = mc$DIM.NAMES.SEX,
+                           hiv.status = mc$DIM.NAMES.HIV,
+                           year = DIM.NAMES.N))
 
 gss<-list(
   #1D arrays for entire population over time
