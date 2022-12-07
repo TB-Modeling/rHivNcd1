@@ -38,6 +38,8 @@ gss<-list(
   #1D arrays for entire population over time
   pop.size=v1temp,
   n.births=v1temp,
+  n.births.non.hiv=v1temp,
+  n.births.hiv=v1temp,
   n.deaths.hiv=v1temp,
   n.deaths.cvd=v1temp,
   n.deaths.ageout=v1temp,
@@ -55,6 +57,8 @@ gss<-list(
 reset.gss<-function(){
   gss$pop.size=v1temp
   gss$n.births=v1temp
+  gss$n.births.non.hiv=v1temp
+  gss$n.births.hiv=v1temp
   gss$n.deaths.hiv=v1temp
   gss$n.deaths.cvd=v1temp
   gss$n.deaths.ageout=v1temp

@@ -177,21 +177,21 @@ model.annual.dynamics<-function(sim){
     prob.inc<-prob.inc/mc$ANNUAL.TIMESTEPS
     
     ##Probability of engagement (direct input to HIV model) --------
-    prob.eng=target.probabilities$prob.eng[as.character(mc$CYNOW),,]
+    prob.eng=target.parameters$prob.eng[as.character(mc$CYNOW),,]
     if(sum(prob.eng>1)>1)     
       stop(paste("Error: probability of engagement >1 in year ",mc$CYNOW))
     prob.eng[prob.eng==Inf]<-0
     prob.eng<-prob.eng/mc$ANNUAL.TIMESTEPS
     
     ##Probability of disengagement (direct input to HIV model) --------
-    prob.diseng=target.probabilities$prob.diseng[as.character(mc$CYNOW),,]
+    prob.diseng=target.parameters$prob.diseng[as.character(mc$CYNOW),,]
     if(sum(prob.diseng>1)>1)     
       stop(paste("Error: probability of disengagement >1 in year ",mc$CYNOW))
     prob.diseng[prob.diseng==Inf]<-0
     prob.diseng<-prob.diseng/mc$ANNUAL.TIMESTEPS
     
     ##Probability of diagnosis (direct input to HIV model) --------
-    prob.diag = target.probabilities$prob.diag[as.character(mc$CYNOW),,]
+    prob.diag = target.parameters$prob.diag[as.character(mc$CYNOW),,]
     if(sum(prob.diag>1)>1)     
       stop(paste("Error: probability of prob.diag >1 in year ",mc$CYNOW))
     prob.diag[prob.diag==Inf]<-0
@@ -337,19 +337,34 @@ model.annual.dynamics<-function(sim){
   
   ##
   ## MODEL BIRTHS --------
-  #compute number of newborns needed (assuming a fix pop size for now)
-  n.births=mc$POP.SIZE-length(pop)
-  if(n.births>0){
-    cat(n.births," newborns are added","\n")
-    vIds = c((mc$lastID+1): (mc$lastID+n.births))
-    mc$lastID=mc$lastID+n.births
-    vSexes = sample(c(mc$MALE,mc$FEMALE),n.births,prob = c(.5,.5),replace = T)
+  #' @PK - added births here; tracking HIV, non-HIV, and combined in gss
+  # non-HIV births
+  n.births.non.hiv=target.parameters$non.hiv.births[as.character(mc$CYNOW)]
+  if(n.births.non.hiv>0){
+    cat(n.births.non.hiv," non-HIV newborns are added","\n")
+    vIds = c((mc$lastID+1): (mc$lastID+n.births.non.hiv))
+    mc$lastID=mc$lastID+n.births.non.hiv
+    vSexes = sample(c(mc$MALE,mc$FEMALE),n.births.non.hiv,prob = c(.5,.5),replace = T) # still 50/50 male/female
     pop1 = (mapply(Person$new, vIds,vSexes,0,mc$TNOW,mc$HIV.NEG,mc$NCD.NEG)) #'@JP: do we need to delete pop1 and open memory?
-    #'@MS: in line above where mc$HIV.NEG is, need to decide their HIV state - two separate loops for HIV negative births and then HIV positive births
     pop<-c(pop,pop1)
     #
-    gss$n.births[mc$YNOW]=n.births
+    gss$n.births.non.hiv[mc$YNOW]=n.births.non.hiv
   }
+  
+  # HIV births - putting into undiagnosed for now
+  n.births.hiv=target.parameters$hiv.births[as.character(mc$CYNOW)]
+  if(n.births.hiv>0){
+    cat(n.births.hiv," newborns are added","\n")
+    vIds = c((mc$lastID+1): (mc$lastID+n.births.hiv))
+    mc$lastID=mc$lastID+n.births.hiv
+    vSexes = sample(c(mc$MALE,mc$FEMALE),n.births.hiv,prob = c(.5,.5),replace = T)
+    pop1 = (mapply(Person$new, vIds,vSexes,0,mc$TNOW,mc$HIV.UNDIAG,mc$NCD.NEG)) #'@JP: do we need to delete pop1 and open memory?
+    pop<-c(pop,pop1)
+    #
+    gss$n.births.hiv[mc$YNOW]=n.births.hiv
+  }
+  
+  gss$n.births[mc$YNOW]=n.births.non.hiv + n.births.hiv
   
   ##############################################
   # END OF YEAR----
