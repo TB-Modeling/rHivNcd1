@@ -93,6 +93,8 @@ simplot(sim1,sim2)
 simplot(sim1,sim2,facet.by = "sex")
 simplot(sim1,sim2,facet.by = "age")
 simplot(sim1,sim2,data.types = "hiv.prevalence",facet.by="age")
+simplot(sim1,sim2,data.types = "hiv.prevalence",facet.by="sex")
+simplot(sim1,sim2,data.types = "hiv.prevalence")
 
 
 
