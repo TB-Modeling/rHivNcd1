@@ -340,7 +340,7 @@ model.annual.dynamics<-function(sim){
   # non-HIV births
   absolute.n.births.non.hiv=target.parameters$non.hiv.births[as.character(mc$CYNOW)] # total non HIV births from HIV model 
   non.hiv.births.scalar = absolute.n.births.non.hiv/sum(hiv.output.for.ncd$population[as.character(mc$CYNOW),,,]) # scaled to pop size from HIV model
-  n.births.non.hiv = non.hiv.births.scalar*length(pop) # re-scaled to pop size from NCD model
+  n.births.non.hiv = round(non.hiv.births.scalar*length(pop),0) # re-scaled to pop size from NCD model
   
   if(n.births.non.hiv>0){
     cat(n.births.non.hiv," non-HIV newborns are added","\n")
@@ -356,7 +356,7 @@ model.annual.dynamics<-function(sim){
   # HIV births - putting into undiagnosed for now
   absolute.n.births.hiv=target.parameters$hiv.births[as.character(mc$CYNOW)] # total HIV births from HIV model
   hiv.births.scalar = absolute.n.births.hiv/sum(hiv.output.for.ncd$population[as.character(mc$CYNOW),,,]) # scaled to pop size from HIV model
-  n.births.hiv = hiv.births.scalar*length(pop) # re-scaled to pop size from NCD mode
+  n.births.hiv = round(hiv.births.scalar*length(pop),0) # re-scaled to pop size from NCD mode
   
   if(n.births.hiv>0){
     cat(n.births.hiv," HIV newborns are added","\n")
