@@ -65,7 +65,6 @@ mc<-list(
 load('data/hiv_sim.RData')
 #distribution of HIV states for each age/sex category
 hivPrev2015 = hiv.output.for.ncd$population["2015",,,]
-dimnames(hivPrev2015)[[3]] = c("FEMALE","MALE") # @MS: can you change this in the input file and save it again? just want to make sure that we dont have to do this everytime we read the data
 
 cat("Input data loaded \n")
 }
