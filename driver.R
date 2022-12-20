@@ -32,6 +32,8 @@ run.simulation<-function(rep=1 # replication count (1,...,Inf)
     invisible(set.initial.hiv.status()) #@JP: is the POP visible to all classes and methods?
     print(return.pop.distribution(var = "hiv"))
     
+    # Set initial CVD risk in 2015
+    invisible(set.initial.annual.cvd.risk())
     
     # run simulation
 
