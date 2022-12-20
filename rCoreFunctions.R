@@ -58,10 +58,10 @@ create.initial.population <- function( n=0){
   sim.pop$age[sim.pop$age>85] = 85 
   sim.pop$sex[sim.pop$sex=="MALE"] = mc$MALE 
   sim.pop$sex[sim.pop$sex=="FEMALE"] = mc$FEMALE
-  sim.pop$ncd[sim.pop$hypertension==0 & sim.pop$diabetes==0] = mc$NCD.NEG #0, neither 
-  sim.pop$ncd[sim.pop$hypertension==0 & sim.pop$diabetes==1] = mc$NCD.DIAB #1, diabetic
-  sim.pop$ncd[sim.pop$hypertension==1 & sim.pop$diabetes==0] = mc$NCD.HYP #2, hypertensive
-  sim.pop$ncd[sim.pop$hypertension==1 & sim.pop$diabetes==1] = mc$NCD.DIAB_HYP #3, both
+  sim.pop$ncd[sim.pop$hypertension==0 & sim.pop$diabetes==0] = mc$NCD.NEG #1, neither 
+  sim.pop$ncd[sim.pop$hypertension==0 & sim.pop$diabetes==1] = mc$NCD.DIAB #2, diabetic
+  sim.pop$ncd[sim.pop$hypertension==1 & sim.pop$diabetes==0] = mc$NCD.HYP #3, hypertensive
+  sim.pop$ncd[sim.pop$hypertension==1 & sim.pop$diabetes==1] = mc$NCD.DIAB_HYP #4, both
   
   #subset the first n row to create n persons
   if (n>0) sim.pop=sim.pop[1:n,]
@@ -134,6 +134,45 @@ set.initial.hiv.status = function(){
     p$hivState=rand.hiv.state
   })
   cat("Initial HIV status set \n")
+  pop
+}
+
+# model initial annual CVD risk
+print("set.initial.annual.cvd.risk")
+set.initial.annual.cvd.risk = function(){
+  lapply(c(1:length(pop)),function(x){
+    p<-pop[[x]]
+    
+    #read pooled CVD risk data
+    cvd.risk = pooled.risk.by.age.sex.ncd
+
+    younger.age.groups = c(1:8) #c("0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39")
+    older.age.groups = c(16:17) #c("75-79","80-85")
+    
+    # for whatever age group they are in, access the 10-year risk for the age group before
+    # this is what is used to calculate annual risk
+    p.age.indicator = p$agegroup-1 
+    p.age.indicator = pmax(1,p.age.indicator) # for the youngest age group, just make this 1, not 0
+    
+    #'@PK: checking this person, their age is 75 but their p$agegroup is 15, and if you index mc$DIM.NAMES.AGE[15], that's the 70-74 age group
+    # if(p$age==75) 
+    #   browser()
+    
+    if(p.age.indicator %in% younger.age.groups) { # if younger than 40, assume CVD risk of 40-44
+      p.cvd.risk.10.year = (cvd.risk["40-44",p$sex,p$ncdState])/100
+    } else if(p.age.indicator %in% older.age.groups) { # if older than 75, assume CVD risk of 70-74
+      p.cvd.risk.10.year = (cvd.risk["70-74",p$sex,p$ncdState])/100
+    } else if(!(p.age.indicator %in% younger.age.groups) & !(p.age.indicator %in% older.age.groups)){ # if not in youngest/oldest, use actual age
+      p.age.group=mc$DIM.NAMES.AGE[p.age.indicator] # access age group name
+      p.cvd.risk.10.year = (cvd.risk[p.age.group,p$sex,p$ncdState])/100
+    } else stop("age group not within CVD risk calculator")
+    
+    # Convert from 10-year CVD risk to annual 
+    p.cvd.risk.annual = -((log(1-p.cvd.risk.10.year))/10) # not always assigning the right risk - I don't understand why; e.g., check pop[[18]] or pop[[11]]
+    p.cvd.risk.annual = p.cvd.risk.annual*100
+    p$annualCvdrisk=p.cvd.risk.annual
+  })
+  cat("Initial CVD risk set \n")
   pop
 }
 
