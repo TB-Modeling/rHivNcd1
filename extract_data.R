@@ -2,6 +2,7 @@
 
 
 extract.data = function(sim,
+                        model,
                         data.type,
                         ages = mc$DIM.NAMES.AGE, 
                         sexes = mc$DIM.NAMES.SEX,
@@ -15,6 +16,7 @@ extract.data = function(sim,
   
   if(data.type=="population")
     rv = extract.population(sim,
+                            model=model,
                             ages=ages,
                             sexes=sexes,
                             hiv.status=hiv.status,
@@ -24,6 +26,7 @@ extract.data = function(sim,
   
   else if(data.type=="hiv.prevalence")
     rv = extract.population(sim,
+                            model=model,
                             ages=ages,
                             sexes=sexes,
                             hiv.status=mc$DIM.NAMES.HIV[-1], # remove HIV negative
@@ -37,6 +40,7 @@ extract.data = function(sim,
 }
 
 extract.population = function(sim,
+                              model,
                               ages = mc$DIM.NAMES.AGE, 
                               sexes = mc$DIM.NAMES.SEX,
                               hiv.status = mc$DIM.NAMES.HIV,
@@ -56,8 +60,15 @@ extract.population = function(sim,
   #filtering unwanted dimensions out
   keep.dim.names = full.dim.names[keep.dimensions]
   
-  x = sim$gss$n.hiv.prev
-  x = x[ages,sexes,hiv.status,years]
+  if(model=="ncd"){
+    x = sim$gss$n.hiv.prev
+    x = x[ages,sexes,hiv.status,years]
+  } else if(model=="hiv"){
+    x=hiv.output.for.ncd$population # this doesn't actually use the hiv.sim object, uses the hiv.output.for.ncd object that corresponds to the sim - might be a problem later
+    x=x[years,hiv.status,ages,sexes]
+    x=aperm(x,c(3,4,2,1)) # reorder to have same dimension order as ncd output: age, sex, hiv.status, year
+  } else stop("must specify model (hiv or ncd)")
+
 
   #summing over dimensions that are to keep
   rv = apply(x, keep.dimensions, sum)
