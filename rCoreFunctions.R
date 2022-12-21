@@ -207,7 +207,7 @@ model.annual.dynamics<-function(sim){
     prob.general.mort<-prob.general.mort/mc$ANNUAL.TIMESTEPS
     
     ##Probability of incidence (estimated via # events/ elig pop) --------
-    n.hiv.neg = hiv.output.for.ncd$population[as.character(mc$CYNOW-1),"hiv_negative",,]
+    n.hiv.neg = hiv.output.for.ncd$population[as.character(mc$CYNOW-1),"HIV.NEG",,]
     target.inc = hiv.output.for.ncd$incidence[as.character(mc$CYNOW),,] # pull out current year; dimensions are year, age, sex
     prob.inc=target.inc/n.hiv.neg
     if(sum(prob.inc>1)>1)
