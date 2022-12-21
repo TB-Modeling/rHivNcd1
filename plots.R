@@ -29,7 +29,7 @@ simplot = function(...,
   df.sim = NULL
   for(d in data.types){
     for(i in 1:length(sims)){
-      
+
       if(is(sims[[i]],"simset")) # if this is an MCMC results, i.e., a simset
         sims.for.i = simset@simulations
       
@@ -42,8 +42,15 @@ simplot = function(...,
         
         sim = sims.for.i[[j]]
         
+        # Assign model type based on whether the class of the sim contains "hiv" in it
+        if(grepl("hiv",class(sim))){
+          model="hiv"
+        } else
+          model="ncd"
+        
         # Extract the data from simulation
-        value = extract.data(sim, 
+        value = extract.data(sim,
+                             model=model,
                              years = years, 
                              age=ages, 
                              sex = sexes, 
@@ -86,15 +93,20 @@ simplot = function(...,
 
 
 
+if(1==2){
+  #'@PK - sample code below.
+  simplot(sim1,sim2)
+  # Plot population for multiple simulations by total, age, and sex
+  simplot(sim1,sim2,hiv.sim,facet.by = "sex")
+  simplot(sim1,sim2,data.types = "hiv.prevalence",facet.by="age")
+  simplot(sim1,sim2,hiv.sim,data.types = "hiv.prevalence")
+  
+  simplot(sim1,sim2,hiv.sim,facet.by = "age")
+  simplot(hiv.sim,data.types = "hiv.prevalence",facet.by="sex")
+  
+}
 
-#'@PK - sample code below.
-#'# Right now this is only the NCD model, but we can plot population for multiple simulations by total, age, and sex
-simplot(sim1,sim2)
-simplot(sim1,sim2,facet.by = "sex")
-simplot(sim1,sim2,facet.by = "age")
-simplot(sim1,sim2,data.types = "hiv.prevalence",facet.by="age")
-simplot(sim1,sim2,data.types = "hiv.prevalence",facet.by="sex")
-simplot(sim1,sim2,data.types = "hiv.prevalence")
+
 
 
 
