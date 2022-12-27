@@ -111,7 +111,7 @@ Person<-R6Class("Person",
       # because they make it possible to implement components that look like fields 
       # from the outside but provide additional checks.
       active=list(
-        agegroup=function(){ min(max(ceiling(self$age/mc$AGE.INTERVAL),1),mc$DIM.AGE)}, #we limit the last agegroups to not drop below 1 nor exceed 17
+        agegroup=function(){ min(max(ceiling((self$age+1)/mc$AGE.INTERVAL),1),mc$DIM.AGE)}, #we limit the last agegroups to not drop below 1 nor exceed 17
         incAge=function(){ 
           self$age<-self$age+1
           invisible(self)
