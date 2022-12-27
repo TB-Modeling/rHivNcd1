@@ -12,6 +12,7 @@ library(ggplot2)
 simplot = function(...,
                    years = as.character(2015:2030),
                    data.types = c("population"),
+                   scale.population = F,
                    facet.by = NULL,
                    split.by = NULL,
                    ages = mc$DIM.NAMES.AGE, 
@@ -21,7 +22,6 @@ simplot = function(...,
   sims = list(...)
   keep.dimensions = union('year',union(facet.by, split.by))
   
-
   ##----------------------##
   ##----- SIM OUTPUT -----##
   ##----------------------##
@@ -57,6 +57,13 @@ simplot = function(...,
                              hiv.status = hiv.status, 
                              data.type=d, 
                              keep.dimensions = keep.dimensions)
+        if(scale.population){
+          if(keep.dimensions!= "year")
+            stop("can only plot total scaled population for now (no age/sex option yet)")
+          
+          value = value/value[years=="2015"]
+          
+        }
         
         # set up a dataframe with columns: year, value, sim id, data.type 
         one.df = reshape2::melt(value) 
@@ -103,6 +110,9 @@ if(1==2){
   
   simplot(sim1,sim2,hiv.sim,facet.by = "age")
   simplot(hiv.sim,data.types = "hiv.prevalence",facet.by="sex")
+  
+  # CHECKING POPULATION GROWTH - CAN ONLY CHECK AT TOTAL LEVEL FOR NOW
+  simplot(sim1,sim2,hiv.sim,scale.population=T)
   
 }
 
