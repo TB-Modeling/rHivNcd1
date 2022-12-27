@@ -154,10 +154,6 @@ set.initial.annual.cvd.risk = function(){
     p.age.indicator = p$agegroup-1 
     p.age.indicator = pmax(1,p.age.indicator) # for the youngest age group, just make this 1, not 0
     
-    #'@PK: checking this person, their age is 75 but their p$agegroup is 15, and if you index mc$DIM.NAMES.AGE[15], that's the 70-74 age group
-    # if(p$age==75) 
-    #   browser()
-    
     if(p.age.indicator %in% younger.age.groups) { # if younger than 40, assume CVD risk of 40-44
       p.cvd.risk.10.year = (cvd.risk["40-44",p$sex,p$ncdState])/100
     } else if(p.age.indicator %in% older.age.groups) { # if older than 75, assume CVD risk of 70-74
@@ -168,7 +164,7 @@ set.initial.annual.cvd.risk = function(){
     } else stop("age group not within CVD risk calculator")
     
     # Convert from 10-year CVD risk to annual 
-    p.cvd.risk.annual = -((log(1-p.cvd.risk.10.year))/10) # not always assigning the right risk - I don't understand why; e.g., check pop[[18]] or pop[[11]]
+    p.cvd.risk.annual = -((log(1-p.cvd.risk.10.year))/10) 
     p.cvd.risk.annual = p.cvd.risk.annual*100
     p$annualCvdrisk=p.cvd.risk.annual
   })
