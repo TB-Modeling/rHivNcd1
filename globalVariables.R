@@ -62,12 +62,13 @@ mc<-list(
 )
 
 {#load hiv sim workspace with: (1) sim object, (2) data manager, (3) extracted data (hiv.output.for.ncd)
-load('data/hiv_sim.RData')
+load('data/hiv_sim.RData') #@MS: I suggest renaming the HIV.output.for.ncd to an abbreviated name for your hiv model, say jheem?
+  
 #distribution of HIV states for each age/sex category
-hivPrev2015 = hiv.output.for.ncd$population["2015",,,]
+jheem.hivPrev2015 = hiv.output.for.ncd$population["2015",,,]
 
 #load pooled CVD risk by age/sex/ncd category
-load('data/pooled.risk.by.age.sex.ncd.Rdata')
+load('data/10.year.cvd.risk.by.age.sex.ncd.Rdata')
 
 cat("Input data loaded \n")
 }

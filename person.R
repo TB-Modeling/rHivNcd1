@@ -31,7 +31,8 @@ Person<-R6Class("Person",
         bMarkedHivUneng=F,
         
         ncdState=mc$NCD.NEG, 
-        annualCvdrisk=NULL,
+        annualCvdRisk=NULL,
+        monthlyCvdRisk=NULL,
         tDiabInc=NULL,
         tDiabDiag=NULL,
         tDiabTrt=NULL,
@@ -46,23 +47,23 @@ Person<-R6Class("Person",
         bMarkedStroke=F,
         
         bMarkedDead.hiv=F,
+        bMarkedDead.non.hiv=F,
         bMarkedDead.cvd=F,
         bMarkedDead.ageout=F,
-        bMarkedDead.gen=F,
+        
   
         ncdtrtState=NULL,
         bNcdscreened=F,
         tNcdscreened=F,
         ################################
         #define public functions here:
-        initialize=function(id=NA,sex=NA,age=NA,tborn=0,hivState=NA,ncdState=NA,annualCvdrisk=NA,tDiabInc=NA,tHypInc=NA){
+        initialize=function(id=NA,sex=NA,age=NA,tborn=0,hivState=NA,ncdState=NA,tDiabInc=NA,tHypInc=NA){
           self$id<-id
           self$sex<-sex
           self$age<-age
           self$tborn<-tborn
           self$hivState<-hivState
           self$ncdState<-ncdState
-          self$annualCvdrisk<-annualCvdrisk
           self$tDiabInc<-tDiabInc
           self$tHypInc<-tHypInc
           },
