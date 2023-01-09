@@ -8,6 +8,65 @@ source("extract_data.R")
 
 library(ggplot2)
 
+#'@PK - moved this function from extract data; only HIV model output now
+
+# Function to extract data from HIV model (khm) output object - either a simset or a single sim (for now, if it's a simset, take only one sim)
+# Specify the khm.output object, what ages/sexes/hiv statuses/years to include, and then what dimensions to report by 
+return.khm.state.size.distribution = function(khm.output, # object from khm model including all state sizes for all years
+                                              ages = mc$DIM.NAMES.AGE, # ages to return
+                                              sexes = mc$DIM.NAMES.SEX, # sexes to return 
+                                              hiv.status = mc$DIM.NAMES.HIV, # hiv status to return
+                                              ncd.status = mc$DIM.NAMES.NCD,
+                                              years=as.character(DIM.NAMES.N), # years to return 
+                                              keep.dimensions = 'year') # collapse all other dimensions & report the data as total value over this dimension
+{ 
+  
+  if(all(keep.dimensions!='year'))
+    stop("must keep year dimension")
+  
+  #full names of all dimensions
+  full.dim.names = list(
+    age = ages,
+    sex = sexes,
+    hiv.status = hiv.status,
+    # ncd.status = ncd.status,
+    year = years
+  )
+  
+  #filtering unwanted dimensions out
+  keep.dim.names = full.dim.names[keep.dimensions]
+  
+  # simset object
+  if(is(khm.output,"khm_simulation_output")) {
+    rv = list()
+    
+    for(i in 1:length(khm.output)){
+      x=khm.output[[i]]$population 
+      x=x[years,hiv.status,ages,sexes]
+      x=aperm(x,c(3,4,2,1)) # reorder to have same dimension order as ncd output: age, sex, hiv.status, year
+      
+      #summing over dimensions that are to keep
+      rv[[i]] = apply(x, keep.dimensions, sum)
+      #adjusting dimension names and 
+      dim(rv[[i]]) = sapply(keep.dim.names, length)
+      dimnames(rv[[i]]) = keep.dim.names
+    }
+    
+  } else {
+    x=khm.output$population 
+    x=x[years,hiv.status,ages,sexes]
+    x=aperm(x,c(3,4,2,1)) # reorder to have same dimension order as ncd output: age, sex, hiv.status, year
+    
+    #summing over dimensions that are to keep
+    rv = apply(x, keep.dimensions, sum)
+    #adjusting dimension names and 
+    dim(rv) = sapply(keep.dim.names, length)
+    dimnames(rv) = keep.dim.names
+  }
+  
+  rv
+}
+
 
 simplot = function(...,
                    years = as.character(2015:2030),
@@ -17,7 +76,8 @@ simplot = function(...,
                    split.by = NULL,
                    ages = mc$DIM.NAMES.AGE, 
                    sexes = mc$DIM.NAMES.SEX,
-                   hiv.status = mc$DIM.NAMES.HIV
+                   hiv.status = mc$DIM.NAMES.HIV,
+                   ncd.status = mc$DIM.NAMES.NCD
 ){
   sims = list(...)
   keep.dimensions = union('year',union(facet.by, split.by))
@@ -27,56 +87,72 @@ simplot = function(...,
   ##----------------------##
   
   df.sim = NULL
-  for(d in data.types){
     for(i in 1:length(sims)){
+      
+      sim = sims[[i]]
+      
+      if(is(sim,"hiv_simulation"))
+        sim = list(sim)
+      
+      # HIV SIMSET OBJECT OR INDIVIDUAL HIV SIMULATION
+      if(is(sim,"khm_simulation_output") | is(sim,"hiv_simulation")) { 
+        
+        for(j in 1:length(sim)){
+          value = return.khm.state.size.distribution(khm.output=sim[[j]], 
+                                                     ages = mc$DIM.NAMES.AGE, 
+                                                     sexes = mc$DIM.NAMES.SEX,
+                                                     hiv.status = mc$DIM.NAMES.HIV, 
+                                                     # ncd.status = mc$DIM.NAMES.NCD,
+                                                     years=as.character(DIM.NAMES.N), 
+                                                     keep.dimensions = 'year')
+          
+          if(scale.population){
+            if(keep.dimensions!= "year")
+              stop("can only plot total scaled population for now (no age/sex option yet)")
+            
+            value = value/value[years=="2015"]
+          }
+          
+          # set up a dataframe with columns: year, value, sim id, data.type 
+          one.df = reshape2::melt(value) 
+          one.df$sim.id = i
+          one.df$sim.number = j
+          # one.df$data.type = d
+          
+          df.sim = rbind(df.sim, one.df)  
 
-      if(is(sims[[i]],"simset")) # if this is an MCMC results, i.e., a simset
-        sims.for.i = simset@simulations
-      
-      # for plotting single simulations
-      else {
-        sim = sims[[i]]
-        sims.for.i = list(sim)}
-      
-      for(j in 1:length(sims.for.i)){
+        }
         
-        sim = sims.for.i[[j]]
+        # NCD SIM
+      } else {
+        value = return.gss.state.size.distribution(sim=sim,
+                                                   years = years, 
+                                                   ages=ages, 
+                                                   sexes = sexes, 
+                                                   hiv.status = hiv.status,
+                                                   ncd.status=ncd.status,
+                                                   keep.dimensions = keep.dimensions)
         
-        # Assign model type based on whether the class of the sim contains "hiv" in it
-        if(grepl("hiv",class(sim))){
-          model="hiv"
-        } else
-          model="ncd"
-        
-        # Extract the data from simulation
-        value = extract.data(sim,
-                             model=model,
-                             years = years, 
-                             age=ages, 
-                             sex = sexes, 
-                             hiv.status = hiv.status, 
-                             data.type=d, 
-                             keep.dimensions = keep.dimensions)
         if(scale.population){
           if(keep.dimensions!= "year")
             stop("can only plot total scaled population for now (no age/sex option yet)")
           
           value = value/value[years=="2015"]
-          
         }
         
         # set up a dataframe with columns: year, value, sim id, data.type 
         one.df = reshape2::melt(value) 
         one.df$sim.id = i
-        one.df$sim.number = j
-        one.df$data.type = d
+        # one.df$sim.number = j
+        # one.df$data.type = d
         
         df.sim = rbind(df.sim, one.df)   
+        
       }
-      
+
+
     }
-  }
-  
+      
   df.sim$sim.id = as.character(df.sim$sim.id)
   df.sim$group.id = paste0("sim ",df.sim$sim.id,"_",df.sim$sim.number)
 
@@ -92,7 +168,7 @@ simplot = function(...,
   
   ggplot() + 
     geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id)) +
-    facet_wrap(facet_formula, scales = "free_y") + 
+    # facet_wrap(facet_formula, scales = "free_y") + 
     ylim(0,NA)
 
 }
