@@ -12,7 +12,7 @@ print("Sourcing Stat.R ... ")
 DIM.N=mc$END.YEAR-mc$INITIAL.YEAR+1
 DIM.NAMES.N=c(mc$INITIAL.YEAR:mc$END.YEAR)
 
-#temporary epty arrays to initialize stats
+#temporary empty arrays to initialize stats
 #1D
 v1temp=rep(0,DIM.N,
            dim=DIM.N,
@@ -35,6 +35,19 @@ v4temp=array(rep(0,mc$DIM.AGE*mc$DIM.SEX*mc$DIM.HIV*DIM.N),
                            sex = mc$DIM.NAMES.SEX,
                            hiv.status = mc$DIM.NAMES.HIV,
                            year = DIM.NAMES.N))
+#5D
+v5temp=array(rep(0,mc$DIM.AGE*mc$DIM.SEX*mc$DIM.HIV*mc$DIM.NCD*DIM.N),  
+             dim = c(mc$DIM.AGE,
+                     mc$DIM.SEX,
+                     mc$DIM.HIV,
+                     mc$DIM.NCD,
+                     DIM.N),
+             dimnames=list(age = mc$DIM.NAMES.AGE,
+                           sex = mc$DIM.NAMES.SEX,
+                           hiv.status = mc$DIM.NAMES.HIV,
+                           ncd.status = mc$DIM.NAMES.NCD,
+                           year = DIM.NAMES.N))
+
 
 gss<-list(
   #1D arrays for entire population over time
@@ -45,7 +58,7 @@ gss<-list(
   n.deaths.hiv=v1temp,
   n.deaths.cvd=v1temp,
   n.deaths.ageout=v1temp,
-  n.deaths.gen=v1temp,
+  n.deaths.non.hiv=v1temp,
   
   #3D arrays by age, sex over time
   n.hiv.inc=v3temp,
@@ -53,9 +66,15 @@ gss<-list(
   n.hiv.eng=v3temp,
   n.hiv.uneng=v3temp,
   
-  # 4D arrays by age, sex and hiv state over time
-  n.hiv.prev=v4temp
+  # 4D arrays by age, sex and hiv state over time 
+  #'@MS: should we use the new n.state.sizes instead of this one to extract both HIV and NCD outputs?
+  #'@MS: redundant?
+  n.hiv.prev=v4temp,
+  
+  # 5D arrays by age, sex, ncd & hiv state over time
+  n.state.sizes=v5temp
 )
+
 reset.gss<-function(){
   gss$pop.size=v1temp
   gss$n.births=v1temp
@@ -64,15 +83,16 @@ reset.gss<-function(){
   gss$n.deaths.hiv=v1temp
   gss$n.deaths.cvd=v1temp
   gss$n.deaths.ageout=v1temp
-  gss$n.deaths.gen=v1temp
+  gss$n.deaths.non.hiv=v1temp
   
   gss$n.hiv.inc=v3temp
   gss$n.hiv.diag=v3temp
   gss$n.hiv.eng=v3temp
   gss$n.hiv.uneng=v3temp
   
+  gss$n.hiv.prev=v4temp   #'@MS: redundant?
   
-  gss$n.hiv.prev=v4temp
+  gss$n.state.sizes=v5temp
   
 }
 #return specific Stats
@@ -81,7 +101,7 @@ return.gss<-function(statName){
 }
 
 #return hiv.state sizes by age and sex
-return.gss.hiv.state.sizes<-function(pop){
+return.gss.hiv.state.sizes<-function(pop){   #'@MS: redundant?
   n=length(pop)
   hiv.state.sizes<-array(0,
                          dim=c(mc$DIM.AGE,mc$DIM.SEX,mc$DIM.HIV),
@@ -90,6 +110,61 @@ return.gss.hiv.state.sizes<-function(pop){
     hiv.state.sizes[  pop[[x]]$agegroup,pop[[x]]$sex, pop[[x]]$hivState] <<- hiv.state.sizes[  pop[[x]]$agegroup,pop[[x]]$sex, pop[[x]]$hivState]+1  }))
   
   hiv.state.sizes
+}
+
+
+
+# extracts hiv & ncd state sizes by age and sex for a given population at this time
+# called at the end of each year to record the value in the gss:n.state.sizes
+extract.pop.state.size.distribution<-function(pop){
+  n=length(pop)
+  state.sizes<-array(0,
+                     dim=c(mc$DIM.AGE,mc$DIM.SEX,mc$DIM.HIV,mc$DIM.NCD),
+                     dimnames = list(mc$DIM.NAMES.AGE,mc$DIM.NAMES.SEX,mc$DIM.NAMES.HIV,mc$DIM.NAMES.NCD))
+  invisible(lapply(c(1:n),function(x){
+    state.sizes[  pop[[x]]$agegroup,
+                  pop[[x]]$sex, 
+                  pop[[x]]$hivState,
+                  pop[[x]]$ncdState] <<- state.sizes[  pop[[x]]$agegroup,
+                                                       pop[[x]]$sex, 
+                                                       pop[[x]]$hivState, 
+                                                       pop[[x]]$ncdState] +1  }))
+  
+  state.sizes
+}
+
+# returns the state size distributions for a given simulation
+# can be called at all times to review the state sizes
+return.gss.state.size.distribution<- function(sim,
+                                              ages = mc$DIM.NAMES.AGE, 
+                                              sexes = mc$DIM.NAMES.SEX,
+                                              hiv.status = mc$DIM.NAMES.HIV,
+                                              ncd.status = mc$DIM.NAMES.NCD,
+                                              years=as.character(DIM.NAMES.N),
+                                              keep.dimensions = 'year' # collapse all other dimensions & report the data as total value over this dimension
+){
+  if(all(keep.dimensions!='year'))  
+    stop("must keep year dimension")
+  
+  #full names of all dimensions
+  full.dim.names = list(
+    age = ages,
+    sex = sexes,
+    hiv.status = hiv.status,
+    ncd.status = ncd.status,
+    year = years
+  )
+  #filtering unwanted dimensions out
+  keep.dim.names = full.dim.names[keep.dimensions]
+  x = sim$gss$n.state.sizes
+  
+  #'@MS: does the order of dimensions in keep.dimension matter? ("year", "sex"?)
+  #summing over dimensions that are to keep
+  rv = apply(x, keep.dimensions, sum)
+  #adjusting dimension names and 
+  dim(rv) = sapply(keep.dim.names, length)
+  dimnames(rv) = keep.dim.names
+  rv
 }
 
 #list of annual statistics that are collected throughout the simulation

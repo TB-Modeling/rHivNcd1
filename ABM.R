@@ -14,9 +14,9 @@ source("globalVariables.R")
 source("person.R")
 source("stats.R")
 source("driver.R")
-source("rCoreFunctions.R")
 source("rHelperFunctions.R")
-# source("plots.R") @MS: generates an error
+source("rCoreFunctions.R")
+source("plots.R")
 
 
 ##COMPILE THE Rcpp##
@@ -26,16 +26,13 @@ source("rHelperFunctions.R")
 # cat("Rcpp code compiled \n")
 
 #run the model 
-res<-run.simulation(rep=2)
+res<-run.simulation(rep=1)
 sim1<-res[[1]]
 sim2<-res[[2]]
 
-sim1$gss$n.births==sim2$gss$n.births
+sim1$pop$gss$n.births==sim2$pop$gss$n.births
 
 
-
-
-
-
+ 
 #@JP: I wanted to make population accessible t all classes, so I made a null object in globalvariables and filled that when I created the population. 
 #I'm not sure how that may work for the memory management though, specially if we want to rewrite that pop for a new replication.
