@@ -11,7 +11,7 @@ record.annual.gss<-function(pop,gss){
   
   gss$n.hiv.prev[,,,mc$YNOW]<<- return.gss.hiv.state.sizes(pop)  #'@MS: redundant?
   
-  #'@MS: the new function to save HIV & NCD states sizes by age/sex
+  # function to save HIV & NCD states sizes by age/sex
   gss$n.state.sizes[,,,,mc$YNOW]<<-extract.pop.state.size.distribution(pop)
 }
 
@@ -61,7 +61,7 @@ create.initial.population <- function( n=0 # number of people if not specified a
 print("set.initial.hiv.status")
 set.initial.hiv.status = function(){
   #get hiv state proportions by age and sex
-  hiv.probs = get.hiv.state.proportions(jheem.hivPrev2015)
+  hiv.probs = get.hiv.state.proportions(khm.hivPrev2015)
   
   invisible(lapply(c(1:length(pop)),function(x){
     p<-pop[[x]]
@@ -121,14 +121,14 @@ run.one.year<-function(sim){
   # Jan 1st to Dec 31st:
   
   # each months:
-  ## changes in HIV states from jheem
+  ## changes in HIV states from khm
   ## new cvd events based on current risks
-  ## deaths from jheem (HIV and age-specific deaths) > these include some CVD deaths too
+  ## deaths from khm (HIV and age-specific deaths) > these include some CVD deaths too
   ## deaths from CVD events
   
   # end of year:
   # deaths due to aging
-  # remaining deaths to balance with jheem population
+  # remaining deaths to balance with khm population
   # new births 
   
   # aging >>  
@@ -144,7 +144,7 @@ run.one.year<-function(sim){
   cat("Beginning the year ... ",mc$CYNOW,"\n")
 
   #### AT YEAR's BEGINNING:
-  { #computing event probabilities from JHEEM
+  { #computing event probabilities from KHM
     ##Probability of HIV mortality (estimated via # events/ elig pop) --------
     n.hiv.pos = apply(hiv.output.for.ncd$population[as.character(mc$CYNOW-1),-1,,],c(2:3),sum) # extract all but hiv.negative, sum over hiv states
     target.hiv.mort = hiv.output.for.ncd$hiv.mortality[as.character(mc$CYNOW),,] # pull out current year; dimensions are year, age, sex
@@ -152,7 +152,7 @@ run.one.year<-function(sim){
     if(sum(prob.hiv.mort>1)>1)
       stop(paste("Error: probability of prob.hiv.mort >1 in year ",mc$CYNOW))
     prob.hiv.mort[prob.hiv.mort==Inf]<-0
-    jheem.prob.hiv.mort<-prob.hiv.mort/mc$ANNUAL.TIMESTEPS
+    khm.prob.hiv.mort<-prob.hiv.mort/mc$ANNUAL.TIMESTEPS
     
     ##Probability of non.HIV mortality (estimated via # events/ elig pop) --------
     n.pop = apply(hiv.output.for.ncd$population[as.character(mc$CYNOW-1),,,],c(2:3),sum) # extract all population, sum over hiv states
@@ -161,7 +161,7 @@ run.one.year<-function(sim){
     if(sum(prob.non.hiv.mort>1)>1)
       stop(paste("Error: probability of prob.non.hiv.mort >1 in year ",mc$CYNOW))
     prob.non.hiv.mort[prob.non.hiv.mort==Inf]<-0
-    jheem.prob.non.hiv.mort<-prob.non.hiv.mort/mc$ANNUAL.TIMESTEPS
+    khm.prob.non.hiv.mort<-prob.non.hiv.mort/mc$ANNUAL.TIMESTEPS
     
     ##Probability of incidence (estimated via # events/ elig pop) --------
     n.hiv.neg = hiv.output.for.ncd$population[as.character(mc$CYNOW-1),"HIV.NEG",,]
@@ -170,28 +170,28 @@ run.one.year<-function(sim){
     if(sum(prob.inc>1)>1)
       stop(paste("Error: probability of prob.inc >1 in year ",mc$CYNOW))
     prob.inc[prob.inc==Inf]<-0
-    jheem.prob.hiv.inc<-prob.inc/mc$ANNUAL.TIMESTEPS
+    khm.prob.hiv.inc<-prob.inc/mc$ANNUAL.TIMESTEPS
     
     ##Probability of engagement (direct input to HIV model) --------
     prob.eng=target.parameters$prob.eng[as.character(mc$CYNOW),,]
     if(sum(prob.eng>1)>1)     
       stop(paste("Error: probability of engagement >1 in year ",mc$CYNOW))
     prob.eng[prob.eng==Inf]<-0
-    jheem.prob.hiv.eng<-prob.eng/mc$ANNUAL.TIMESTEPS
+    khm.prob.hiv.eng<-prob.eng/mc$ANNUAL.TIMESTEPS
     
     ##Probability of disengagement (direct input to HIV model) --------
     prob.diseng=target.parameters$prob.diseng[as.character(mc$CYNOW),,]
     if(sum(prob.diseng>1)>1)     
       stop(paste("Error: probability of disengagement >1 in year ",mc$CYNOW))
     prob.diseng[prob.diseng==Inf]<-0
-    jheem.prob.hiv.diseng<-prob.diseng/mc$ANNUAL.TIMESTEPS
+    khm.prob.hiv.diseng<-prob.diseng/mc$ANNUAL.TIMESTEPS
     
     ##Probability of diagnosis (direct input to HIV model) --------
     prob.diag = target.parameters$prob.diag[as.character(mc$CYNOW),,]
     if(sum(prob.diag>1)>1)     
       stop(paste("Error: probability of prob.diag >1 in year ",mc$CYNOW))
     prob.diag[prob.diag==Inf]<-0
-    jheem.prob.hiv.diag<-prob.diag/mc$ANNUAL.TIMESTEPS
+    khm.prob.hiv.diag<-prob.diag/mc$ANNUAL.TIMESTEPS
     
   }
   
@@ -206,16 +206,16 @@ run.one.year<-function(sim){
     # counting new events: marking those who will die after the event
     model.cvd.events()
     
-    # 2- modeling HIV transitions based on jheem outputs
-    model.hiv.transitions(jheem.prob.hiv.inc, 
-                          jheem.prob.hiv.eng, 
-                          jheem.prob.hiv.diseng, 
-                          jheem.prob.hiv.diag)
+    # 2- modeling HIV transitions based on khm outputs
+    model.hiv.transitions(khm.prob.hiv.inc, 
+                          khm.prob.hiv.eng, 
+                          khm.prob.hiv.diseng, 
+                          khm.prob.hiv.diag)
     
     # 3- modeling HIV and CVD deaths
     #prob of deaths for eveyone/killing those who are marked 
-    model.hiv.cvd.deaths( jheem.prob.hiv.mort,
-                          jheem.prob.non.hiv.mort)
+    model.hiv.cvd.deaths( khm.prob.hiv.mort,
+                          khm.prob.non.hiv.mort)
     
     cat("End of timestep: ",mc$TNOW," ---")
     # cat("Total incidence= ",n.inc," diag= ",n.diag," eng= ",n.eng," uneng= ",n.uneng)
@@ -295,7 +295,6 @@ run.one.year<-function(sim){
   # Record annual statatistics --------
   record.annual.gss(pop)
   
-  #'@MS: for now, we let the TNOW increase over time and use it to record the event times for agents
   mc$YNOW<-mc$YNOW+1
   mc$CYNOW<-mc$CYNOW+1
   

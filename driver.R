@@ -58,7 +58,7 @@ run.simulation<-function(rep=1 # replication count (1,...,Inf)
       sim<-run.one.year(sim)
     }
     
-    # return the gss #@MS: we can return all stats or selected stats only, depending on how we use them
+    # return the gss 
     return(sim)
     
     cat("End of replication",rep,"-----------","\n")

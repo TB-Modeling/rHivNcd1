@@ -6,8 +6,6 @@
 print("Sourcing Stat.R ... ")
 
 
-#' @MS: add more arrays to keep track of HIV and NCD sizes
-
 #global statistics
 DIM.N=mc$END.YEAR-mc$INITIAL.YEAR+1
 DIM.NAMES.N=c(mc$INITIAL.YEAR:mc$END.YEAR)

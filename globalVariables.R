@@ -61,11 +61,12 @@ mc<-list(
   DIM.NAMES.NCD=c("NCD.NEG","NCD.DIAB","NCD.HYP","NCD.DIAB_HYP")
 )
 
-{#load hiv sim workspace with: (1) sim object, (2) data manager, (3) extracted data (hiv.output.for.ncd)
-load('data/hiv_sim.RData') #@MS: I suggest renaming the HIV.output.for.ncd to an abbreviated name for your hiv model, say jheem?
+#'@PK - renamed hiv.output.for.ncd to khm for "kenya hiv model"
+{#load hiv sim workspace with: (1) sim object, (2) data manager, (3) extracted data (khm)
+load('data/hiv_sim.RData') 
   
 #distribution of HIV states for each age/sex category
-jheem.hivPrev2015 = hiv.output.for.ncd$population["2015",,,]
+khm.hivPrev2015 = hiv.output.for.ncd$population["2015",,,]
 
 #load pooled CVD risk by age/sex/ncd category
 load('data/10.year.cvd.risk.by.age.sex.ncd.Rdata')
