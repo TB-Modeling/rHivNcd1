@@ -155,6 +155,8 @@ return.gss.state.size.distribution<- function(sim,
   #filtering unwanted dimensions out
   keep.dim.names = full.dim.names[keep.dimensions]
   x = sim$gss$n.state.sizes
+  #'@PK - I added the below line back in; this filters to only include the ages,sexes,etc. that we've specified in the arguments
+  x = x[ages,sexes,hiv.status,ncd.status,years] 
   
   #'@MS: does the order of dimensions in keep.dimension matter? ("year", "sex"?)
   #summing over dimensions that are to keep
