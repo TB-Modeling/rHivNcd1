@@ -8,7 +8,7 @@ print("Sourcing Driver.R ... ")
 source("globalVariables.R")
 source("person.R")
 source("stats.R")
-source("driver.R")
+# source("driver.R")
 source("rHelperFunctions.R")
 source("rCoreFunctions.R")
 source("plots.R")
@@ -66,3 +66,4 @@ run.simulation<-function(rep=1 # replication count (1,...,Inf)
   return(sims)
 }
 
+res<-run.simulation(rep=1)

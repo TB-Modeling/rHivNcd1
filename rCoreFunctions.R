@@ -12,7 +12,7 @@ record.annual.gss<-function(pop,gss){
   gss$n.hiv.prev[,,,mc$YNOW]<<- return.gss.hiv.state.sizes(pop)  #'@MS: redundant?
   
   #'@MS: the new function to save HIV & NCD states sizes by age/sex
-  gss$n.state.sizes[,,,,mc$YNOW]<<-return.pop.state.size.distribution(pop)
+  gss$n.state.sizes[,,,,mc$YNOW]<<-extract.pop.state.size.distribution(pop)
 }
 
 
@@ -117,9 +117,27 @@ set.annual.cvd.risk = function(){
 # model one simulated year
 print("model.annual.dynamics")
 run.one.year<-function(sim){
+  # current age at year's beginning:
+  # Jan 1st to Dec 31st:
+  
+  # each months:
+  ## changes in HIV states from jheem
+  ## new cvd events based on current risks
+  ## deaths from jheem (HIV and age-specific deaths) > these include some CVD deaths too
+  ## deaths from CVD events
+  
+  # end of year:
+  # deaths due to aging
+  # remaining deaths to balance with jheem population
+  # new births 
+  
+  # aging >>  
+  # changes in NCD states
+  # updating cvd annual risks based on new age and ncd state
+  
   pop=sim$pop
   mc=sim$mc
-  
+  gss=sim$gss
   
   #check the TNOW and break if it's not correctly set
   if ((mc$TNOW%%mc$ANNUAL.TIMESTEPS)!=0) break("TNOW is not set correctly")
@@ -265,7 +283,7 @@ run.one.year<-function(sim){
   
   ## 4- UPDATE NCD STATES & CVD RISKS FOR NEXT YEAR --------
   update.ncd.states()
-  set.annual.cvd.risk()
+  invisible(set.annual.cvd.risk())
   
 
     ##############################################
@@ -282,26 +300,10 @@ run.one.year<-function(sim){
   mc$CYNOW<-mc$CYNOW+1
   
   invisible(list(pop=pop,
-                 mc=mc))
+                 mc=mc,
+                 gss=gss))
 }
 
-# current age at year's beginning:
-# Jan 1st to Dec 31st:
-
-# each months:
-## changes in HIV states from jheem
-## new cvd events based on current risks
-## deaths from jheem (HIV and age-specific deaths) > these include some CVD deaths too
-## deaths from CVD events
-
-# end of year:
-# deaths due to aging
-# remaining deaths to balance with jheem population
-# new births 
-
-# aging >>  
-# changes in NCD states
-# updating cvd annual risks based on new age and ncd state
 
 
 
@@ -389,7 +391,7 @@ model.hiv.transitions<-function(prob.inc,
 
 model.hiv.cvd.deaths<-function(prob.hiv.mort,
                                prob.non.hiv.mort){
-  
+  n=length(pop)
   #evaluate prob of hiv and non.hiv mortality for everyone who is not already marked dead
   invisible(lapply(c(1:n),function(x){
     p=pop[[x]] 
@@ -403,7 +405,7 @@ model.hiv.cvd.deaths<-function(prob.hiv.mort,
       # NON.HIV MORTALITY 
       p.prob = prob.non.hiv.mort[p$agegroup,p$sex]
       if(runif(1)<p.prob)
-        p$bMarkedDead.gen=T
+        p$bMarkedDead.non.hiv=T
     }}))
   
   # modeling deaths & saving gss

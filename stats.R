@@ -61,10 +61,10 @@ gss<-list(
   n.deaths.non.hiv=v1temp,
   
   #3D arrays by age, sex over time
-  n.hiv.inc=v3temp,
-  n.hiv.diag=v3temp,
-  n.hiv.eng=v3temp,
-  n.hiv.uneng=v3temp,
+  n.hiv.inc=v3temp,#'@MS: redundant?
+  n.hiv.diag=v3temp,#'@MS: redundant?
+  n.hiv.eng=v3temp,#'@MS: redundant?
+  n.hiv.uneng=v3temp,#'@MS: redundant?
   
   # 4D arrays by age, sex and hiv state over time 
   #'@MS: should we use the new n.state.sizes instead of this one to extract both HIV and NCD outputs?
