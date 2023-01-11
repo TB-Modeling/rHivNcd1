@@ -202,41 +202,31 @@ simplot = function(...,
         # For scale.population, divide by 2015 population size - have to do this separately for each combo of keep.dimensions
         if(scale.population){
           
+          # Keep dimensions = year only 
           if(setequal(keep.dimensions,"year")){
             value = value/value[years=="2015"]
             
-          } else if (setequal(keep.dimensions, c('year','age'))){
+            # 2 keep dimensions 
+          } else if(length(keep.dimensions)==2){
             value = sapply(1:dim(value)[2],function(j){
               sapply(1:dim(value)[1],function(i){
                 value[i,j]/value["2015",j]
               })
             })
-            dimnames(value) = list(year=years,
-                                   age=ages)
+            if (setequal(keep.dimensions, c('year','age'))){
+              dimnames(value) = list(year=years,
+                                     age=ages)
+            } else if (setequal(keep.dimensions, c('year','sex'))){ 
+              dimnames(value) = list(year=years,
+                                     sex=sexes)
+            } else if (setequal(keep.dimensions, c('year','hiv.status'))){
+              dimnames(value) = list(year=years,
+                                     hiv.status=hiv.status)
+            } else stop("need to add these dimensions")
             
-          } else if (setequal(keep.dimensions, c('year','sex'))){
-            value = sapply(1:dim(value)[2],function(j){
-              sapply(1:dim(value)[1],function(i){
-                value[i,j]/value["2015",j]
-              })
-            })
-            dimnames(value) = list(year=years,
-                                   sex=sexes)
             
-          } else if (setequal(keep.dimensions, c('year','hiv.status'))){
-            value = sapply(1:dim(value)[2],function(j){
-              sapply(1:dim(value)[1],function(i){
-                value[i,j]/value["2015",j]
-              })
-            })
-            dimnames(value) = list(year=years,
-                                   hiv.status=hiv.status)
-            
-          } else if (setequal(keep.dimensions, c('year','age','sex'))){
-            
-            if(!all(keep.dimensions==c("year","age","sex")))
-              stop("keep.dimensions must be in the order: year, age, sex")
-            
+            # 3 keep dimensions
+          } else if(length(keep.dimensions)==3){
             value = sapply(1:dim(value)[3],function(k){
               sapply(1:dim(value)[2],function(j){
                 sapply(1:dim(value)[1],function(i){
@@ -244,14 +234,16 @@ simplot = function(...,
                 })
               })
             })
-            
-            dim.names = list("year"=years,
-                             "age"=ages,
-                             "sex"=sexes)
-            dim(value) = sapply(dim.names,length)
-            dimnames(value) = dim.names
-            
-          } else stop("need to add these dimensions")
+            if (setequal(keep.dimensions, c('year','age','sex'))){
+              if(!all(keep.dimensions==c("year","age","sex")))
+                stop("keep.dimensions must be in the order: year, age, sex")
+              dim.names = list("year"=years,
+                               "age"=ages,
+                               "sex"=sexes)
+              dim(value) = sapply(dim.names,length)
+              dimnames(value) = dim.names
+            } else stop("need to add these dimensions")
+          }
         }
         
         # set up a dataframe with columns: year, value, sim id, data.type 
