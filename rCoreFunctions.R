@@ -6,13 +6,16 @@
 print("Sourcing rCoreFunctions.R ... ")
 
 # records annual statistics
-record.annual.gss<-function(pop,gss){
-  gss$pop.size[mc$YNOW]<<-length(pop)
+record.annual.gss<-function(pop,mc,gss){
   
-  gss$n.hiv.prev[,,,mc$YNOW]<<- return.gss.hiv.state.sizes(pop)  #'@MS: redundant?
+  gss$pop.size[mc$YNOW] <-length(pop)
+  
+  gss$n.hiv.prev[,,,mc$YNOW] <- return.gss.hiv.state.sizes(pop)  #'@MS: redundant?
   
   # function to save HIV & NCD states sizes by age/sex
-  gss$n.state.sizes[,,,,mc$YNOW]<<-extract.pop.state.size.distribution(pop)
+  gss$n.state.sizes[,,,,mc$YNOW] <-extract.pop.state.size.distribution(pop)
+  
+  gss
 }
 
 
@@ -197,7 +200,7 @@ run.one.year<-function(sim){
   
   ##### AT EACH TIMESTEP WITHIN THE YEAR:
   for(i in (1:mc$ANNUAL.TIMESTEPS)){
-    mc$TNOW=mc$TNOW+1
+    mc$TNOW = mc$TNOW+1
     n=length(pop)
     # CVD events and HIV transisions are independant, so the order doesnt matter
     # we model HIV deaths based on new HIV states after new transitions are modeled
@@ -291,12 +294,13 @@ run.one.year<-function(sim){
   cat("Final pop size is ",length(pop),"\n")
   print(paste("End of year: ",mc$CYNOW," ---------------------------"))
   
-  
-  # Record annual statatistics --------
-  record.annual.gss(pop)
-  
   mc$YNOW<-mc$YNOW+1
   mc$CYNOW<-mc$CYNOW+1
+  
+  # Record annual statatistics --------
+  gss<-record.annual.gss(pop,
+                         mc,
+                         gss)
   
   invisible(list(pop=pop,
                  mc=mc,

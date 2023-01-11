@@ -7,8 +7,8 @@ print("Sourcing Stat.R ... ")
 
 
 #global statistics
-DIM.N=mc$END.YEAR-mc$INITIAL.YEAR+1
-DIM.NAMES.N=c(mc$INITIAL.YEAR:mc$END.YEAR)
+DIM.N=mc$END.YEAR-mc$INITIAL.YEAR+2
+DIM.NAMES.N=c(mc$INITIAL.YEAR:(mc$END.YEAR+1))
 
 #temporary empty arrays to initialize stats
 #1D

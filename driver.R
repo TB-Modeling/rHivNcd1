@@ -21,10 +21,10 @@ run.simulation<-function(rep=1 # replication count (1,...,Inf)
     
     #initialize variables
     reset.gss()
-    mc$TNOW=0
-    mc$YNOW=1
-    mc$CYNOW=mc$INITIAL.YEAR
-    mc$ANNUAL.TIMESTEPS=12 #modeling monthly dynamics
+    mc$TNOW<<-0
+    mc$YNOW<<-1
+    mc$CYNOW<<-mc$INITIAL.YEAR
+    mc$ANNUAL.TIMESTEPS<<-12 #modeling monthly dynamics
     
     #Create initial population 
     cat("Generating Population ... ")
@@ -44,16 +44,17 @@ run.simulation<-function(rep=1 # replication count (1,...,Inf)
     # Set initial CVD risks in 2015
     invisible(set.annual.cvd.risk())
     
+    
     cat("Recording statistics ... ")
     # record annual statistics for year 2015
-    record.annual.gss(pop,gss) 
+    gss<-record.annual.gss(pop,mc,gss) 
     # return.gss.state.size.distribution(sim = list(pop=pop,mc=mc,gss=gss),
     #                                    keep.dimensions = c('hiv.status', 'year'))
 
     cat("Initial population is ready.")
+    sim<-list(pop=pop,mc=mc,gss=gss) 
     
     # run simulation
-    sim<-list(pop=pop,mc=mc,gss=gss) 
     for(i in c(mc$INITIAL.YEAR:mc$END.YEAR)){
       sim<-run.one.year(sim)
     }

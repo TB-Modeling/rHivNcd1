@@ -16,7 +16,7 @@ mc<-list(
   POP.SIZE=100,
   #
   #variables
-  YNOW=0, #variable showing current year
+  YNOW=1, #variable showing current year
   CYNOW=2015, #calendar year
   TNOW=0, #current timestep
   
