@@ -61,8 +61,8 @@ get.hiv.state.proportions = function(hiv.pop){
   
   #compute proportions of HIV states in each age/sex subgroup
   hiv.probs = 
-    sapply(1:length(hiv.dim.names$age), function(age){
-      sapply(1:length(hiv.dim.names$sex), function(sex){
+    sapply(1:length(hiv.dim.names$sex), function(sex){
+      sapply(1:length(hiv.dim.names$age), function(age){
         hiv.pop[,age,sex]/sum(hiv.pop[,age,sex])
       })
     })
