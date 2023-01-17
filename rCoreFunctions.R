@@ -440,9 +440,48 @@ model.hiv.cvd.deaths<-function(prob.hiv.mort,
 #'@MS: to be completed
 
 # new function to update NCD state after aging
-update.ncd.states<-function(){ 
+update.ncd.states<-function(sim){ 
   # for each age/sex subgroup:
   #   compute current prp of ncd states, compare to baseline proportions, and estimate the difference
+  
+  # BASELINE ncd state proportions 
+  baseline.ncd.states = return.gss.state.size.distribution(sim=sim,
+                                                               years="2015",
+                                                               keep.dimensions = c("age","sex","ncd.status","year")) # all but hiv status
+  
+  baseline.ncd.states = (baseline.ncd.states*1000)+1 # to get rid of dividing by 0 issue below 
+  
+  baseline.ncd.proportions = sapply(1:length(mc$DIM.NAMES.SEX), function(sex){
+    sapply(1:length(mc$DIM.NAMES.AGE), function(age){
+      baseline.ncd.states[age,sex,,]/sum(baseline.ncd.states[age,sex,,]) # small numbers problem - dividing by 0
+    })
+  })
+  
+  dim.names = list(ncd.status=mc$DIM.NAMES.NCD,
+                   age=mc$DIM.NAMES.AGE,
+                   sex=mc$DIM.NAMES.SEX)
+  
+  dim(baseline.ncd.proportions) = sapply(dim.names,length)
+  dimnames(baseline.ncd.proportions) = dim.names
+  
+  # CURRENT ncd state proportions 
+  current.ncd.states = return.gss.state.size.distribution(sim=sim,
+                                                               years=as.character(mc$CYNOW),
+                                                               keep.dimensions = c("age","sex","ncd.status","year")) # all but hiv status
+  
+  current.ncd.states = (current.ncd.states*1000)+1 # to get rid of dividing by 0 issue below 
+  
+  current.ncd.proportions = sapply(1:length(mc$DIM.NAMES.SEX), function(sex){
+    sapply(1:length(mc$DIM.NAMES.AGE), function(age){
+      current.ncd.states[age,sex,,]/sum(current.ncd.states[age,sex,,])
+    })
+  })
+  
+  dim(current.ncd.proportions) = sapply(dim.names,length)
+  dimnames(current.ncd.proportions) = dim.names
+  
+  difference = current.ncd.proportions - baseline.ncd.proportions
+  
   # if diference > 0, assign individuals to new ncd states with corresponding probabilities 
   # states: S, D, H, DH
   # only allowing one NCD incidence at a time (H>DH, D>DH and not S>>DH)
@@ -457,7 +496,7 @@ update.ncd.states<-function(){
 #   SA:  assuming differential ncd prevalences based on hiv status
 #   SA: assuming an increase in ncd prevalences over time
   
-  }
+}
 
 #'@MS: new function to mdeol cvd events
 #'need more data on which CVD events are modeled
