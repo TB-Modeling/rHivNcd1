@@ -285,7 +285,7 @@ run.one.year<-function(sim){
   invisible(lapply(pop,function(x){x$incAge}))
   
   ## 4- UPDATE NCD STATES & CVD RISKS FOR NEXT YEAR --------
-  update.ncd.states()
+  # update.ncd.states()
   invisible(set.annual.cvd.risk())
   
 
