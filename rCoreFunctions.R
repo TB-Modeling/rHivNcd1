@@ -524,10 +524,35 @@ update.ncd.states<-function(sim){
   dimnames(transition.probability.DH) = dim.names.age.sex
   
   # >> D transition probabilities 
+  transition.probability.D = transition.numerator["NCD.DIAB",,]
+  transition.probability.D = sapply(1:length(mc$DIM.NAMES.SEX),function(sex){
+    sapply(1:length(mc$DIM.NAMES.AGE),function(age){
+      if(transition.probability.D[age,sex]>0){
+        transition.probability.D[age,sex]/current.ncd.states["NCD.NEG",age,sex,]
+      } else
+        transition.probability.D[age,sex]
+    })
+  })
+  
+  dim(transition.probability.D) = sapply(dim.names.age.sex,length)
+  dimnames(transition.probability.D) = dim.names.age.sex
   
   # >> H transition probabilities 
+  transition.probability.H = transition.numerator["NCD.HYP",,]
+  transition.probability.H = sapply(1:length(mc$DIM.NAMES.SEX),function(sex){
+    sapply(1:length(mc$DIM.NAMES.AGE),function(age){
+      if(transition.probability.H[age,sex]>0){
+        transition.probability.H[age,sex]/current.ncd.states["NCD.NEG",age,sex,]
+      } else
+        transition.probability.H[age,sex]
+    })
+  })
+  
+  dim(transition.probability.H) = sapply(dim.names.age.sex,length)
+  dimnames(transition.probability.H) = dim.names.age.sex
   
 
+  # cbind(transition.probability.DH,transition.probability.D,transition.probability.H)
 
 # master.ncd.distrubution.by.age.sex >>> to extract from 2015 step dataset  
 #   can be included as an input to the model.hiv.cvd.deaths
