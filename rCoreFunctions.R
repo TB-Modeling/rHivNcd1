@@ -444,16 +444,21 @@ update.ncd.states<-function(sim){
   # for each age/sex subgroup:
   #   compute current prp of ncd states, compare to baseline proportions, and estimate the difference
   
+  # if diference > 0, assign individuals to new ncd states with corresponding probabilities 
+  # states: S, D, H, DH
+  # only allowing one NCD incidence at a time (H>DH, D>DH and not S>>DH)
+  # 1- modeling moves from H >> DH or D>> DH
+  # 2- modeling moves from S >> D
+  # 3- modeling moves from S >>H
+  
   # BASELINE ncd state proportions 
   baseline.ncd.states = return.gss.state.size.distribution(sim=sim,
-                                                               years="2015",
-                                                               keep.dimensions = c("age","sex","ncd.status","year")) # all but hiv status
-  
-  baseline.ncd.states = (baseline.ncd.states*1000)+1 # to get rid of dividing by 0 issue below 
+                                                           years="2015",
+                                                           keep.dimensions = c("age","sex","ncd.status","year")) # all but hiv status
   
   baseline.ncd.proportions = sapply(1:length(mc$DIM.NAMES.SEX), function(sex){
     sapply(1:length(mc$DIM.NAMES.AGE), function(age){
-      baseline.ncd.states[age,sex,,]/sum(baseline.ncd.states[age,sex,,]) # small numbers problem - dividing by 0
+      baseline.ncd.states[age,sex,,]/sum(baseline.ncd.states[age,sex,,]) 
     })
   })
   
@@ -464,12 +469,13 @@ update.ncd.states<-function(sim){
   dim(baseline.ncd.proportions) = sapply(dim.names,length)
   dimnames(baseline.ncd.proportions) = dim.names
   
+  baseline.ncd.proportions[baseline.ncd.proportions=="NaN"] = 0 # to remove NaN values that were introduced by dividing by 0 
+  baseline.ncd.states = aperm(baseline.ncd.states,c(3,1,2,4)) # reorder dimensions, just to make comparisons easier
+  
   # CURRENT ncd state proportions 
   current.ncd.states = return.gss.state.size.distribution(sim=sim,
-                                                               years=as.character(mc$CYNOW),
-                                                               keep.dimensions = c("age","sex","ncd.status","year")) # all but hiv status
-  
-  current.ncd.states = (current.ncd.states*1000)+1 # to get rid of dividing by 0 issue below 
+                                                          years=as.character(mc$CYNOW),
+                                                          keep.dimensions = c("age","sex","ncd.status","year")) # all but hiv status
   
   current.ncd.proportions = sapply(1:length(mc$DIM.NAMES.SEX), function(sex){
     sapply(1:length(mc$DIM.NAMES.AGE), function(age){
@@ -480,14 +486,48 @@ update.ncd.states<-function(sim){
   dim(current.ncd.proportions) = sapply(dim.names,length)
   dimnames(current.ncd.proportions) = dim.names
   
+  current.ncd.proportions[current.ncd.proportions=="NaN"] = 0 # to remove NaN values that were introduced by dividing by 0 
+  current.ncd.states = aperm(current.ncd.states,c(3,1,2,4)) # reorder dimensions, just to make comparisons easier
+  
+  # DIFFERENCE in prevalence
   difference = current.ncd.proportions - baseline.ncd.proportions
   
-  # if diference > 0, assign individuals to new ncd states with corresponding probabilities 
-  # states: S, D, H, DH
-  # only allowing one NCD incidence at a time (H>DH, D>DH and not S>>DH)
-  # 1- modeling moves from H >> DH or D>> DH
-  # 2- modeling moves from S >> D
-  # 3- modeling moves from S >>H
+  # NUMERATOR for transition probability 
+  transition.numerator = sapply(1:length(mc$DIM.NAMES.SEX),function(sex){
+    sapply(1:length(mc$DIM.NAMES.AGE),function(age){
+      sapply(1:length(mc$DIM.NAMES.NCD),function(ncd){
+        if(difference[ncd,age,sex]>0){
+          current.ncd.states[ncd,age,sex,] - baseline.ncd.states[ncd,age,sex,]
+        } else if(difference[ncd,age,sex]==0 | difference[ncd,age,sex]<0)
+          0
+      })
+    })
+  })
+  
+  dim(transition.numerator) = sapply(dim.names,length)
+  dimnames(transition.numerator) = dim.names
+  
+  # H >> DH and D >> DH transition probabilities 
+  transition.probability.DH = transition.numerator["NCD.DIAB_HYP",,]
+  transition.probability.DH = sapply(1:length(mc$DIM.NAMES.SEX),function(sex){
+    sapply(1:length(mc$DIM.NAMES.AGE),function(age){
+        if(transition.probability.DH[age,sex]>0){
+          transition.probability.DH[age,sex]/sum(current.ncd.states["NCD.DIAB",age,sex,],current.ncd.states["NCD.HYP",age,sex,])
+        } else
+          transition.probability.DH[age,sex]
+    })
+  })
+  
+  dim.names.age.sex = list(age=mc$DIM.NAMES.AGE,
+                           sex=mc$DIM.NAMES.SEX)
+  dim(transition.probability.DH) = sapply(dim.names.age.sex,length)
+  dimnames(transition.probability.DH) = dim.names.age.sex
+  
+  # >> D transition probabilities 
+  
+  # >> H transition probabilities 
+  
+
 
 # master.ncd.distrubution.by.age.sex >>> to extract from 2015 step dataset  
 #   can be included as an input to the model.hiv.cvd.deaths
