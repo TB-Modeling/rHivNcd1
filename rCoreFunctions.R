@@ -552,8 +552,6 @@ update.ncd.states<-function(sim){
   dimnames(transition.probability.H) = dim.names.age.sex
   
 
-  # cbind(transition.probability.DH,transition.probability.D,transition.probability.H)
-
 # master.ncd.distrubution.by.age.sex >>> to extract from 2015 step dataset  
 #   can be included as an input to the model.hiv.cvd.deaths
 #   
