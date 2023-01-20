@@ -33,12 +33,16 @@ Person<-R6Class("Person",
         ncdState=mc$NCD.NEG, 
         annualCvdRisk=NULL,
         monthlyCvdRisk=NULL,
+        bMarkedTransDH=FALSE,
+        bMarkedTransD=FALSE,
+        bMarkedTransH=FALSE,
         tDiabInc=NULL,
         tDiabDiag=NULL,
         tDiabTrt=NULL,
         tHypInc=NULL,
         tHypDiag=NULL,
         tHypTrt=NULL,
+        tDiabHypInc=NULL,
         
         cvdState=mc$CVD.NONE,
         nMi=0,
@@ -99,7 +103,17 @@ Person<-R6Class("Person",
         hyp.getInfected=function(tnow){
           self$ncdState=mc$NCD.HYP
           self$tHypInc=tnow
-        }
+        },
+        
+        DH.transition=function(tnow){
+          if(self$bMarkedTransDH==T){
+            self$ncdState=mc$NCD.DIAB_HYP
+            self$tDiabHypInc=tnow
+            self$bMarkedTransDH=F}
+          }
+      
+        
+        
         #' @JP: we need to check this
         # #run a function when the object is garbage collected
         # finalize = function() {

@@ -456,63 +456,58 @@ update.ncd.states<-function(sim){
                                                            years="2015",
                                                            keep.dimensions = c("age","sex","ncd.status","year")) # all but hiv status
   
-  baseline.ncd.proportions = sapply(1:length(mc$DIM.NAMES.SEX), function(sex){
+  D<-baseline.ncd.states
+  invisible(sapply(1:length(mc$DIM.NAMES.SEX), function(sex){
     sapply(1:length(mc$DIM.NAMES.AGE), function(age){
-      baseline.ncd.states[age,sex,,]/sum(baseline.ncd.states[age,sex,,]) 
+      D[age,sex,,]<<-D[age,sex,,]/sum(baseline.ncd.states[age,sex,,]) # double assignment goes back to the most recent value of D in the upper environment
     })
-  })
-  
-  dim.names = list(ncd.status=mc$DIM.NAMES.NCD,
-                   age=mc$DIM.NAMES.AGE,
-                   sex=mc$DIM.NAMES.SEX)
-  
-  dim(baseline.ncd.proportions) = sapply(dim.names,length)
-  dimnames(baseline.ncd.proportions) = dim.names
-  
+  }))
+  baseline.ncd.proportions = D
   baseline.ncd.proportions[baseline.ncd.proportions=="NaN"] = 0 # to remove NaN values that were introduced by dividing by 0 
-  baseline.ncd.states = aperm(baseline.ncd.states,c(3,1,2,4)) # reorder dimensions, just to make comparisons easier
-  
+
   # CURRENT ncd state proportions 
   current.ncd.states = return.gss.state.size.distribution(sim=sim,
                                                           years=as.character(mc$CYNOW),
                                                           keep.dimensions = c("age","sex","ncd.status","year")) # all but hiv status
-  
-  current.ncd.proportions = sapply(1:length(mc$DIM.NAMES.SEX), function(sex){
+  D<-current.ncd.states
+  invisible(sapply(1:length(mc$DIM.NAMES.SEX), function(sex){
     sapply(1:length(mc$DIM.NAMES.AGE), function(age){
-      current.ncd.states[age,sex,,]/sum(current.ncd.states[age,sex,,])
+      D[age,sex,,]<<-D[age,sex,,]/sum(current.ncd.states[age,sex,,]) 
     })
-  })
-  
-  dim(current.ncd.proportions) = sapply(dim.names,length)
-  dimnames(current.ncd.proportions) = dim.names
-  
+  }))
+  current.ncd.proportions = D
   current.ncd.proportions[current.ncd.proportions=="NaN"] = 0 # to remove NaN values that were introduced by dividing by 0 
-  current.ncd.states = aperm(current.ncd.states,c(3,1,2,4)) # reorder dimensions, just to make comparisons easier
+  
   
   # DIFFERENCE in prevalence
   difference = current.ncd.proportions - baseline.ncd.proportions
   
   # NUMERATOR for transition probability 
-  transition.numerator = sapply(1:length(mc$DIM.NAMES.SEX),function(sex){
-    sapply(1:length(mc$DIM.NAMES.AGE),function(age){
-      sapply(1:length(mc$DIM.NAMES.NCD),function(ncd){
-        if(difference[ncd,age,sex]>0){
-          current.ncd.states[ncd,age,sex,] - baseline.ncd.states[ncd,age,sex,]
-        } else if(difference[ncd,age,sex]==0 | difference[ncd,age,sex]<0)
+  transition.numerator = sapply(1:length(mc$DIM.NAMES.NCD),function(ncd){
+    sapply(1:length(mc$DIM.NAMES.SEX),function(sex){
+      sapply(1:length(mc$DIM.NAMES.AGE),function(age){
+        if(difference[age,sex,ncd,]>0){
+          difference[age,sex,ncd,]*baseline.ncd.states[age,sex,ncd,]
+        } else if(difference[age,sex,ncd,]==0 | difference[age,sex,ncd,]<0)
           0
       })
     })
   })
+  #'@MS double check dimension order 
+  
+  dim.names = list(age=mc$DIM.NAMES.AGE,
+                   sex=mc$DIM.NAMES.SEX,
+                   ncd=mc$DIM.NAMES.NCD)
   
   dim(transition.numerator) = sapply(dim.names,length)
   dimnames(transition.numerator) = dim.names
   
   # H >> DH and D >> DH transition probabilities 
-  transition.probability.DH = transition.numerator["NCD.DIAB_HYP",,]
+  transition.probability.DH = transition.numerator[,,"NCD.DIAB_HYP"]
   transition.probability.DH = sapply(1:length(mc$DIM.NAMES.SEX),function(sex){
     sapply(1:length(mc$DIM.NAMES.AGE),function(age){
         if(transition.probability.DH[age,sex]>0){
-          transition.probability.DH[age,sex]/sum(current.ncd.states["NCD.DIAB",age,sex,],current.ncd.states["NCD.HYP",age,sex,])
+          transition.probability.DH[age,sex]/sum(current.ncd.states[age,sex,"NCD.DIAB",],current.ncd.states[age,sex,"NCD.HYP",])
         } else
           transition.probability.DH[age,sex]
     })
@@ -523,12 +518,35 @@ update.ncd.states<-function(sim){
   dim(transition.probability.DH) = sapply(dim.names.age.sex,length)
   dimnames(transition.probability.DH) = dim.names.age.sex
   
+  # model transition to DH from D or H 
+  n=length(pop)
+  invisible(lapply(c(1:n),function(x){
+    p=pop[[x]] 
+    if(p$ncdState==mc$NCD.DIAB | p$ncdState==mc$NCD.HYP){
+      prob = transition.probability.DH[p$agegroup,p$sex]
+      if(runif(1)<prob)
+        p$bMarkedTransDH=T
+    } 
+  })
+  )
+  
+  pop.temp = pop
+  n=length(pop)
+  invisible(lapply(c(1:n),function(x){
+    p=pop[[x]] 
+    p$DH.transition(mc$TNOW)
+  }))
+  # invisible(sapply(pop.temp,DH.transition,mc$TNOW))
+
+  ## COMPARE PREVALENCES AGAIN WITH TEMPORARY POP WHERE PEOPLE ARE MARKED FOR TRANSITION ALREADY
+  
+  
   # >> D transition probabilities 
-  transition.probability.D = transition.numerator["NCD.DIAB",,]
+  transition.probability.D = transition.numerator[,,"NCD.DIAB"]
   transition.probability.D = sapply(1:length(mc$DIM.NAMES.SEX),function(sex){
     sapply(1:length(mc$DIM.NAMES.AGE),function(age){
       if(transition.probability.D[age,sex]>0){
-        transition.probability.D[age,sex]/current.ncd.states["NCD.NEG",age,sex,]
+        transition.probability.D[age,sex]/current.ncd.states[age,sex,"NCD.NEG",]
       } else
         transition.probability.D[age,sex]
     })
@@ -537,12 +555,14 @@ update.ncd.states<-function(sim){
   dim(transition.probability.D) = sapply(dim.names.age.sex,length)
   dimnames(transition.probability.D) = dim.names.age.sex
   
+  ## COMPARE PREVALENCES AGAIN WITH TEMPORARY POP WHERE PEOPLE ARE MARKED FOR TRANSITION ALREADY
+  
   # >> H transition probabilities 
-  transition.probability.H = transition.numerator["NCD.HYP",,]
+  transition.probability.H = transition.numerator[,,"NCD.HYP"]
   transition.probability.H = sapply(1:length(mc$DIM.NAMES.SEX),function(sex){
     sapply(1:length(mc$DIM.NAMES.AGE),function(age){
       if(transition.probability.H[age,sex]>0){
-        transition.probability.H[age,sex]/current.ncd.states["NCD.NEG",age,sex,]
+        transition.probability.H[age,sex]/current.ncd.states[age,sex,"NCD.NEG",]
       } else
         transition.probability.H[age,sex]
     })
