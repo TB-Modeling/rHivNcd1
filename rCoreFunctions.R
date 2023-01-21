@@ -475,7 +475,7 @@ update.ncd.states<-function(sim){
   ####################################################################################
   # DIAB HYP
   ####################################################################################
-  cat("Modeling transitions to diab.hyp...")
+  cat("Modeling transitions to diab.hyp... \n")
   # CURRENT NCD state sizes & prop
   current.ncd.states = extract.pop.ncd.distribution(pop = pop)
   current.ncd.props<-return.prop.sex.age(current.ncd.states)
@@ -509,7 +509,8 @@ update.ncd.states<-function(sim){
   ####################################################################################
   # DIAB 
   ####################################################################################
-  cat("Modeling transitions to diab ...")
+  #MS: see the example of a shallow vs deep copy below
+  cat("Modeling transitions to diab ... \n")
   # define a temporary population to model the transitions 
   #option1. 
   # pop.temp = pop #this is a shallow copy and the default value for R6 objects clone is False. 
@@ -567,7 +568,7 @@ update.ncd.states<-function(sim){
   ####################################################################################
   # HYP
   ####################################################################################
-  cat("Modeling transitions to hyp...")
+  cat("Modeling transitions to hyp... \n")
   #deep copy: element by element: more time consuming 
   invisible(lapply(1:length(pop),function(x){
     pop.temp[[x]]<<- pop[[x]]$clone(deep=T)
