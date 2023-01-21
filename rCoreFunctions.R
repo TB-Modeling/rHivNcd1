@@ -26,7 +26,7 @@ create.initial.population <- function( n=0 # number of people if not specified a
   cat("Generating ",n, "people in year=",mc$CYNOW,"\n")
   
   #subset the first n row to create n persons
-  sim.pop = read.csv("data/stepSimPop2015.csv")
+  sim.pop=step.dataset
   if (n>nrow(sim.pop)) stop ("Requested size of initial population is greater than simpop data in 2015")
   sim.pop=sim.pop[1:n,]
   #set up attributes for each row
@@ -436,151 +436,6 @@ model.hiv.cvd.deaths<-function(prob.hiv.mort,
   }
 }
 
-
-#'@MS: to be completed
-
-# new function to update NCD state after aging
-update.ncd.states<-function(sim){ 
-  # for each age/sex subgroup:
-  #   compute current prp of ncd states, compare to baseline proportions, and estimate the difference
-  
-  # if diference > 0, assign individuals to new ncd states with corresponding probabilities 
-  # states: S, D, H, DH
-  # only allowing one NCD incidence at a time (H>DH, D>DH and not S>>DH)
-  # 1- modeling moves from H >> DH or D>> DH
-  # 2- modeling moves from S >> D
-  # 3- modeling moves from S >>H
-  
-  # BASELINE ncd state proportions 
-  baseline.ncd.states = return.gss.state.size.distribution(sim=sim,
-                                                           years="2015",
-                                                           keep.dimensions = c("age","sex","ncd.status","year")) # all but hiv status
-  
-  D<-baseline.ncd.states
-  invisible(sapply(1:length(mc$DIM.NAMES.SEX), function(sex){
-    sapply(1:length(mc$DIM.NAMES.AGE), function(age){
-      D[age,sex,,]<<-D[age,sex,,]/sum(baseline.ncd.states[age,sex,,]) # double assignment goes back to the most recent value of D in the upper environment
-    })
-  }))
-  baseline.ncd.proportions = D
-  baseline.ncd.proportions[baseline.ncd.proportions=="NaN"] = 0 # to remove NaN values that were introduced by dividing by 0 
-
-  # CURRENT ncd state proportions 
-  current.ncd.states = return.gss.state.size.distribution(sim=sim,
-                                                          years=as.character(mc$CYNOW),
-                                                          keep.dimensions = c("age","sex","ncd.status","year")) # all but hiv status
-  D<-current.ncd.states
-  invisible(sapply(1:length(mc$DIM.NAMES.SEX), function(sex){
-    sapply(1:length(mc$DIM.NAMES.AGE), function(age){
-      D[age,sex,,]<<-D[age,sex,,]/sum(current.ncd.states[age,sex,,]) 
-    })
-  }))
-  current.ncd.proportions = D
-  current.ncd.proportions[current.ncd.proportions=="NaN"] = 0 # to remove NaN values that were introduced by dividing by 0 
-  
-  
-  # DIFFERENCE in prevalence
-  difference = current.ncd.proportions - baseline.ncd.proportions
-  
-  # NUMERATOR for transition probability 
-  transition.numerator = sapply(1:length(mc$DIM.NAMES.NCD),function(ncd){
-    sapply(1:length(mc$DIM.NAMES.SEX),function(sex){
-      sapply(1:length(mc$DIM.NAMES.AGE),function(age){
-        if(difference[age,sex,ncd,]>0){
-          difference[age,sex,ncd,]*baseline.ncd.states[age,sex,ncd,]
-        } else if(difference[age,sex,ncd,]==0 | difference[age,sex,ncd,]<0)
-          0
-      })
-    })
-  })
-  #'@MS double check dimension order 
-  
-  dim.names = list(age=mc$DIM.NAMES.AGE,
-                   sex=mc$DIM.NAMES.SEX,
-                   ncd=mc$DIM.NAMES.NCD)
-  
-  dim(transition.numerator) = sapply(dim.names,length)
-  dimnames(transition.numerator) = dim.names
-  
-  # H >> DH and D >> DH transition probabilities 
-  transition.probability.DH = transition.numerator[,,"NCD.DIAB_HYP"]
-  transition.probability.DH = sapply(1:length(mc$DIM.NAMES.SEX),function(sex){
-    sapply(1:length(mc$DIM.NAMES.AGE),function(age){
-        if(transition.probability.DH[age,sex]>0){
-          transition.probability.DH[age,sex]/sum(current.ncd.states[age,sex,"NCD.DIAB",],current.ncd.states[age,sex,"NCD.HYP",])
-        } else
-          transition.probability.DH[age,sex]
-    })
-  })
-  
-  dim.names.age.sex = list(age=mc$DIM.NAMES.AGE,
-                           sex=mc$DIM.NAMES.SEX)
-  dim(transition.probability.DH) = sapply(dim.names.age.sex,length)
-  dimnames(transition.probability.DH) = dim.names.age.sex
-  
-  # model transition to DH from D or H 
-  n=length(pop)
-  invisible(lapply(c(1:n),function(x){
-    p=pop[[x]] 
-    if(p$ncdState==mc$NCD.DIAB | p$ncdState==mc$NCD.HYP){
-      prob = transition.probability.DH[p$agegroup,p$sex]
-      if(runif(1)<prob)
-        p$bMarkedTransDH=T
-    } 
-  })
-  )
-  
-  pop.temp = pop
-  n=length(pop)
-  invisible(lapply(c(1:n),function(x){
-    p=pop[[x]] 
-    p$DH.transition(mc$TNOW)
-  }))
-  # invisible(sapply(pop.temp,DH.transition,mc$TNOW))
-
-  ## COMPARE PREVALENCES AGAIN WITH TEMPORARY POP WHERE PEOPLE ARE MARKED FOR TRANSITION ALREADY
-  
-  
-  # >> D transition probabilities 
-  transition.probability.D = transition.numerator[,,"NCD.DIAB"]
-  transition.probability.D = sapply(1:length(mc$DIM.NAMES.SEX),function(sex){
-    sapply(1:length(mc$DIM.NAMES.AGE),function(age){
-      if(transition.probability.D[age,sex]>0){
-        transition.probability.D[age,sex]/current.ncd.states[age,sex,"NCD.NEG",]
-      } else
-        transition.probability.D[age,sex]
-    })
-  })
-  
-  dim(transition.probability.D) = sapply(dim.names.age.sex,length)
-  dimnames(transition.probability.D) = dim.names.age.sex
-  
-  ## COMPARE PREVALENCES AGAIN WITH TEMPORARY POP WHERE PEOPLE ARE MARKED FOR TRANSITION ALREADY
-  
-  # >> H transition probabilities 
-  transition.probability.H = transition.numerator[,,"NCD.HYP"]
-  transition.probability.H = sapply(1:length(mc$DIM.NAMES.SEX),function(sex){
-    sapply(1:length(mc$DIM.NAMES.AGE),function(age){
-      if(transition.probability.H[age,sex]>0){
-        transition.probability.H[age,sex]/current.ncd.states[age,sex,"NCD.NEG",]
-      } else
-        transition.probability.H[age,sex]
-    })
-  })
-  
-  dim(transition.probability.H) = sapply(dim.names.age.sex,length)
-  dimnames(transition.probability.H) = dim.names.age.sex
-  
-
-# master.ncd.distrubution.by.age.sex >>> to extract from 2015 step dataset  
-#   can be included as an input to the model.hiv.cvd.deaths
-#   
-#   Baseline: we assume similar ncd prevalences for HIV+/-, and keep the prevalence fix over time
-#   SA:  assuming differential ncd prevalences based on hiv status
-#   SA: assuming an increase in ncd prevalences over time
-  
-}
-
 #'@MS: new function to mdeol cvd events
 #'need more data on which CVD events are modeled
 model.cvd.events<-function(){
@@ -602,4 +457,176 @@ model.cvd.events<-function(){
   # }))
 }
 
+
+# new function to update NCD state after aging
+update.ncd.states<-function(sim){ 
+  # for each age/sex subgroup:
+  #   compute current prp of ncd states, compare to baseline proportions, and estimate the difference
+  # if diference > 0, assign individuals to new ncd states with corresponding probabilities 
+  # states: S, D, H, DH
+  # only allowing one NCD incidence at a time (H>DH, D>DH and not S>>DH)
+  # 1- modeling moves from H >> DH or D>> DH
+  # 2- modeling moves from S >> D
+  # 3- modeling moves from S >>H
+  
+  # TARGET ncNCDd state sizes and proportions 
+  # target.ncd.sizes
+  # target.ncd.props
+  ####################################################################################
+  # DIAB HYP
+  ####################################################################################
+  cat("Modeling transitions to diab.hyp...")
+  # CURRENT NCD state sizes & prop
+  current.ncd.states = extract.pop.ncd.distribution(pop = pop)
+  current.ncd.props<-return.prop.sex.age(current.ncd.states)
+  # sum(current.ncd.props)==mc$DIM.AGE*mc$DIM.SEX #to make sure we computed proportions correctly
+  
+  # DIFFERENCE in prevalence of NCDs
+  diff.props =  target.ncd.props-current.ncd.props
+
+  # ADDITIONAL Transitions required to reach the target proportions:
+  trans.freq=diff.props
+  invisible(lapply(1:mc$DIM.AGE, function(ag){
+    lapply(1:mc$DIM.SEX, function(sex){
+      lapply(1:mc$DIM.NCD, function(ncd){
+        trans.freq[ag,sex,ncd]<<-diff.props[ag,sex,ncd]*sum(current.ncd.states[ag,sex,]) # the required number of new transitions
+    })})}))
+  trans.freq[trans.freq<0]<-0
+  
+  #PROBABILITY Of transition to DH for those in D or H state
+  trans.prob.diab.hyp=
+  trans.freq[,,"NCD.DIAB_HYP"]/(current.ncd.states[,,"NCD.DIAB"]+current.ncd.states[,,"NCD.HYP"])
+  
+  # TRANSITION to DH from D or H 
+  invisible(lapply(c(1:length(pop)),function(x){
+    p=pop[[x]] 
+    if(p$ncdState==mc$NCD.DIAB || p$ncdState==mc$NCD.HYP){ #@MS: make sure to use double || for OR in the if clauses. see the difference between | and ||
+      if(runif(1) < trans.prob.diab.hyp[p$agegroup,p$sex])
+        p$bMarkedTransDiabHyp=T}
+    }))
+  # number of people marked to transition?   
+  sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp))))
+  ####################################################################################
+  # DIAB 
+  ####################################################################################
+  cat("Modeling transitions to diab ...")
+  # define a temporary population to model the transitions 
+  #option1. 
+  # pop.temp = pop #this is a shallow copy and the default value for R6 objects clone is False. 
+  # so you basically make a mirrored copy of the popualtion and all the changes that you make on pop.temp is mirrored on pop
+  
+  #option2. deep copy: element by element: more time consuming 
+  invisible(lapply(1:length(pop),function(x){
+    pop.temp[[x]]<<- pop[[x]]$clone(deep=T)
+  }))
+  
+  sum(unlist(lapply(pop.temp,function(x) return(x$bMarkedTransDiabHyp))))
+  sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp))))
+  
+  D<-lapply(pop.temp,function(x) {if (x$bMarkedTransDiabHyp==T) {
+    x$ncdState <-mc$NCD.DIAB_HYP
+    x$bMarkedTransDiabHyp<-F
+    return(1)
+    }})
+  # how many events are modeled?  
+  # sum(unlist(D))
+ 
+  # the population is updated after those events?  
+  sum(unlist(lapply(pop.temp,function(x) return(x$bMarkedTransDiabHyp)))) #should be 0
+  sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp)))) #should be non-zero
+  
+  # CURRENT NCD state sizes & prop based on the "temp.pop"
+  current.ncd.states = extract.pop.ncd.distribution(pop = pop.temp)
+  current.ncd.props<-return.prop.sex.age(current.ncd.states)
+  
+  # DIFFERENCE in prevalence of NCDs
+  diff.props = target.ncd.props-current.ncd.props 
+  
+  # ADDITIONAL Transitions required to reach the target proportions:
+  trans.freq=diff.props
+  invisible(lapply(1:mc$DIM.AGE, function(ag){
+    lapply(1:mc$DIM.SEX, function(sex){
+      lapply(1:mc$DIM.NCD, function(ncd){
+        trans.freq[ag,sex,ncd]<<-diff.props[ag,sex,ncd]*sum(current.ncd.states[ag,sex,]) # the required number of new transitions
+      })})}))
+  trans.freq[trans.freq<0]<-0
+  
+  #PROBABILITY Of transition to DIAB for those in NCD.NEG
+  trans.prob.diab= trans.freq[,,"NCD.DIAB"]/(current.ncd.states[,,"NCD.NEG"])
+  
+  # TRANSITION to H from neg
+  invisible(lapply(c(1:length(pop)),function(x){
+    p=pop[[x]] 
+    if(p$ncdState==mc$NCD.NEG){
+      if(runif(1)<trans.prob.diab[p$agegroup,p$sex])
+        p$bMarkedTransDiab=T}
+  }))
+  # number of people marked to transition?   
+  # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiab))))
+  # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp))))
+  ####################################################################################
+  # HYP
+  ####################################################################################
+  cat("Modeling transitions to hyp...")
+  #deep copy: element by element: more time consuming 
+  invisible(lapply(1:length(pop),function(x){
+    pop.temp[[x]]<<- pop[[x]]$clone(deep=T)
+  }))
+  # sum(unlist(lapply(pop.temp,function(x) return(x$bMarkedTransDiab))))
+  # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiab))))
+
+  D<-lapply(pop.temp,function(x) {
+    if (x$bMarkedTransDiabHyp==T) {
+      x$ncdState <-mc$NCD.DIAB_HYP
+      x$bMarkedTransDiabHyp<-F }
+    if (x$bMarkedTransDiab==T) {
+      x$ncdState <-mc$NCD.DIAB
+      x$bMarkedTransDiab<-F}
+    })
+  # how many events are modeled?  
+  # sum(unlist(D))
+  
+  # the population is updated after those events?  
+  # sum(unlist(lapply(pop.temp,function(x) return(x$bMarkedTransDiab)))) #should be 0
+  # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiab)))) #should be non-zero
+  
+  # CURRENT NCD state sizes & prop based on the "temp.pop"
+  current.ncd.states = extract.pop.ncd.distribution(pop = pop.temp)
+  current.ncd.props<-return.prop.sex.age(current.ncd.states)
+  
+  # DIFFERENCE in prevalence of NCDs
+  diff.props = target.ncd.props-current.ncd.props 
+  
+  # ADDITIONAL Transitions required to reach the target proportions:
+  trans.freq=diff.props
+  invisible(lapply(1:mc$DIM.AGE, function(ag){
+    lapply(1:mc$DIM.SEX, function(sex){
+      lapply(1:mc$DIM.NCD, function(ncd){
+        trans.freq[ag,sex,ncd]<<-diff.props[ag,sex,ncd]*sum(current.ncd.states[ag,sex,]) # the required number of new transitions
+      })})}))
+  trans.freq[trans.freq<0]<-0
+  
+  #PROBABILITY Of transition to HYP for those in NCD.NEG
+  trans.prob.hyp= trans.freq[,,"NCD.HYP"]/(current.ncd.states[,,"NCD.NEG"])
+  
+  # TRANSITION to H from neg
+  invisible(lapply(c(1:length(pop)),function(x){
+    p=pop[[x]] 
+    if(p$ncdState==mc$NCD.NEG){
+      if(runif(1)<trans.prob.diab[p$agegroup,p$sex])
+        p$bMarkedTransHyp=T}
+  }))
+  # number of people marked to transition?   
+  # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransHyp))))
+  # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiab))))
+  # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp))))
+  
+  pop
+}
+
+
+#   
+#   Baseline: we assume similar ncd prevalences for HIV+/-, and keep the prevalence fix over time
+#   SA:  assuming differential ncd prevalences based on hiv status
+#   SA: assuming an increase in ncd prevalences over time
 

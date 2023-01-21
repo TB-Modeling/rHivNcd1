@@ -175,6 +175,35 @@ return.gss.state.size.distribution<- function(sim,
   rv
 }
 
+
+extract.pop.ncd.distribution<-function(pop){
+  n=length(pop)
+  ncd.state.sizes<-array(0,
+                         dim=c(mc$DIM.AGE,mc$DIM.SEX,mc$DIM.NCD),
+                         dimnames = list(mc$DIM.NAMES.AGE,mc$DIM.NAMES.SEX,mc$DIM.NAMES.NCD))
+  invisible(lapply(c(1:n),function(x){
+    ncd.state.sizes[  pop[[x]]$agegroup,
+                      pop[[x]]$sex, 
+                      pop[[x]]$ncdState] <<- ncd.state.sizes[  pop[[x]]$agegroup,
+                                                               pop[[x]]$sex,  
+                                                               pop[[x]]$ncdState] +1  }))
+  
+  ncd.state.sizes
+}
+
+
+return.prop.sex.age<-function(vFreq){
+  vProp=vFreq
+  invisible(sapply(1:length(mc$DIM.NAMES.SEX), function(sex){
+    sapply(1:length(mc$DIM.NAMES.AGE), function(age){
+      vProp[age,sex,]<<-vProp[age,sex,]/sum(vFreq[age,sex,]) 
+    })
+  }))
+  vProp[vProp=="NaN"] = 0 # to remove NaN values that were introduced by dividing by 0 
+  vProp
+}
+
+
 #list of annual statistics that are collected throughout the simulation
 # astats<-list(
 #   pop.size=0,

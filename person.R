@@ -13,7 +13,7 @@ library(R6)
 # we defined
 # alice <- Agent$new(mc$SEX.FEMALE, 35)
 Person<-R6Class("Person",
-                clone=F,
+                clone=T,
       public=list(
         id=NULL,
         tborn=NULL,
@@ -31,11 +31,15 @@ Person<-R6Class("Person",
         bMarkedHivUneng=F,
         
         ncdState=mc$NCD.NEG, 
+        
+        bMarkedTransDiabHyp=FALSE, # True if person is chosen for transition to the new state
+        bMarkedTransDiab=FALSE,
+        bMarkedTransHyp=FALSE,
+        
+        
         annualCvdRisk=NULL,
         monthlyCvdRisk=NULL,
-        bMarkedTransDH=FALSE,
-        bMarkedTransD=FALSE,
-        bMarkedTransH=FALSE,
+        
         tDiabInc=NULL,
         tDiabDiag=NULL,
         tDiabTrt=NULL,
