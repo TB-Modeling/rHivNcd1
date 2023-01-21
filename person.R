@@ -99,21 +99,21 @@ Person<-R6Class("Person",
           self$tHivUneng=tnow
           self$bMarkedHivUneng=FALSE
         },
-        #NCD transitions
+        #NCD incidence 
         diab.getInfected=function(tnow){
           self$ncdState=mc$NCD.DIAB
           self$tDiabInc=tnow
+          self$bMarkedTransDiab=F
         },
         hyp.getInfected=function(tnow){
           self$ncdState=mc$NCD.HYP
           self$tHypInc=tnow
+          self$bMarkedTransHyp=F
         },
-        
-        DH.transition=function(tnow){
-          if(self$bMarkedTransDH==T){
+       diab.hyp.getInfected=function(tnow){
             self$ncdState=mc$NCD.DIAB_HYP
             self$tDiabHypInc=tnow
-            self$bMarkedTransDH=F}
+            self$bMarkedTransDiabHyp=F
           }
       
         

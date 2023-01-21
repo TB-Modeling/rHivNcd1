@@ -28,6 +28,8 @@ cat("Recording statistics ... ")
 gss<-record.annual.gss(pop,mc,gss)
 sim<-list(pop=pop,mc=mc,gss=gss)
 # sim<-run.one.year(sim)
+
+
 pop<-update.ncd.states()
 sum(unlist(lapply(pop,function(x) return(x$bMarkedTransHyp))))
 sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiab))))

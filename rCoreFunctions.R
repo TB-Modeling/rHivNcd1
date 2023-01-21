@@ -506,38 +506,20 @@ update.ncd.states<-function(sim){
     }))
   # number of people marked to transition?   
   sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp))))
+  
+  #model events
+  D<-lapply(pop,function(p) {
+    if (p$bMarkedTransDiabHyp==T){
+      p$diab.hyp.getInfected(mc$TNOW)
+    return(1)
+  }})
+  # sum(unlist(D))
+  # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp))))
   ####################################################################################
   # DIAB 
   ####################################################################################
-  #MS: see the example of a shallow vs deep copy below
-  cat("Modeling transitions to diab ... \n")
-  # define a temporary population to model the transitions 
-  #option1. 
-  # pop.temp = pop #this is a shallow copy and the default value for R6 objects clone is False. 
-  # so you basically make a mirrored copy of the popualtion and all the changes that you make on pop.temp is mirrored on pop
-  
-  #option2. deep copy: element by element: more time consuming 
-  invisible(lapply(1:length(pop),function(x){
-    pop.temp[[x]]<<- pop[[x]]$clone(deep=T)
-  }))
-  
-  sum(unlist(lapply(pop.temp,function(x) return(x$bMarkedTransDiabHyp))))
-  sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp))))
-  
-  D<-lapply(pop.temp,function(x) {if (x$bMarkedTransDiabHyp==T) {
-    x$ncdState <-mc$NCD.DIAB_HYP
-    x$bMarkedTransDiabHyp<-F
-    return(1)
-    }})
-  # how many events are modeled?  
-  # sum(unlist(D))
- 
-  # the population is updated after those events?  
-  sum(unlist(lapply(pop.temp,function(x) return(x$bMarkedTransDiabHyp)))) #should be 0
-  sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp)))) #should be non-zero
-  
   # CURRENT NCD state sizes & prop based on the "temp.pop"
-  current.ncd.states = extract.pop.ncd.distribution(pop = pop.temp)
+  current.ncd.states = extract.pop.ncd.distribution(pop)
   current.ncd.props<-return.prop.sex.age(current.ncd.states)
   
   # DIFFERENCE in prevalence of NCDs
@@ -562,37 +544,23 @@ update.ncd.states<-function(sim){
       if(runif(1)<trans.prob.diab[p$agegroup,p$sex])
         p$bMarkedTransDiab=T}
   }))
-  # number of people marked to transition?   
+  
   # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiab))))
+  #model events
+  D<-lapply(pop,function(p) {
+    if (p$bMarkedTransDiab==T){
+      p$diab.getInfected(mc$TNOW)
+      return(1)
+    }})
+  # sum(unlist(D))
   # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp))))
   ####################################################################################
   # HYP
   ####################################################################################
   cat("Modeling transitions to hyp... \n")
-  #deep copy: element by element: more time consuming 
-  invisible(lapply(1:length(pop),function(x){
-    pop.temp[[x]]<<- pop[[x]]$clone(deep=T)
-  }))
-  # sum(unlist(lapply(pop.temp,function(x) return(x$bMarkedTransDiab))))
-  # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiab))))
-
-  D<-lapply(pop.temp,function(x) {
-    if (x$bMarkedTransDiabHyp==T) {
-      x$ncdState <-mc$NCD.DIAB_HYP
-      x$bMarkedTransDiabHyp<-F }
-    if (x$bMarkedTransDiab==T) {
-      x$ncdState <-mc$NCD.DIAB
-      x$bMarkedTransDiab<-F}
-    })
-  # how many events are modeled?  
-  # sum(unlist(D))
-  
-  # the population is updated after those events?  
-  # sum(unlist(lapply(pop.temp,function(x) return(x$bMarkedTransDiab)))) #should be 0
-  # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiab)))) #should be non-zero
   
   # CURRENT NCD state sizes & prop based on the "temp.pop"
-  current.ncd.states = extract.pop.ncd.distribution(pop = pop.temp)
+  current.ncd.states = extract.pop.ncd.distribution(pop = pop)
   current.ncd.props<-return.prop.sex.age(current.ncd.states)
   
   # DIFFERENCE in prevalence of NCDs
@@ -617,9 +585,15 @@ update.ncd.states<-function(sim){
       if(runif(1)<trans.prob.diab[p$agegroup,p$sex])
         p$bMarkedTransHyp=T}
   }))
-  # number of people marked to transition?   
-  # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransHyp))))
-  # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiab))))
+  
+  sum(unlist(lapply(pop,function(x) return(x$bMarkedTransHyp))))
+  #model events
+  D<-lapply(pop,function(p) {
+    if (p$bMarkedTransHyp==T){
+      p$hyp.getInfected(mc$TNOW)
+      return(1)
+    }})
+  # sum(unlist(D))
   # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp))))
   
   pop
