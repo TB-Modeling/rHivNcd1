@@ -25,28 +25,32 @@ Person<-R6Class("Person",
         tHivDiag=NULL,
         tHivEng=NULL,
         tHivUneng=NULL,
+        #
         bMarkedHivInc=F,
         bMarkedHivDiag=F,
         bMarkedHivEng=F,
         bMarkedHivUneng=F,
         
         ncdState=mc$NCD.NEG, 
-        
+        #
         bMarkedTransDiabHyp=FALSE, # True if person is chosen for transition to the new state
         bMarkedTransDiab=FALSE,
         bMarkedTransHyp=FALSE,
+        #
+        tDiabInc=NULL,
+        tHypInc=NULL,
+        tDiabHypInc=NULL,
         
         
         annualCvdRisk=NULL,
         monthlyCvdRisk=NULL,
         
-        tDiabInc=NULL,
+        
         tDiabDiag=NULL,
         tDiabTrt=NULL,
-        tHypInc=NULL,
         tHypDiag=NULL,
         tHypTrt=NULL,
-        tDiabHypInc=NULL,
+        
         
         cvdState=mc$CVD.NONE,
         nMi=0,
@@ -65,15 +69,16 @@ Person<-R6Class("Person",
         tNcdscreened=F,
         ################################
         #define public functions here:
-        initialize=function(id=NA,sex=NA,age=NA,tborn=0,hivState=NA,ncdState=NA,tDiabInc=NA,tHypInc=NA){
+        initialize=function(id=NA,sex=NA,age=NA,tborn=0,hivState=NA,ncdState=NA,tDiabInc=NA,tHypInc=NA,tDiabHypInc=NA){
           self$id<-id
           self$sex<-sex
           self$age<-age
           self$tborn<-tborn
           self$hivState<-hivState
           self$ncdState<-ncdState
-          self$tDiabInc<-tDiabInc
-          self$tHypInc<-tHypInc
+          self$tDiabInc<-max(tDiabInc,tDiabHypInc)
+          self$tHypInc<-max(tHypInc,tDiabHypInc)
+          self$tDiabHypInc<-tDiabHypInc
           },
         greet = function() {
           cat(paste0("Hello, my id is ", self$id,", age=",self$age,", sex=",self$sex," , hivState=",self$hivState,",ncdState=",self$ncdState, ".\n"))

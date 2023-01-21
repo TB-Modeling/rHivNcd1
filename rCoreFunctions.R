@@ -44,14 +44,16 @@ create.initial.population <- function( n=0 # number of people if not specified a
   vSexes = as.numeric(sim.pop$sex)
   vNcdState = sim.pop$ncd
   vHivState = rep(mc$HIV.NEG,n)
-  vtDiabInc= c(sim.pop$ncd%in%c(mc$NCD.DIAB,mc$NCD.DIAB_HYP))*-1
-  vtHypInc= c(sim.pop$ncd%in%c(mc$NCD.HYP,mc$NCD.DIAB_HYP))*-1
+  vtDiabInc= c(sim.pop$ncd%in%c(mc$NCD.DIAB))*-1
+  vtHypInc= c(sim.pop$ncd%in%c(mc$NCD.HYP))*-1
+  vtDiabHypInc= c(sim.pop$ncd%in%c(mc$NCD.DIAB_HYP))*-1
   
   pop = (mapply(Person$new, vIds,vSexes,vAges,mc$TNOW,
                 vHivState,
                 vNcdState,
                 vtDiabInc,
-                vtHypInc
+                vtHypInc,
+                vtDiabHypInc
   ))
   pop = unlist(pop)
   
