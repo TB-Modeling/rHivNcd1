@@ -438,27 +438,6 @@ model.hiv.cvd.deaths<-function(prob.hiv.mort,
   }
 }
 
-#'@MS: new function to mdeol cvd events
-#'need more data on which CVD events are modeled
-model.cvd.events<-function(){
-  # a.	First event: WHO calculator 
-  # # b.	Repeat events: 2x risk of first event (Smith-Spangler assumption) 
-  # invisible(lapply(c(1:length(pop)),function(x){
-  #   p<-pop[[x]]
-  #   
-  #   # person has no history of previous cvd events? 
-  #   # { evaluate prob of first CVD event
-  #     # if true: mark the cvd >>> evaluate prob of death following that event?
-  #     # if true: mark dead
-  #   # }
-  #   # else{
-  #   # evaluare prob of subsequent CVD events & death
-  #   # }
-  #   # model cvd events that are marked & count the incidence 
-  #   
-  # }))
-}
-
 
 # new function to update NCD state after aging
 update.ncd.states<-function(sim){ 
@@ -502,7 +481,7 @@ update.ncd.states<-function(sim){
   # TRANSITION to DH from D or H 
   invisible(lapply(c(1:length(pop)),function(x){
     p=pop[[x]] 
-    if(p$ncdState==mc$NCD.DIAB || p$ncdState==mc$NCD.HYP){ #@MS: make sure to use double || for OR in the if clauses. see the difference between | and ||
+    if(p$ncdState==mc$NCD.DIAB || p$ncdState==mc$NCD.HYP){ 
       if(runif(1) < trans.prob.diab.hyp[p$agegroup,p$sex])
         p$bMarkedTransDiabHyp=T}
     }))
@@ -539,7 +518,7 @@ update.ncd.states<-function(sim){
   #PROBABILITY Of transition to DIAB for those in NCD.NEG
   trans.prob.diab= trans.freq[,,"NCD.DIAB"]/(current.ncd.states[,,"NCD.NEG"])
   
-  # TRANSITION to H from neg
+  # TRANSITION to D from neg
   invisible(lapply(c(1:length(pop)),function(x){
     p=pop[[x]] 
     if(p$ncdState==mc$NCD.NEG){
@@ -601,8 +580,27 @@ update.ncd.states<-function(sim){
   pop
 }
 
+#'@MS: new function to mdeol cvd events
+#'need more data on which CVD events are modeled
+model.cvd.events<-function(){
+  # a.	First event: WHO calculator 
+  # # b.	Repeat events: 2x risk of first event (Smith-Spangler assumption) 
+  # invisible(lapply(c(1:length(pop)),function(x){
+  #   p<-pop[[x]]
+  #   
+  #   # person has no history of previous cvd events? 
+  #   # { evaluate prob of first CVD event
+  #     # if true: mark the cvd >>> evaluate prob of death following that event?
+  #     # if true: mark dead
+  #   # }
+  #   # else{
+  #   # evaluare prob of subsequent CVD events & death
+  #   # }
+  #   # model cvd events that are marked & count the incidence 
+  #   
+  # }))
+}
 
-#   
 #   Baseline: we assume similar ncd prevalences for HIV+/-, and keep the prevalence fix over time
 #   SA:  assuming differential ncd prevalences based on hiv status
 #   SA: assuming an increase in ncd prevalences over time

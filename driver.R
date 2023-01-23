@@ -4,37 +4,44 @@
 #  
 #####################################
 print("Sourcing Driver.R ... ")
+{
+  source("globalVariables.R")
+  source("person.R")
+  source("stats.R")
+  source("rHelperFunctions.R")
+  source("rCoreFunctions.R")
+  source("plots.R")
+  
+  #sample run for debugging
+  reset.gss()
+  mc$TNOW <-0
+  mc$YNOW <-1
+  mc$CYNOW <-mc$INITIAL.YEAR
+  mc$ANNUAL.TIMESTEPS <-12 #modeling monthly dynamics
+}
 
-source("globalVariables.R")
-source("person.R")
-source("stats.R")
-# source("driver.R")
-source("rHelperFunctions.R")
-source("rCoreFunctions.R")
-source("plots.R")
+{
+  #create a pop with desired size
+  pop<<-create.initial.population(n = 100)
+  
+  # setting up person attributes
+  invisible(set.initial.hiv.status())
+  invisible(set.annual.cvd.risk())
+  gss<-record.annual.gss(pop,mc,gss) # year 2015
+  
+  #building simulation object to run forward
+  sim<-list(pop=pop,mc=mc,gss=gss)
+}
 
-#sample run for debugging
-reset.gss()
-mc$TNOW <-0
-mc$YNOW <-1
-mc$CYNOW <-mc$INITIAL.YEAR
-mc$ANNUAL.TIMESTEPS <-12 #modeling monthly dynamics
+# run simulation
+# for(i in c(XX:YY)){ #set up the number of years to run the simulation
+sim<-run.one.year(sim)
+# }
 
-pop<<-create.initial.population(n = mc$POP.SIZE)
-
-invisible(set.initial.hiv.status()) #@JP: is the POP visible to all classes and methods?
-invisible(set.annual.cvd.risk())
-cat("Recording statistics ... ")
-gss<-record.annual.gss(pop,mc,gss)
-sim<-list(pop=pop,mc=mc,gss=gss)
-# sim<-run.one.year(sim)
-
-
-pop<-update.ncd.states()
-sum(unlist(lapply(pop,function(x) return(x$bMarkedTransHyp))))
-sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiab))))
-sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp))))
-
+# this is for temporary debugging
+invisible(lapply(1:10,function(x){
+  pop<-update.ncd.states()
+}))
 
 # # wrapper function to initialize and run the simulation
 # run.simulation<-function(rep=1 # replication count (1,...,Inf)
@@ -90,3 +97,11 @@ sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp))))
 # }
 # 
 # # res<-run.simulation(rep=1)
+
+
+
+# ABM (main interface for running the final code )
+# Driver
+# rCoreFunction (pop) >>> Person.R...
+
+
