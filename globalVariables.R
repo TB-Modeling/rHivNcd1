@@ -42,9 +42,9 @@ mc <- list(
   DEATH.MI=4,
   #
   NCDTRT.NONE=1,
-  NCDTRT.HYP=2,
-  NCDTRT.DIAB=3,
-  NCDTRT.HYPDIAB=4,
+  NCDTRT.DIAB=2,
+  NCDTRT.HYP=3,
+  NCDTRT.DIABHYP=4,
   #
   CVD.NONE=1,
   CVD.MI=2,
@@ -86,7 +86,7 @@ step.dataset$agegroup=ceiling((step.dataset$age+1)/mc$AGE.INTERVAL)
 # step.dataset$agegroup[step.dataset$agegroup<1]<-1
 # step.dataset$agegroup[step.dataset$agegroup>mc$DIM.AGE]<-mc$DIM.AGE
 # #add ncd state
-# step.dataset$ncdstate=step.dataset$hypertension+2*step.dataset$diabetes+1
+# step.dataset$ncdstate=step.dataset$diabetes + 2*step.dataset$hypertension + 1 #@MS: can you run this on your end?
 # #loop through and count the state sizes
 # ncd.state.sizes<-array(0,
 #                        dim=c(mc$DIM.AGE,mc$DIM.SEX,mc$DIM.NCD),
