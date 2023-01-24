@@ -69,6 +69,11 @@ gss<-list(
   #'@MS: redundant?
   n.hiv.prev=v4temp,
   
+  #'@PK: added 4D arrays for tracking new NCD incidences (by age/sex/hiv status/year)
+  n.diab.hyp.inc=v4temp,
+  n.diab.inc=v4temp,
+  n.hyp.inc=v4temp,
+  
   # 5D arrays by age, sex, ncd & hiv state over time
   n.state.sizes=v5temp
 )
@@ -89,6 +94,10 @@ reset.gss<-function(){
   gss$n.hiv.uneng=v3temp
   
   gss$n.hiv.prev=v4temp   #'@MS: redundant?
+  
+  gss$n.diab.hyp.inc=v4temp
+  gss$n.diab.inc=v4temp
+  gss$n.hyp.inc=v4temp
   
   gss$n.state.sizes=v5temp
   
