@@ -278,6 +278,7 @@ run.one.year<-function(sim){
       pop<-c(pop,pop1)
       #
       gss$n.births.hiv[mc$YNOW]=n.births.hiv
+      gss$n.hiv.inc["0-4","FEMALE",mc$YNOW]=gss$n.hiv.inc["0-4","FEMALE",mc$YNOW] + 1 #'@PK: for now just adding to female - how to assign the right sex? 
     }
     
     gss$n.births[mc$YNOW]=n.births.non.hiv + n.births.hiv
@@ -440,7 +441,7 @@ model.hiv.cvd.deaths<-function(prob.hiv.mort,
 
 
 # new function to update NCD state after aging
-update.ncd.states<-function(sim){ 
+update.ncd.states<-function(){ 
   # for each age/sex subgroup:
   #   compute current prp of ncd states, compare to baseline proportions, and estimate the difference
   # if diference > 0, assign individuals to new ncd states with corresponding probabilities 
@@ -492,13 +493,18 @@ update.ncd.states<-function(sim){
   D<-lapply(pop,function(p) {
     if (p$bMarkedTransDiabHyp==T){
       p$diab.hyp.getInfected(mc$TNOW)
+      #'@PK: added below for tracking new diab/hyp incidence; repeated for diab and hyp alone below 
+      gss$n.diab.hyp.inc[p$agegroup,p$sex,p$hivState,as.character(mc$CYNOW)] <<- gss$n.diab.hyp.inc[p$agegroup,p$sex,p$hivState,as.character(mc$CYNOW)]+1
     return(1)
   }})
   # sum(unlist(D))
+  # sum(gss$n.diab.hyp.inc)
   # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp))))
   ####################################################################################
   # DIAB 
   ####################################################################################
+  cat("Modeling transitions to diab \n")
+  
   # CURRENT NCD state sizes & prop based on the "temp.pop"
   current.ncd.states = extract.pop.ncd.distribution(pop)
   current.ncd.props<-return.prop.sex.age(current.ncd.states)
@@ -531,9 +537,11 @@ update.ncd.states<-function(sim){
   D<-lapply(pop,function(p) {
     if (p$bMarkedTransDiab==T){
       p$diab.getInfected(mc$TNOW)
+      gss$n.diab.inc[p$agegroup,p$sex,p$hivState,as.character(mc$CYNOW)] <<- gss$n.diab.inc[p$agegroup,p$sex,p$hivState,as.character(mc$CYNOW)]+1
       return(1)
     }})
   # sum(unlist(D))
+  # sum(gss$n.diab.inc)
   # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp))))
   ####################################################################################
   # HYP
@@ -572,9 +580,11 @@ update.ncd.states<-function(sim){
   D<-lapply(pop,function(p) {
     if (p$bMarkedTransHyp==T){
       p$hyp.getInfected(mc$TNOW)
+      gss$n.hyp.inc[p$agegroup,p$sex,p$hivState,as.character(mc$CYNOW)] <<- gss$n.hyp.inc[p$agegroup,p$sex,p$hivState,as.character(mc$CYNOW)]+1
       return(1)
     }})
   # sum(unlist(D))
+  # sum(gss$n.hyp.inc)
   # sum(unlist(lapply(pop,function(x) return(x$bMarkedTransDiabHyp))))
   
   pop
