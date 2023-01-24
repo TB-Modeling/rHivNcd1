@@ -11,6 +11,7 @@ print("Sourcing Driver.R ... ")
   source("rHelperFunctions.R")
   source("rCoreFunctions.R")
   source("plots.R")
+  source("testing_ncd_prevalences.R")
   
   #sample run for debugging
   reset.gss()
@@ -22,7 +23,7 @@ print("Sourcing Driver.R ... ")
 
 {
   #create a pop with desired size
-  pop<<-create.initial.population(n = 100)
+  pop<<-create.initial.population(n = 10000)
   
   # setting up person attributes
   invisible(set.initial.hiv.status())
@@ -37,6 +38,15 @@ print("Sourcing Driver.R ... ")
 # for(i in c(XX:YY)){ #set up the number of years to run the simulation
 sim<-run.one.year(sim)
 # }
+
+# run simulation WITH ONLY: DEATHS, BIRTHS (balancing), AGING, NCD PREVALENCE UPDATES
+for(i in c(mc$INITIAL.YEAR:mc$END.YEAR)){ #set up the number of years to run the simulation
+sim<-run.one.year.for.ncd.test(sim)
+}
+
+# apply(gss$n.diab.hyp.inc,4,sum)
+# apply(gss$n.diab.inc,4,sum)
+# apply(gss$n.hyp.inc,4,sum)
 
 # this is for temporary debugging
 invisible(lapply(1:10,function(x){
