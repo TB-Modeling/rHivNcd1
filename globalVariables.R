@@ -76,30 +76,7 @@ load('data/10.year.cvd.risk.by.age.sex.ncd.Rdata')
 
 #load STEP dataset to generate the initial population by age, sex and ncd state
 step.dataset = read.csv("data/stepSimPop2015.csv")
-
-#@MS: I added the step dataset here so that all external files are linked from the same place
 step.dataset$agegroup=ceiling((step.dataset$age+1)/mc$AGE.INTERVAL)
-
-#@MS:I wrote the code below to extract the initial NCD prevalences from the STEP survey. 
-# I then saved it externally so that we read it into the model everytime. you can remove this after reviewing it
-# #add agegroups
-# step.dataset$agegroup[step.dataset$agegroup<1]<-1
-# step.dataset$agegroup[step.dataset$agegroup>mc$DIM.AGE]<-mc$DIM.AGE
-# #add ncd state
-# step.dataset$ncdstate=step.dataset$diabetes + 2*step.dataset$hypertension + 1 #@MS: can you run this on your end?
-# #loop through and count the state sizes
-# ncd.state.sizes<-array(0,
-#                        dim=c(mc$DIM.AGE,mc$DIM.SEX,mc$DIM.NCD),
-#                        dimnames = list(mc$DIM.NAMES.AGE,mc$DIM.NAMES.SEX,mc$DIM.NAMES.NCD))
-# invisible(lapply(1:nrow(step.dataset),function(x){
-#   p<-step.dataset[x,]
-#   ncd.state.sizes[p$agegroup,
-#                   p$sex,
-#                   p$ncdstate] <<- ncd.state.sizes[   p$agegroup,
-#                                                      p$sex,
-#                                                      p$ncdstate] +1
-#   }))
-# write.csv(ncd.state.sizes,file = "ncd.state.sizes.2015.csv")
 
 # read target NCD sizes and compute the target proportions based on 2015 step dataset
 D<-read.csv("ncd.state.sizes.2015.csv",header = T)[,2:9]
@@ -119,3 +96,25 @@ target.ncd.props[is.na(target.ncd.props)]<-0
 
 cat("Input data loaded \n")
 }
+
+
+# Code to extract the initial NCD prevalences from the STEP survey
+# Saved externally; read into the model everytime (so we no longer need this code; but keeping for now)
+# #add agegroups
+# step.dataset$agegroup[step.dataset$agegroup<1]<-1
+# step.dataset$agegroup[step.dataset$agegroup>mc$DIM.AGE]<-mc$DIM.AGE
+# #add ncd state
+# step.dataset$ncdstate=step.dataset$diabetes + 2*step.dataset$hypertension + 1 
+# #loop through and count the state sizes
+# ncd.state.sizes<-array(0,
+#                        dim=c(mc$DIM.AGE,mc$DIM.SEX,mc$DIM.NCD),
+#                        dimnames = list(mc$DIM.NAMES.AGE,mc$DIM.NAMES.SEX,mc$DIM.NAMES.NCD))
+# invisible(lapply(1:nrow(step.dataset),function(x){
+#   p<-step.dataset[x,]
+#   ncd.state.sizes[p$agegroup,
+#                   p$sex,
+#                   p$ncdstate] <<- ncd.state.sizes[   p$agegroup,
+#                                                      p$sex,
+#                                                      p$ncdstate] +1
+#   }))
+# write.csv(ncd.state.sizes,file = "ncd.state.sizes.2015.csv")
