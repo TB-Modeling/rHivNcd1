@@ -44,6 +44,10 @@ for(i in c(mc$INITIAL.YEAR:mc$END.YEAR)){ #set up the number of years to run the
 sim<-run.one.year.for.ncd.test(sim)
 }
 
+# This doesn't work:
+# apply(sim$gss$n.diab.hyp.inc,4,sum)
+
+# ...but this does: 
 # apply(gss$n.diab.hyp.inc,4,sum)
 # apply(gss$n.diab.inc,4,sum)
 # apply(gss$n.hyp.inc,4,sum)
