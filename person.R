@@ -10,17 +10,16 @@ library(R6)
 
 # We create class instances with the Agent$new()
 # function, which calls the 'initialize()' function
-# we defined
-# alice <- Agent$new(mc$SEX.FEMALE, 35)
-Person<-R6Class("Person",
-                clone=T,
+# we defined alice <- Agent$new(SEX.FEMALE, 35)
+PERSON<-R6Class("PERSON",
+                clone=F, #allows for creating a deep copy of this person
       public=list(
         id=NULL,
         tborn=NULL,
         age=NULL,
         sex=NULL,
         
-        hivState=mc$HIV.NEG,
+        hivState=HIV.NEG,
         tHivInc=NULL,
         tHivDiag=NULL,
         tHivEng=NULL,
@@ -31,7 +30,7 @@ Person<-R6Class("Person",
         bMarkedHivEng=F,
         bMarkedHivUneng=F,
         
-        ncdState=mc$NCD.NEG, 
+        ncdState=NCD.NEG, 
         #
         bMarkedTransDiabHyp=FALSE, # True if person is chosen for transition to the new state
         bMarkedTransDiab=FALSE,
@@ -52,7 +51,7 @@ Person<-R6Class("Person",
         tHypTrt=NULL,
         
         
-        cvdState=mc$CVD.NONE,
+        cvdState=CVD.NONE,
         nMi=0,
         nStroke=0,
         bMarkedMi=F,
@@ -85,38 +84,38 @@ Person<-R6Class("Person",
         },
         #HIV transitions:
         hiv.getInfected=function(tnow){
-          self$hivState=mc$HIV.UNDIAG
+          self$hivState=HIV.UNDIAG
           self$tHivInc=tnow
           self$bMarkedHivInc=F
         },
         hiv.getDiagnosed=function(tnow){
-          self$hivState=mc$HIV.UNENG
+          self$hivState=HIV.UNENG
           self$tHivDiag=tnow
           self$bMarkedHivDiag=F
         },
         hiv.getEngaged=function(tnow){
-          self$hivState=mc$HIV.ENG
+          self$hivState=HIV.ENG
           self$tHivEng=tnow
           self$bMarkedHivEng=F
         },
         hiv.getUnengage=function(tnow){
-          self$hivState=mc$HIV.UNENG
+          self$hivState=HIV.UNENG
           self$tHivUneng=tnow
           self$bMarkedHivUneng=FALSE
         },
         #NCD incidence 
         diab.getInfected=function(tnow){
-          self$ncdState=mc$NCD.DIAB
+          self$ncdState=NCD.DIAB
           self$tDiabInc=tnow
           self$bMarkedTransDiab=F
         },
         hyp.getInfected=function(tnow){
-          self$ncdState=mc$NCD.HYP
+          self$ncdState=NCD.HYP
           self$tHypInc=tnow
           self$bMarkedTransHyp=F
         },
        diab.hyp.getInfected=function(tnow){
-            self$ncdState=mc$NCD.DIAB_HYP
+            self$ncdState=NCD.DIAB_HYP
             self$tDiabHypInc=tnow
             self$bMarkedTransDiabHyp=F
           }
@@ -135,7 +134,7 @@ Person<-R6Class("Person",
       # because they make it possible to implement components that look like fields 
       # from the outside but provide additional checks.
       active=list(
-        agegroup=function(){ min(max(ceiling((self$age+1)/mc$AGE.INTERVAL),1),mc$DIM.AGE)}, #we limit the last agegroups to not drop below 1 nor exceed 17
+        agegroup=function(){ min(max(ceiling((self$age+1)/AGE.INTERVAL),1),DIM.AGE)}, #we limit the last agegroups to not drop below 1 nor exceed 17
         incAge=function(){ 
           self$age<-self$age+1
           invisible(self)
