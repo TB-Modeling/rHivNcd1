@@ -9,20 +9,14 @@ run.one.year.for.ncd.test = function(sim){
   if ((mc$TNOW%%mc$ANNUAL.TIMESTEPS)!=0) break("TNOW is not set correctly")
   cat("Beginning the year ... ",mc$CYNOW,"\n")
   
-  ##### AT EACH TIMESTEP WITHIN THE YEAR: 
-  for(i in (1:mc$ANNUAL.TIMESTEPS)){
-    mc$TNOW = mc$TNOW+1
-    n=length(pop)
-  }
   
-  #### AT YEAR's END:
   ## 1-MODEL REMAINING DEATHS --------
   n.ageout=sum(unlist(invisible(lapply(pop,function(x){
     if(x$age>=mc$MAX.AGE) {
       x$bMarkedDead.ageout=T;
       return(1)
     }}))))
-  # balancing deaths
+  # killing agents
   {
     n<-length(pop)
     death.status=unlist(invisible(lapply(c(1:n),function(x){
@@ -56,7 +50,12 @@ run.one.year.for.ncd.test = function(sim){
   invisible(lapply(pop,function(x){x$incAge}))
   
   ## 4- UPDATE NCD STATES & CVD RISKS FOR NEXT YEAR --------
-  pop = update.ncd.states()
+  res= update.ncd.states(pop,mc,gss)
+  pop=(res[[1]])
+  mc=res[[2]]
+  gss=(res[[3]])
+  
+ 
   invisible(set.annual.cvd.risk())
   
   ##############################################
