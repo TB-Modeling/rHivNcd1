@@ -38,6 +38,10 @@ print("Sourcing Driver.R ... ")
   pop<-run.one.year(pop)
   # }
   
+  # for(i in c(INITIAL.YEAR:END.YEAR)){
+  # pop = run.one.year.for.ncd.test(pop)
+  # }
+  
   #review the statistics 
   filter.stateSizes.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year'))
   filter.stateSizes.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year','hiv.status'))

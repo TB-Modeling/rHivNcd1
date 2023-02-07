@@ -1,31 +1,20 @@
 
 
-run.one.year.for.ncd.test = function(sim){
+run.one.year.for.ncd.test = function(pop){
+
+  cat("Beginning the year ... ",pop$params$CYNOW,"\n")
+  khm=pop$params$khm
   
-  pop=sim$pop
-  mc=sim$mc
-  gss=sim$gss
-  
-  if ((mc$TNOW%%mc$ANNUAL.TIMESTEPS)!=0) break("TNOW is not set correctly")
-  cat("Beginning the year ... ",mc$CYNOW,"\n")
-  
-  
-  ## 1-MODEL REMAINING DEATHS --------
-  n.ageout=sum(unlist(invisible(lapply(pop,function(x){
-    if(x$age>=mc$MAX.AGE) {
+  ## 1-MODEL Deaths due to aging out --------
+  n.ageout=sum(unlist(invisible(lapply(pop$members,function(x){
+    if(x$age>=MAX.AGE) {
       x$bMarkedDead.ageout=T;
       return(1)
     }}))))
-  # killing agents
-  {
-    n<-length(pop)
-    death.status=unlist(invisible(lapply(c(1:n),function(x){
-      return(pop[[x]]$bMarkedDead.ageout)
-    })))
-    n.deaths.ageout<-sum(death.status)
-    gss$n.deaths.ageout[mc$YNOW]=n.deaths.ageout
-    pop<-pop[!death.status]   
-  }
+  # modeling deaths
+  n.deaths.ageout=pop$remove.dead.ageout()
+  pop$stats$n.deaths.ageout[pop$params$YNOW]=n.deaths.ageout
+  
   
   ## 2-MODEL BIRTHS --------
   { # (just balance deaths; put all into non-HIV ) 
@@ -34,45 +23,38 @@ run.one.year.for.ncd.test = function(sim){
     
     if(n.births.non.hiv>0){
       cat(n.births.non.hiv," non-HIV newborns are added","\n")
-      vIds = c((mc$lastID+1): (mc$lastID+n.births.non.hiv))
-      mc$lastID=mc$lastID+n.births.non.hiv
-      vSexes = sample(c(mc$MALE,mc$FEMALE),n.births.non.hiv,prob = c(.5,.5),replace = T) # still 50/50 male/female
-      pop1 = (mapply(Person$new, vIds,vSexes,0,mc$TNOW,mc$HIV.NEG,mc$NCD.NEG)) 
-      pop<-c(pop,pop1)
-      #
-      gss$n.births.non.hiv[mc$YNOW]=n.births.non.hiv
+      vIds = c((pop$params$LAST.ID+1): (pop$params$LAST.ID+n.births.non.hiv))
+      pop$params$LAST.ID=pop$params$LAST.ID+n.births.non.hiv
+      vSexes = sample(c(MALE,FEMALE),n.births.non.hiv,prob = c(.5,.5),replace = T) # still 50/50 male/female
+      memberListNew = (mapply(PERSON$new, vIds,vSexes,0,pop$params$TNOW,HIV.NEG,NCD.NEG)) #'@JP: do we need to delete pop1 and open memory?
+      pop$addMembers(unlist(memberListNew))
+      # record stats:
+      pop$stats$n.births.non.hiv[pop$params$YNOW]=n.births.non.hiv
     }
     
-    gss$n.births[mc$YNOW]=n.births.non.hiv
+    #record stats:
+    pop$stats$n.births[pop$params$YNOW]=n.births.non.hiv 
+    cat("n.births.non.hiv= ",n.births.non.hiv, " modeled \n")
   }
   
   ## 3- MODEL AGING --------
-  invisible(lapply(pop,function(x){x$incAge}))
+  pop$modelAging()
   
   ## 4- UPDATE NCD STATES & CVD RISKS FOR NEXT YEAR --------
-  res= update.ncd.states(pop,mc,gss)
-  pop=(res[[1]])
-  mc=res[[2]]
-  gss=(res[[3]])
-  
- 
-  invisible(set.annual.cvd.risk())
+  pop<-update.ncd.states(pop)
+  pop<-invisible(set.annual.cvd.risk(pop))
   
   ##############################################
   # END OF YEAR----
-  cat("Final pop size is ",length(pop),"\n")
-  print(paste("End of year: ",mc$CYNOW," ---------------------------"))
-  
-  mc$YNOW<-mc$YNOW+1
-  mc$CYNOW<-mc$CYNOW+1
+  cat("Final pop size is ",length(pop$members),"\n")
+  cat("End of year: ",pop$params$CYNOW," --------------------------- \n")
   
   # Record annual statatistics --------
-  gss<-record.annual.gss(pop,
-                         mc,
-                         gss)
+  pop$record.annual.stats()
   
-  invisible(list(pop=pop,
-                 mc=mc,
-                 gss=gss))
+  #Increment the clock
+  pop$increaseYear()
+  
+  pop
   
 }
