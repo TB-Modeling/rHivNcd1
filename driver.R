@@ -34,7 +34,7 @@ print("Sourcing Driver.R ... ")
 
 # RUNNING / DEBUGGING
 {
-  # for(i in c(mc$INITIAL.YEAR:mc$END.YEAR)){
+  # for(i in c(INITIAL.YEAR:END.YEAR)){
   pop<-run.one.year(pop)
   # }
   

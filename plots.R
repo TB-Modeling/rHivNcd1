@@ -4,20 +4,17 @@
 #  
 #####################################
 print("Sourcing Plot.R ... ")
-source("extract_data.R")
 
 library(ggplot2)
-
-#'@PK - moved this function from extract data; only HIV model output now
 
 # Function to extract data from HIV model (khm) output object - either a simset or a single sim (for now, if it's a simset, take only one sim)
 # Specify the khm.output object, what ages/sexes/hiv statuses/years to include, and then what dimensions to report by 
 return.khm.state.size.distribution = function(khm.output, # object from khm model including all state sizes for all years
-                                              ages = mc$DIM.NAMES.AGE, # ages to return
-                                              sexes = mc$DIM.NAMES.SEX, # sexes to return 
-                                              hiv.status = mc$DIM.NAMES.HIV, # hiv status to return
-                                              ncd.status = mc$DIM.NAMES.NCD,
-                                              years=as.character(DIM.NAMES.N), # years to return 
+                                              ages = DIM.NAMES.AGE, # ages to return
+                                              sexes = DIM.NAMES.SEX, # sexes to return 
+                                              hiv.status = DIM.NAMES.HIV, # hiv status to return
+                                              ncd.status = DIM.NAMES.NCD,
+                                              years=as.character(DIM.NAMES.YEARS), # years to return 
                                               keep.dimensions = 'year') # collapse all other dimensions & report the data as total value over this dimension
 { 
   
@@ -91,113 +88,31 @@ simplot = function(...,
                    scale.population = F,
                    facet.by = NULL,
                    split.by = NULL,
-                   ages = mc$DIM.NAMES.AGE, 
-                   sexes = mc$DIM.NAMES.SEX,
-                   hiv.status = mc$DIM.NAMES.HIV,
-                   ncd.status = mc$DIM.NAMES.NCD
+                   ages = DIM.NAMES.AGE, 
+                   sexes = DIM.NAMES.SEX,
+                   hiv.status = DIM.NAMES.HIV,
+                   ncd.status = DIM.NAMES.NCD
 ){
   sims = list(...)
   keep.dimensions = union('year',union(facet.by, split.by))
   
   df.sim = NULL
+  
     for(i in 1:length(sims)){
       sim = sims[[i]]
-      
-      # if this is a single simulation, need to make it a list with one element
-      if(class(sim[[1]])=="array"){
-        sim = list(sim)
-      }
-      
-      
-      ##----------------------##
-      ##----- HIV OUTPUT -----##
-      ##----------------------##
-      # HIV SIMSET OBJECT OR INDIVIDUAL HIV SIMULATION
-      
-      # wanted to say if(sim[[1]]$model=="hiv"), but that doesn't work for ncd sims
-      if("hiv" %in% sim[[1]]) { 
-        
-        for(j in 1:length(sim)){
-          value = return.khm.state.size.distribution(khm.output=sim[[j]], 
-                                                     ages = ages, 
-                                                     sexes = sexes,
-                                                     hiv.status = hiv.status, 
-                                                     # ncd.status = ncd.status,
-                                                     years=years, 
-                                                     keep.dimensions = keep.dimensions)
-          
-          
-          # For scale.population, divide by 2015 population size - have to do this separately for each combo of keep.dimensions
-          if(scale.population){
-            
-            # Keep dimensions = year only 
-            if(setequal(keep.dimensions,"year")){
-              value = value/value[years=="2015"]
-              
-              # 2 keep dimensions 
-            } else if(length(keep.dimensions)==2){
-              value = sapply(1:dim(value)[2],function(j){
-                sapply(1:dim(value)[1],function(i){
-                  value[i,j]/value["2015",j]
-                })
-              })
-              if (setequal(keep.dimensions, c('year','age'))){
-                dimnames(value) = list(year=years,
-                                       age=ages)
-              } else if (setequal(keep.dimensions, c('year','sex'))){ 
-                dimnames(value) = list(year=years,
-                                       sex=sexes)
-              } else if (setequal(keep.dimensions, c('year','hiv.status'))){
-                dimnames(value) = list(year=years,
-                                       hiv.status=hiv.status)
-              } else stop("need to add these dimensions")
-            
 
-              # 3 keep dimensions
-            } else if(length(keep.dimensions)==3){
-              value = sapply(1:dim(value)[3],function(k){
-                sapply(1:dim(value)[2],function(j){
-                  sapply(1:dim(value)[1],function(i){
-                    value[i,j,k]/value["2015",j,k]  
-                  })
-                })
-              })
-              if (setequal(keep.dimensions, c('year','age','sex'))){
-                if(!all(keep.dimensions==c("year","age","sex")))
-                  stop("keep.dimensions must be in the order: year, age, sex")
-                dim.names = list("year"=years,
-                                 "age"=ages,
-                                 "sex"=sexes)
-                dim(value) = sapply(dim.names,length)
-                dimnames(value) = dim.names
-              } else stop("need to add these dimensions")
-            }
-          }
-          
-          
-          # set up a dataframe with columns: year, value, sim id, data.type 
-          one.df = reshape2::melt(value) 
-          one.df$sim.id = i
-          one.df$sim.number = j
-          # one.df$data.type = d
-          
-          df.sim = rbind(df.sim, one.df)  
-
-        }
-        
-      
-        ##----------------------##
-        ##----- NCD OUTPUT -----##
-        ##----------------------##
-        # have to repeat everything because hiv sims are within a for loop of the length of sim (ncd sims have their own length)
-      } else {
-        value = return.gss.state.size.distribution(sim=sim,
-                                                   years = years, 
-                                                   ages=ages, 
-                                                   sexes = sexes, 
-                                                   hiv.status = hiv.status,
-                                                   ncd.status=ncd.status,
-                                                   keep.dimensions = keep.dimensions)
+      ##----------------------##
+      ##----- NCD OUTPUT -----##
+      ##----------------------##
+      # have to repeat everything because hiv sims are within a for loop of the length of sim (ncd sims have their own length)
+      if("R6" %in% class(sim)){
+        value = filter.stateSizes.by.field(sim$stats$n.state.sizes, 
+                                           years = years,
+                                           ages = ages, 
+                                           sexes = sexes,
+                                           hiv.status = hiv.status,
+                                           ncd.status = ncd.status,
+                                           keep.dimensions = keep.dimensions)
         
         # For scale.population, divide by 2015 population size - have to do this separately for each combo of keep.dimensions
         if(scale.population){
@@ -254,8 +169,88 @@ simplot = function(...,
         
         df.sim = rbind(df.sim, one.df)   
         
+        
+        ##----------------------##
+        ##----- HIV OUTPUT -----##
+        ##----------------------##
+        
+        # HIV SIMSET OBJECT OR INDIVIDUAL HIV SIMULATION
+      } else {
+        
+        # if this is a single simulation, need to make it a list with one element
+        if(class(sim[[1]])=="array"){
+          sim = list(sim)     
+        }
+        
+        for(j in 1:length(sim)){
+          value = return.khm.state.size.distribution(khm.output=sim[[j]], 
+                                                     ages = ages, 
+                                                     sexes = sexes,
+                                                     hiv.status = hiv.status, 
+                                                     # ncd.status = ncd.status,
+                                                     years=years, 
+                                                     keep.dimensions = keep.dimensions)
+          
+          
+          # For scale.population, divide by 2015 population size - have to do this separately for each combo of keep.dimensions
+          if(scale.population){
+            
+            # Keep dimensions = year only 
+            if(setequal(keep.dimensions,"year")){
+              value = value/value[years=="2015"]
+              
+              # 2 keep dimensions 
+            } else if(length(keep.dimensions)==2){
+              value = sapply(1:dim(value)[2],function(j){
+                sapply(1:dim(value)[1],function(i){
+                  value[i,j]/value["2015",j]
+                })
+              })
+              if (setequal(keep.dimensions, c('year','age'))){
+                dimnames(value) = list(year=years,
+                                       age=ages)
+              } else if (setequal(keep.dimensions, c('year','sex'))){ 
+                dimnames(value) = list(year=years,
+                                       sex=sexes)
+              } else if (setequal(keep.dimensions, c('year','hiv.status'))){
+                dimnames(value) = list(year=years,
+                                       hiv.status=hiv.status)
+              } else stop("need to add these dimensions")
+              
+              
+              # 3 keep dimensions
+            } else if(length(keep.dimensions)==3){
+              value = sapply(1:dim(value)[3],function(k){
+                sapply(1:dim(value)[2],function(j){
+                  sapply(1:dim(value)[1],function(i){
+                    value[i,j,k]/value["2015",j,k]  
+                  })
+                })
+              })
+              if (setequal(keep.dimensions, c('year','age','sex'))){
+                if(!all(keep.dimensions==c("year","age","sex")))
+                  stop("keep.dimensions must be in the order: year, age, sex")
+                dim.names = list("year"=years,
+                                 "age"=ages,
+                                 "sex"=sexes)
+                dim(value) = sapply(dim.names,length)
+                dimnames(value) = dim.names
+              } else stop("need to add these dimensions")
+            }
+          }
+          
+          
+          # set up a dataframe with columns: year, value, sim id, data.type 
+          one.df = reshape2::melt(value) 
+          one.df$sim.id = i
+          one.df$sim.number = j
+          # one.df$data.type = d
+          
+          df.sim = rbind(df.sim, one.df)  
+          
+        }
+        
       }
-
 
     }
       
@@ -288,12 +283,9 @@ simplot = function(...,
 
 
 if(1==2){
-  #'@PK - sample code below
-  simplot(khm,sim1,facet.by="age",scale.population = T)
-  simplot(khm,facet.by=c("age","sex"),sexes="MALE",scale.population = T)
-  
-  simplot(khm,facet.by=c("age","sex"),ages="10-14",scale.population = T)
-  
-  simplot(khm,sim1, facet.by="hiv.status")
+  simplot(pop$params$khm,pop,scale.population = T)
+  simplot(pop$params$khm,pop,scale.population = T, facet.by = "age")
+  simplot(pop$params$khm,pop,scale.population = T, facet.by = "sex")
+  simplot(pop$params$khm,pop,scale.population = T, facet.by="hiv.status")
   
 }

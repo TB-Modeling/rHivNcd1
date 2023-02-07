@@ -67,10 +67,10 @@ generate.new.modelParameter<-function(){
   #1- load HIV data 
   # load('data/hiv_sim.RData')  #a single run from the HIV model
   load("data/hiv_simset.RData") #multiple runs from the HIV model
-  class(khm) = "khm_simulation_output"
   khm.hivPrev2015 = khm[[1]]$population["2015",,,]
   MP$khm=khm
   MP$khm.hivPrev2015=khm.hivPrev2015
+  class(MP$khm) = "khm_simulation_output"
   
   #2- load STEP dataset to generate the initial population by age, sex and ncd state
   step.dataset = read.csv("data/stepSimPop2015.csv")
@@ -177,7 +177,6 @@ generate.new.stat<-function(){
   return(stats)
 }
 
-#load hiv sim workspace with: (1) sim object, (2) data manager, (3) extracted data (khm)
 
 
 # Code to extract the initial NCD prevalences from the STEP survey
