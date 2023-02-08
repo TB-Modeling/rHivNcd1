@@ -84,6 +84,8 @@ generate.new.modelParameter<-function(){
                           dimnames = list(DIM.NAMES.AGE,DIM.NAMES.SEX,DIM.NAMES.NCD))
   invisible(lapply(1:4,function(i){
     target.ncd.sizes[,,i]<<-array(unlist(D[,(i*2-1):(i*2)]),dim = c(DIM.AGE,DIM.SEX) )}))
+  MP$target.ncd.sizes= target.ncd.sizes
+  
   #proportions 
   target.ncd.props<-target.ncd.sizes
   invisible(sapply(1:length(DIM.NAMES.SEX), function(sex){
