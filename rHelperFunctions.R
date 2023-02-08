@@ -115,6 +115,45 @@ filter.4D.stats.by.field<- function(stateSizes, # a 5D array
   rv
 }
 
+
+filter.4D.stats.by.field.ncd<- function(stateSizes, # a 5D array
+                                    ages = DIM.NAMES.AGE, 
+                                    sexes = DIM.NAMES.SEX,
+                                    ncd.status = DIM.NAMES.NCD,
+                                    years=as.character(DIM.NAMES.YEARS),
+                                    keep.dimensions = 'year' # collapse all other dimensions & report the data as total value over this dimension
+){
+  if(all(keep.dimensions!='year'))  
+    stop("must keep year dimension")
+  
+  #full names of all dimensions
+  full.dim.names = list(
+    age = ages,
+    sex = sexes,
+    ncd.status = ncd.status,
+    year = years
+  )
+  #filtering unwanted dimensions out
+  keep.dim.names = full.dim.names[keep.dimensions]
+  x = stateSizes
+  x = x[ages,sexes,ncd.status,years] 
+  
+  # have to add dimnames back in just in case any dimension was reduced down to just one stratum (R then drops that dimension)
+  dim.names = list(age=ages,
+                   sex=sexes,
+                   ncd.status=ncd.status,
+                   year=years)
+  dim(x)=sapply(dim.names,length)
+  dimnames(x)=dim.names
+  
+  #summing over dimensions that are to keep
+  rv = apply(x, keep.dimensions, sum)
+  #adjusting dimension names and 
+  dim(rv) = sapply(keep.dim.names, length)
+  dimnames(rv) = keep.dim.names
+  rv
+}
+
 # transforms the frequencies into proportions 
 print("loading function return.prop.sex.age")
 return.prop.sex.age<-function(vFreq){

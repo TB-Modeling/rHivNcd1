@@ -18,28 +18,41 @@ PERSON<-R6Class("PERSON",
         tborn=NULL,
         age=NULL,
         sex=NULL,
-        
+        #
         hivState=HIV.NEG,
         tHivInc=NULL,
         tHivDiag=NULL,
         tHivEng=NULL,
         tHivUneng=NULL,
-        #
         bMarkedHivInc=F,
         bMarkedHivDiag=F,
         bMarkedHivEng=F,
         bMarkedHivUneng=F,
-        
-        ncdState=NCD.NEG, 
         #
+        ncdState=NCD.NEG, 
         bMarkedTransDiabHyp=FALSE, # True if person is chosen for transition to the new state
         bMarkedTransDiab=FALSE,
         bMarkedTransHyp=FALSE,
-        #
         tDiabInc=NULL,
         tHypInc=NULL,
         tDiabHypInc=NULL,
-        
+        #
+        bMarkedDead.hiv=F,
+        bMarkedDead.non.hiv=F,
+        bMarkedDead.cvd=F,
+        bMarkedDead.ageout=F,
+        #
+        cvdState=CVD.NONE,
+        nMi=0,
+        nStroke=0,
+        #incidence
+        bMarkedMi=F,
+        bMarkedStroke=F,
+        #recording the time
+        # tMiInc=NULL,
+        # tStrokeInc=NULL,
+        # you can add a function to return current mortality as a function of time since incidence (retrunMiMortality())
+        # risk of recurrent CVD events (maybe another function returnCVDrisk( first check the CVD histpry = return the original risk, return 2* risk))
         
         annualCvdRisk=NULL,
         monthlyCvdRisk=NULL,
@@ -51,16 +64,9 @@ PERSON<-R6Class("PERSON",
         tHypTrt=NULL,
         
         
-        cvdState=CVD.NONE,
-        nMi=0,
-        nStroke=0,
-        bMarkedMi=F,
-        bMarkedStroke=F,
         
-        bMarkedDead.hiv=F,
-        bMarkedDead.non.hiv=F,
-        bMarkedDead.cvd=F,
-        bMarkedDead.ageout=F,
+        
+       
         
   
         ncdtrtState=NULL,
