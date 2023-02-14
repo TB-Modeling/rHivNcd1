@@ -49,10 +49,39 @@ PERSON<-R6Class("PERSON",
         bMarkedMi=F,
         bMarkedStroke=F,
         #recording the time
-        # tMiInc=NULL,
-        # tStrokeInc=NULL,
+        tMiInc=NULL,
+        tStrokeInc=NULL,
         # you can add a function to return current mortality as a function of time since incidence (retrunMiMortality())
+        #'@PK - I added these functions below. I don't actually have monthly MI mortality estimates yet, so this is just a placeholder
+        returnStrokeMortality=function(tnow){
+          p.months.since.stroke=tnow-self$tStrokeInc
+          if(p.months.since.stroke<60){
+            p.stroke.mortality=stroke.monthly.mortality[p.months.since.stroke] # if less than 5 years after event, take monthly prob
+          } else if(p.months.since.stroke>=60){
+            p.stroke.mortality=stroke.monthly.mortality[60] # if 5+ years after event, take 5-year prob
+          }
+        },
+        
+        # don't actually have mi.monthly.mortality vector yet
+        returnMiMortality=function(tnow){
+          p.months.since.mi=tnow-self$tMiInc
+          if(p.months.since.mi<60){
+            p.mi.mortality=mi.monthly.mortality[p.months.since.mi] # if less than 5 years after event, take monthly prob
+          } else if(p.months.since.mi>=60){
+            p.mi.mortality=mi.monthly.mortality[60] # if 5+ years after event, take 5-year prob
+          }
+        },
+        
         # risk of recurrent CVD events (maybe another function returnCVDrisk( first check the CVD histpry = return the original risk, return 2* risk))
+        returnCVDrisk=function(){
+          if(self$bMarkedMi==F && self$bMarkedStroke==F){ # if no history of CVD, return original risk 
+            annualCvdRisk=selfl$annualCvdRisk
+            monthlyCvdRisk=self$monthlyCvdRisk
+          } else if(self$bMarkedMi==T || self$bMarkedStroke==T){ # if any history of CVD, return risk*multiplier
+            annualCvdRisk=self$annualCvdRisk*pop$params$recurrent.event.risk.multiplier # right now 2x the risk, but can change in SA
+            monthlyCvdRisk=self$monthlyCvdRisk*pop$params$recurrent.event.risk.multiplier
+          }
+        }
         
         annualCvdRisk=NULL,
         monthlyCvdRisk=NULL,

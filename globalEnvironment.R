@@ -98,6 +98,13 @@ generate.new.modelParameter<-function(){
   #4-load pooled CVD risk by age/sex/ncd category
   load('data/10.year.cvd.risk.by.age.sex.ncd.Rdata')
   MP$pooled.risk.by.age.sex.ncd=pooled.risk.by.age.sex.ncd
+  #'@PK - setting risk of recurrent event here to 2x original risk; able to change in sensitivity analysis
+  MP$recurrent.event.risk.multiplier=2 
+  
+  
+  #5-load CVD mortality data
+  load("data/monthly.cvd.mortality.Rdata")
+  
   
   return(MP)
 }
