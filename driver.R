@@ -12,13 +12,15 @@ print("Sourcing Driver.R ... ")
   source("rCoreFunctions.R")
   source("plots.R")
   source("testing_ncd_prevalences.R")
+  source("ncdTestFunctions.R")
 }
 
 { 
+  bDebugMode=F
   set.seed(1)
   # -- Create the population in year 2014; save the stats and move the clock to 2015
   pop<-create.initial.population(id = 1,
-                                 n = 10000)
+                                 n = POP.SIZE)
   # setting up person attributes
   # pop<-invisible(set.initial.hiv.status(pop ))
   # pop<-invisible(set.annual.cvd.risk(pop))
@@ -61,113 +63,147 @@ print("Sourcing Driver.R ... ")
 
 ####################################################################################
 for(i in c(INITIAL.YEAR:END.YEAR)){
-pop = run.one.year.for.ncd.test(pop)
+  pop = run.one.year.for.ncd.test(pop)
 }
 ####################################################################################
 ####################################################################################
+# plot NCD prevalence at the population-level by year
+# props and freq
 ####################################################################################
-# plot total NCD prevalence by year
-
 # simulated ncd prev by year
-sim.ncd.prev = filter.stateSizes.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year','ncd.status'))
-D<-lapply(1:nrow(sim.ncd.prev),function(x){return(sim.ncd.prev[x,]/sum(sim.ncd.prev[x,]))})
-sim.ncd.prev<-do.call(rbind,D)                                                                                         
-
-x=pop$params$target.ncd.sizes
-dim(x)=c(dim(x),1) #add year
-dimnames(x)=list(
-  age = DIM.NAMES.AGE, 
-  sex = DIM.NAMES.SEX,
-  ncd.status = DIM.NAMES.NCD,
-  year=as.character(2015)
-)
-target.ncd.prev=filter.4D.stats.by.field.ncd(x,
-                                             years=as.character(2015),
-                                             keep.dimensions = c('year','ncd.status'))
-target.ncd.prev<-target.ncd.prev/sum(target.ncd.prev)
-
-par(mfrow=c(2,2))
-lapply(1:DIM.NCD,function(c){
-  sim=sim.ncd.prev[,c]
-  target=target.ncd.prev[,c]
-  plot(sim, ylim=c(min(sim,target,na.rm = T),max(sim,target,na.rm = T)),
-       main=DIM.NAMES.NCD[c],type="l")
-  abline(h=target,col="red")
-}) 
-
+{
+  sim.ncd.prev.size = filter.stateSizes.by.field(pop$stats$n.state.sizes, keep.dimensions = c('ncd.status','year'))
+  D<-lapply(1:DIM.YEAR,function(year){
+    return(sim.ncd.prev.size[,year]/sum(sim.ncd.prev.size[,year]))})
+  sim.ncd.prev.prp<-t(do.call(rbind,D))                                                                                         
+  
+  x=pop$params$target.ncd.size
+  dim(x)=c(dim(x),1) #add year
+  dimnames(x)=list(
+    age = DIM.NAMES.AGE, 
+    sex = DIM.NAMES.SEX,
+    ncd.status = DIM.NAMES.NCD,
+    year=as.character(2015)
+  )
+  target.ncd.prev.size=filter.4D.stats.by.field.ncd(x,
+                                                    years=as.character(2015),
+                                                    keep.dimensions = c('ncd.status','year'))
+  #prp of total population in 2015
+  target.ncd.prev.prp<-target.ncd.prev.size/sum(target.ncd.prev.size)
+  
+  # eqivalent target sizes for our model
+  target.ncd.prev.simPop= round(target.ncd.prev.prp* POP.SIZE)
+  
+  {  jpeg("ncdPrev_total.jpeg",width = 3000,height = 1500,res=300)
+    par(mfrow=c(2,4))
+    lapply(1:DIM.NCD,function(c){
+      sim=sim.ncd.prev.prp[c,]
+      target=target.ncd.prev.prp[c,]
+      plot(sim, ylim=c(min(sim,target,na.rm = T),max(sim,target,na.rm = T)),
+           main=DIM.NAMES.NCD[c],type="l",lwd=2,ylab="proportion")
+      abline(h=target,col="red",lwd=2)
+    }) 
+    lapply(1:DIM.NCD,function(c){
+      sim=sim.ncd.prev.size[c,]
+      target=target.ncd.prev.simPop[c,]
+      plot(sim, ylim=c(min(sim,target,na.rm = T),max(sim,target,na.rm = T)),
+           main=DIM.NAMES.NCD[c],type="l",lwd=2,ylab="Frequency")
+      abline(h=target,col="red",lwd=2)
+    }) 
+    dev.off()
+  }
+}
 ########################################################################################
 # plot NCD prevalence by age and sex over time
 {
-  sim.ncd.prev = filter.stateSizes.by.field(pop$stats$n.state.sizes, keep.dimensions = c( 'age','sex' ,'year','ncd.status'))
-dimnames(sim.ncd.prev)
-
-vProp=sim.ncd.prev
-vFreq=sim.ncd.prev
-invisible(
-  sapply(1:length(DIM.NAMES.SEX), function(sex){
-    sapply(1:length(DIM.NAMES.AGE), function(age){
-      sapply(1:length(DIM.NAMES.YEARS), function(year){
-        # vFreq[age,sex,as.character(year),]
-        vProp[age,sex,year,]<<- vProp[age,sex,year,]/sum(vFreq[age,sex,year,]) 
+  #frequency distribution of NCD states by age and sex
+  sim.ncd.prev.size = filter.stateSizes.by.field(pop$stats$n.state.sizes, keep.dimensions = c( 'age','sex' ,'ncd.status','year'))
+  # estimate ncd prevalence proportions in each age/sex strata
+  vFreq=sim.ncd.prev.size
+  vProp=vFreq
+  invisible(
+    sapply(1:length(DIM.NAMES.SEX), function(sex){
+      sapply(1:length(DIM.NAMES.AGE), function(age){
+        sapply(1:length(DIM.NAMES.YEAR), function(year){
+          vProp[age,sex,,year]<<- vProp[age,sex,,year]/sum(vFreq[age,sex,,year]) 
+        })
       })
-    })
-  }))
-vProp[vProp=="NaN"] = 0 # to remove NaN values that were introduced by dividing by 0 
-sim.ncd.prev=vProp
-dim(sim.ncd.prev)
-
-target.ncd.prev=pop$params$target.ncd.sizes
-target.ncd.prev<-  return.prop.sex.age(vFreq = target.ncd.prev)
-dim(target.ncd.prev)
+    }))
+  vProp[vProp=="NaN"] = 0 # to remove NaN values that were introduced by dividing by 0 
+  sim.ncd.prev.prp=vProp
+  dim(sim.ncd.prev.prp)
+  
+  #target ncd prev proportions
+  target.ncd.prev.prp=pop$params$target.ncd.props
+  
+  #estimate corresponding target frequencies in our population
+  target.ncd.prev.simPop=sim.ncd.prev.size
+  invisible(
+    lapply(1:DIM.AGE,function(age){
+      lapply(1:DIM.SEX,function(sex){
+        lapply(1:DIM.YEAR,function(year){
+          t=target.ncd.prev.prp[age,sex,]
+          popSize=sum(sim.ncd.prev.size[age,sex,,year])
+          #
+          target.ncd.prev.simPop[age,sex,,year]<<-round(t*popSize)
+        })  })}))
+  
 }
 
-{jpeg("ncdPrev_ageSex.jpeg",width = 3000,height = 1400)
-par(mfrow=c(8,17))
-invisible(
-  lapply(1:DIM.SEX,function(sex){
-    lapply(1:DIM.NCD,function(ncd){
-      lapply(1:DIM.AGE,function(age){
-        sim=sim.ncd.prev[age,sex,,ncd]
-        target=target.ncd.prev[age,sex,ncd]
-        plot(sim, ylim=c(min(sim,target,na.rm = T),max(sim,target,na.rm = T)),lwd=2,
-             main=paste0(DIM.NAMES.NCD[ncd],"_",DIM.NAMES.SEX[sex],"_",DIM.NAMES.AGE[age]),
-             type="l")
-        abline(h=target,col="red",lwd=2)
-      }) 
-    }) 
+{ #plot the ncd 'proportions' within each age/sex strata against target
+  jpeg("ncdPrevProp_ageSex.jpeg",width = 12000,height = 5000,res=300)
+  par(mfrow=c(8,17))
+  invisible(
+    lapply(1:DIM.SEX,function(sex){
+      lapply(1:DIM.NCD,function(ncd){
+        lapply(1:DIM.AGE,function(age){
+          sim=sim.ncd.prev.prp[age,sex,ncd,]
+          target=target.ncd.prev.prp[age,sex,ncd]
+          plot(sim, ylim=c(min(sim,target,na.rm = T),max(sim,target,na.rm = T)),lwd=2,
+               main=paste0(DIM.NAMES.NCD[ncd],"_",DIM.NAMES.SEX[sex],"_",DIM.NAMES.AGE[age]),
+               type="l",ylab="prop",xlab="")
+          abline(h=target,col="red",lwd=2)
+        })       })     })   )
+  dev.off()
+}
+{#plot the ncd 'frequencies' within each age/sex strata against target
+  jpeg("ncdPrevFreq_ageSex.jpeg",width = 12000,height = 6000,res=300)
+  par(mfrow=c(8,17))
+  invisible(
+    lapply(1:DIM.SEX,function(sex){
+      lapply(1:DIM.NCD,function(ncd){
+        lapply(1:DIM.AGE,function(age){
+          sim=sim.ncd.prev.size[age,sex,ncd,]
+          target=target.ncd.prev.simPop[age,sex,ncd,]
+          plot(sim, ylim=c(min(sim,target,na.rm = T),max(sim,target,na.rm = T)),lwd=4,
+               main=paste0(DIM.NAMES.NCD[ncd],"_",DIM.NAMES.SEX[sex],"_",DIM.NAMES.AGE[age]),
+               type="l",ylab="Freq",xlab="")
+          lines(target,col="green",lwd=4)
+        })       })     })   )
+  dev.off()
+}
+########################################################################################
+# sum square error for sim freq vs target freq over year:
+# SSE= (sim.ncd.prev.size - target.ncd.prev.simPop)^2
+
+# SSE between proportions:
+target.prp<-array(rep(target.ncd.prev.prp, DIM.YEAR),dim=c(DIM.AGE,DIM.SEX,DIM.NCD,DIM.YEAR),dimnames = list(DIM.NAMES.AGE,DIM.NAMES.SEX,DIM.NAMES.NCD,DIM.NAMES.YEAR))
+SSE= (sim.ncd.prev.prp - target.prp)^2
+
+# for each NCD state in each YEAR: compute mean squared error accross all age/sex strata 
+mse.ncd.year<-array(0,dim=c(DIM.NCD,DIM.YEAR),dimnames = list(DIM.NAMES.NCD,DIM.NAMES.YEAR))
+invisible(lapply(1:DIM.NCD,function(ncd){
+  lapply(1:DIM.YEAR,function(year){
+    mse.ncd.year[ncd,year] <<- mean(SSE[,,ncd,year])
+  })}))
+
+
+{  jpeg("mse_byNcdYear.jpeg",width = 1500,height = 1500,res=300)
+  par(mfrow=c(2,2))
+  lapply(1:DIM.NCD,function(c){
+    sim=mse.ncd.year[c,]
+    plot(sim, 
+         main=DIM.NAMES.NCD[c],type="l",lwd=2,ylab="MSE")
   }) 
-)
 dev.off()
 }
-
-# getwd()
-# D<-lapply(1:nrow(sim.ncd.prev),function(x){return(sim.ncd.prev[x,]/sum(sim.ncd.prev[x,]))})
-# sim.ncd.prev<-do.call(rbind,D)                                                                                         
-# 
-# 
-# ncd.prev = filter.stateSizes.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year','age','sex','ncd.status'))
-# pop.by.age.sex = filter.stateSizes.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year',"age","sex"))
-# 
-# ncd.prev.by.age.sex = array(NA,
-#                             dim = dim(ncd.prev),
-#                             dimnames = dimnames(ncd.prev))
-# for(i in 1:length(DIM.NAMES.NCD)){
-#   ncd.prev.by.age.sex[,,,i] = ncd.prev[,,,i]/pop.by.age.sex
-# }
-# 
-# apply(ncd.prev.by.age.sex,c(1:3),sum)
-# 
-# prev.difference = array(NA,
-#                         dim = length(DIM.NAMES.YEARS),
-#                         dimnames = list(DIM.NAMES.YEARS))
-# # check all years; mean squared error
-# for(i in 1:length(DIM.NAMES.YEARS)){
-# 
-#   prev.difference[i] = mean((ncd.prev.by.age.sex[i,,,]-pop$params$target.ncd.props)^2,na.rm = T) 
-# }
-# 
-# plot(prev.difference)  
-
-
-
-
