@@ -39,7 +39,7 @@ filter.stateSizes.by.field<- function(stateSizes, # a 5D array
                                           sexes = DIM.NAMES.SEX,
                                           hiv.status = DIM.NAMES.HIV,
                                           ncd.status = DIM.NAMES.NCD,
-                                          years=as.character(DIM.NAMES.YEARS),
+                                          years=as.character(DIM.NAMES.YEAR),
                                           keep.dimensions = 'year' # collapse all other dimensions & report the data as total value over this dimension
 ){
   if(all(keep.dimensions!='year'))  
@@ -81,7 +81,7 @@ filter.4D.stats.by.field<- function(stateSizes, # a 5D array
                                       ages = DIM.NAMES.AGE, 
                                       sexes = DIM.NAMES.SEX,
                                       hiv.status = DIM.NAMES.HIV,
-                                      years=as.character(DIM.NAMES.YEARS),
+                                      years=as.character(DIM.NAMES.YEAR),
                                       keep.dimensions = 'year' # collapse all other dimensions & report the data as total value over this dimension
 ){
   if(all(keep.dimensions!='year'))  
@@ -120,7 +120,7 @@ filter.4D.stats.by.field.ncd<- function(stateSizes, # a 5D array
                                     ages = DIM.NAMES.AGE, 
                                     sexes = DIM.NAMES.SEX,
                                     ncd.status = DIM.NAMES.NCD,
-                                    years=as.character(DIM.NAMES.YEARS),
+                                    years=as.character(DIM.NAMES.YEAR),
                                     keep.dimensions = 'year' # collapse all other dimensions & report the data as total value over this dimension
 ){
   if(all(keep.dimensions!='year'))  

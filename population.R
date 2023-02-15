@@ -66,6 +66,18 @@ POPULATION<-R6Class("POPULATION",
                         vdead <- unlist(invisible(lapply(self$members,function(p) {return(p$bMarkedDead.ageout)})))
                         self$members <- self$members[!vdead] #remove dead people
                         return(sum(vdead))
+                      },
+                      record.inc.diab.hyp=function(age,sex,hiv){
+                        self$stats$n.diab.hyp.inc[age,sex,hiv,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.diab.hyp.inc[age,sex,hiv,as.character(self$params$CYNOW)]+1
+                      },
+                      record.inc.diab=function(age,sex,hiv){
+                        self$stats$n.diab.inc[age,sex,hiv,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.diab.inc[age,sex,hiv,as.character(self$params$CYNOW)]+1
+                      },
+                      record.inc.hyp=function(age,sex,hiv){
+                        self$stats$n.hyp.inc[age,sex,hiv,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.hyp.inc[age,sex,hiv,as.character(self$params$CYNOW)]+1
                       }
                     )
                     
