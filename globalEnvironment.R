@@ -9,7 +9,7 @@ print("Sourcing GlobalEnvironment.R ... ")
 cat("Setting up global parameters .... \n")
 ANNUAL.TIMESTEPS=12 #how many timepsteps in a year?
 INITIAL.YEAR=2014
-END.YEAR=2030
+END.YEAR=2060
 #
 AGE.INTERVAL=5
 MIN.AGE=0
