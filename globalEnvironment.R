@@ -47,12 +47,14 @@ DIM.SEX=2
 DIM.AGE=17
 DIM.HIV=4
 DIM.NCD=4
+DIM.YEAR=END.YEAR-INITIAL.YEAR+1
+
 DIM.NAMES.SEX=c("FEMALE","MALE")
 DIM.NAMES.AGE=c("0-4","5-9","10-14","15-19", "20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59",
                 "60-64","65-69","70-74","75-79","80-85")
 DIM.NAMES.HIV=c("HIV.NEG","HIV.UNDIAG","HIV.UNENG", "HIV.ENG")
 DIM.NAMES.NCD=c("NCD.NEG","NCD.DIAB","NCD.HYP","NCD.DIAB_HYP")
-DIM.NAMES.YEARS=c(INITIAL.YEAR:END.YEAR)
+DIM.NAMES.YEAR=c(INITIAL.YEAR:END.YEAR)
 ################################################################################################################
 # MODEL PARAMETERS (MP) HOUSES ALL PARAMETERS THAT MAY BE CHANGED IN SENSITIVITY ANALYSIS. THEY'RE CREATED ONCE FOR EACH POPULATION
 cat("loading function generate.new.modelParameter ... \n")
@@ -175,7 +177,6 @@ generate.new.stat<-function(){
     #'@MS: redundant?
     n.hiv.prev=v4temp,
     
-    #'@PK: added 4D arrays for tracking new NCD incidences (by age/sex/hiv status/year)
     n.diab.hyp.inc=v4temp,
     n.diab.inc=v4temp,
     n.hyp.inc=v4temp,

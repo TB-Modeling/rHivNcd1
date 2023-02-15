@@ -298,7 +298,7 @@ update.ncd.states<-function(pop){
   # target.ncd.sizes
   # target.ncd.props
   ####################################################################################
-  # DIAB HYP
+  # DIAB_HYP
   ####################################################################################
   # CURRENT NCD state sizes & prop
   # 3D array of ncd state sizes: age, sex, ncd, year
@@ -307,19 +307,20 @@ update.ncd.states<-function(pop){
                                                   keep.dimensions = c('age','sex','ncd.status','year'))
   current.ncd.states=current.ncd.states[,,,1] #to remove year dimension
   # dimnames(current.ncd.states)
-  current.ncd.props<-return.prop.sex.age(current.ncd.states)
+  current.ncd.props<-return.prop.sex.age(vFreq = current.ncd.states)
   
   # DIFFERENCE in prevalence of NCDs
+  # dimnames(pop$params$target.ncd.props)
   diff.props =  pop$params$target.ncd.props-current.ncd.props
   
-  # ADDITIONAL Transitions required to reach the target proportions:
+  # ADDITIONAL Transitions required to reach the target proportions in our current population:
   trans.freq=diff.props
   invisible(lapply(1:DIM.AGE, function(ag){
     lapply(1:DIM.SEX, function(sex){
       lapply(1:DIM.NCD, function(ncd){
         trans.freq[ag,sex,ncd]<<-diff.props[ag,sex,ncd]*sum(current.ncd.states[ag,sex,]) # the required number of new transitions
       })})}))
-  trans.freq[trans.freq<0]<-0
+  # trans.freq[trans.freq<0]<-0  
   
   #PROBABILITY Of transition to DH for those in D or H state
   trans.prob.diab.hyp=

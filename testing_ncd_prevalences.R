@@ -1,10 +1,8 @@
 
 
 run.one.year.for.ncd.test = function(pop){
-
   cat("Beginning the year ... ",pop$params$CYNOW,"\n")
-  khm=pop$params$khm
-  
+
   ## 1-MODEL Deaths due to aging out --------
   n.ageout=sum(unlist(invisible(lapply(pop$members,function(x){
     if(x$age>=MAX.AGE) {
@@ -22,28 +20,26 @@ run.one.year.for.ncd.test = function(pop){
     n.births.non.hiv = n.births 
     
     if(n.births.non.hiv>0){
-      cat(n.births.non.hiv," non-HIV newborns are added","\n")
+      # cat(n.births.non.hiv," non-HIV newborns are added","\n")
       vIds = c((pop$params$LAST.ID+1): (pop$params$LAST.ID+n.births.non.hiv))
       pop$params$LAST.ID=pop$params$LAST.ID+n.births.non.hiv
-      vSexes = sample(c(MALE,FEMALE),n.births.non.hiv,prob = c(.5,.5),replace = T) # still 50/50 male/female
-      memberListNew = (mapply(PERSON$new, vIds,vSexes,0,pop$params$TNOW,HIV.NEG,NCD.NEG)) #'@JP: do we need to delete pop1 and open memory?
+      vSexes = sample(c(MALE,FEMALE),n.births.non.hiv,prob = c(.5,.5),replace = T) 
+      memberListNew = (mapply(PERSON$new, vIds,vSexes,0,pop$params$TNOW,HIV.NEG,NCD.NEG)) 
       pop$addMembers(unlist(memberListNew))
       # record stats:
       pop$stats$n.births.non.hiv[pop$params$YNOW]=n.births.non.hiv
     }
-    
-    #record stats:
     pop$stats$n.births[pop$params$YNOW]=n.births.non.hiv 
-    cat("n.births.non.hiv= ",n.births.non.hiv, " modeled \n")
-  }
+    }
   
   ## 3- MODEL AGING --------
   pop$modelAging()
-  
+
   ## 4- UPDATE NCD STATES & CVD RISKS FOR NEXT YEAR --------
-  pop<-update.ncd.states(pop)
-  pop<-invisible(set.annual.cvd.risk(pop))
-  
+  pop<-update.ncd.states.diabHyp(pop)
+  pop<-update.ncd.states.hyp(pop)
+  pop<-update.ncd.states.diab(pop)
+
   ##############################################
   # END OF YEAR----
   cat("Final pop size is ",length(pop$members),"\n")
