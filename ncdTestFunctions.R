@@ -42,6 +42,7 @@ update.ncd.states.diabHyp<-function(pop){
       
       nNeeded<-trans.freq[age,sex,]
       if (bDebugMode) print(paste0("Num events needed in age=",age," sex=",sex," :  ",nNeeded["NCD.DIAB_HYP"]))
+      
       if(nNeeded["NCD.DIAB_HYP"] >0){
         if( sum(nNeeded[c("NCD.HYP","NCD.DIAB")]>0)< 2) { #at least one state event is <0
           ### From Hyp?

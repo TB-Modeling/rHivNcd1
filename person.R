@@ -51,9 +51,10 @@ PERSON<-R6Class("PERSON",
         #recording the time
         tMiInc=NULL,
         tStrokeInc=NULL,
+        
         # you can add a function to return current mortality as a function of time since incidence (retrunMiMortality())
         #'@PK - I added these functions below. I don't actually have monthly MI mortality estimates yet, so this is just a placeholder
-        returnStrokeMortality=function(tnow){
+        returnStrokeMortality=function(params){
           p.months.since.stroke=tnow-self$tStrokeInc
           if(p.months.since.stroke<60){
             p.stroke.mortality=stroke.monthly.mortality[p.months.since.stroke] # if less than 5 years after event, take monthly prob
@@ -91,6 +92,14 @@ PERSON<-R6Class("PERSON",
         tDiabTrt=NULL,
         tHypDiag=NULL,
         tHypTrt=NULL,
+        
+        # at a population level >> rCoreFunctions
+        # we will loop through pop members, and evauate risk of CVD death for a person
+        # check the CVD history: if no events, risk of CVD death is 0
+        # if MI only (nMi==1 && nstroke==0)
+        # if stroke only *nMi==0 && n Stroke==1)
+        # if hae had recurent events .... nMi >=1 and/or nStroke >=1
+        ### evaluate risk of death >> if true: mark to die
         
         
         
