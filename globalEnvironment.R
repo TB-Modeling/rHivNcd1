@@ -105,7 +105,10 @@ generate.new.modelParameter<-function(){
   
   
   #5-load CVD mortality data
-  load("data/monthly.cvd.mortality.Rdata")
+  load("data/monthly.stroke.mortality.Rdata")
+  load("data/monthly.mi.mortality.Rdata")
+  MP$stroke.monthly.mortality = stroke.monthly.mortality
+  MP$mi.monthly.mortality = mi.monthly.mortality
   
   
   return(MP)
