@@ -42,47 +42,66 @@ PERSON<-R6Class("PERSON",
         bMarkedDead.cvd=F,
         bMarkedDead.ageout=F,
         #
-        cvdState=CVD.NONE,
         nMi=0,
         nStroke=0,
         #incidence
-        bMarkedMi=F,
-        bMarkedStroke=F,
         #recording the time
         tMiInc=NULL,
         tStrokeInc=NULL,
         
-        # you can add a function to return current mortality as a function of time since incidence (retrunMiMortality())
-        #'@PK - I added these functions below. I don't actually have monthly MI mortality estimates yet, so this is just a placeholder
-        returnStrokeMortality=function(params){
-          p.months.since.stroke=tnow-self$tStrokeInc
-          if(p.months.since.stroke<60){
-            p.stroke.mortality=stroke.monthly.mortality[p.months.since.stroke] # if less than 5 years after event, take monthly prob
-          } else if(p.months.since.stroke>=60){
-            p.stroke.mortality=stroke.monthly.mortality[60] # if 5+ years after event, take 5-year prob
+        
+        # risk of CVD events 
+        returnCVDrisk=function(p,params){
+          if(p$nMi==0 && p$nStroke==0){ # if no history of CVD, return original risk
+            annualCvdRisk=self$annualCvdRisk
+            monthlyCvdRisk=p$monthlyCvdRisk
+          } else if(p$nMi>0 || p$nStroke>0){ # if any history of CVD, return risk*multiplier
+            annualCvdRisk=p$annualCvdRisk*pop$params$recurrent.event.risk.multiplier # right now 2x the risk, but can change in SA
+            monthlyCvdRisk=p$monthlyCvdRisk*pop$params$recurrent.event.risk.multiplier
           }
         },
         
-        # don't actually have mi.monthly.mortality vector yet
-        returnMiMortality=function(tnow){
-          p.months.since.mi=tnow-self$tMiInc
-          if(p.months.since.mi<60){
-            p.mi.mortality=mi.monthly.mortality[p.months.since.mi] # if less than 5 years after event, take monthly prob
-          } else if(p.months.since.mi>=60){
-            p.mi.mortality=mi.monthly.mortality[60] # if 5+ years after event, take 5-year prob
-          }
+        # return CVD mortality
+        returnCvdMortality = function(p,params){
+          p.cvd.mortality = 0
+          
+          # First, evaluate if they have had at least one event 
+          if(p$nMi + p$nStroke > 0){ 
+            
+            # Next, evaluate which event (stroke vs. MI) is more recent 
+            ## STROKE MORE RECENT ##
+            if(p$tStrokeInc>p$tMiInc){  
+              p.months.since.stroke=tnow-p$tStrokeInc
+              
+              # Next, evaluate if this is a first or recurrent event 
+              if(p$nMi + p$nStroke > 1) { 
+                ## STROKE AS RECURRENT EVENT ##
+                p.cvd.mortality=params$stroke.monthly.mortality[min(p.months.since.stroke,60)]*params$recurrent.event.mortality.multiplier
+                # if 60 months or greater, return the value for 60 months
+
+              } else { 
+                ## STROKE AS FIRST EVENT ##
+                p.cvd.mortality=params$stroke.monthly.mortality[min(p.months.since.stroke,60)]
+              }
+              
+            } else { 
+              ## MI MORE RECENT ##
+              p.months.since.mi=tnow-p$tMiInc
+              
+              if(p$nMi + p$nStroke > 1) {  
+                ## MI AS RECURRENT EVENT ##
+                p.cvd.mortality=params$mi.monthly.mortality[min(p.months.since.mi,120)]*params$recurrent.event.mortality.multiplier 
+                # if 60 months or greater, return the value for 120 months
+                
+              } else { 
+                ## MI AS FIRST EVENT ##
+                p.cvd.mortality=params$mi.monthly.mortality[min(p.months.since.mi,120)]
+              }
+            }
+          } # (If no events, don't need to return anything since we already set p.cvd.mortality to 0)
+          
+          p.cvd.mortality
         },
-        
-        # risk of recurrent CVD events (maybe another function returnCVDrisk( first check the CVD histpry = return the original risk, return 2* risk))
-        returnCVDrisk=function(){
-          if(self$bMarkedMi==F && self$bMarkedStroke==F){ # if no history of CVD, return original risk 
-            annualCvdRisk=selfl$annualCvdRisk
-            monthlyCvdRisk=self$monthlyCvdRisk
-          } else if(self$bMarkedMi==T || self$bMarkedStroke==T){ # if any history of CVD, return risk*multiplier
-            annualCvdRisk=self$annualCvdRisk*pop$params$recurrent.event.risk.multiplier # right now 2x the risk, but can change in SA
-            monthlyCvdRisk=self$monthlyCvdRisk*pop$params$recurrent.event.risk.multiplier
-          }
-        }
         
         annualCvdRisk=NULL,
         monthlyCvdRisk=NULL,
@@ -92,19 +111,7 @@ PERSON<-R6Class("PERSON",
         tDiabTrt=NULL,
         tHypDiag=NULL,
         tHypTrt=NULL,
-        
-        # at a population level >> rCoreFunctions
-        # we will loop through pop members, and evauate risk of CVD death for a person
-        # check the CVD history: if no events, risk of CVD death is 0
-        # if MI only (nMi==1 && nstroke==0)
-        # if stroke only *nMi==0 && n Stroke==1)
-        # if hae had recurent events .... nMi >=1 and/or nStroke >=1
-        ### evaluate risk of death >> if true: mark to die
-        
-        
-        
-        
-       
+
         
   
         ncdtrtState=NULL,
@@ -162,8 +169,17 @@ PERSON<-R6Class("PERSON",
             self$ncdState=NCD.DIAB_HYP
             self$tDiabHypInc=tnow
             self$bMarkedTransDiabHyp=F
-          }
-      
+          },
+       model.cvd.mi.event=function(tnow){
+         self$nMi=self$nMi+1
+         self$tMiInc=tnow
+       },
+       model.cvd.stroke.event=function(tnow){
+         self$nStroke=self$nStroke+1
+         self$tStrokeInc=tnow
+       }
+       
+
         
         
         #' @JP: we need to check this
