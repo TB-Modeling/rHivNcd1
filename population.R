@@ -78,6 +78,14 @@ POPULATION<-R6Class("POPULATION",
                       record.inc.hyp=function(age,sex,hiv){
                         self$stats$n.hyp.inc[age,sex,hiv,as.character(self$params$CYNOW)] <- 
                           self$stats$n.hyp.inc[age,sex,hiv,as.character(self$params$CYNOW)]+1
+                      },
+                      record.inc.mi=function(age,sex,hiv,ncd){
+                        self$stats$n.mi.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.mi.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      },
+                      record.inc.stroke=function(age,sex,hiv,ncd){
+                        self$stats$n.stroke.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.stroke.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       }
                     )
                     
