@@ -206,10 +206,53 @@ model.hiv.transitions<-function(pop,
   pop
 }
 
+# models the CVD events
+print("model.cvd.events")
+model.cvd.events<-function(pop){
+  cat("CVD events - TBD \n")
+  
+  invisible(lapply(c(1:length(pop$members)),function(x){
+    p<-pop$members[[x]]
+    
+    p.cvd.risk = returnCVDrisk(p,
+                               pop$params) # this function evaluates whether they have history of cvd events and returns appropriate risk 
+    
+    if(runif(1) < p.cvd.risk){ # evaluate if they have a cvd event 
+      
+      # evaluate whether this should be a stroke event or mi event (assign default male probability, change to female if sex is female)
+      prob.mi=pop$param$prob.first.cvd.event.mi.male
+      if(p$sex==FEMALE)
+        prob.mi=pop$param$prob.first.cvd.event.mi.female
+      
+      if(runif(1) < prob.mi){ # mi event
+        p$model.cvd.mi.event(pop$params$tnow)
+        pop$record.inc.mi(p$agegroup(),p$sex,p$hivState,p$ncdState)
+      } else{ # stroke event
+        p$model.cvd.stroke.event(pop$params$tnow)
+        pop$record.inc.stroke(p$agegroup(),p$sex,p$hivState,p$ncdState)
+      }
+    }
+    
+  }))
+  pop
+}
 
-# models the HIV & CVD deaths
+# models the CVD deaths
 print("model.hiv.cvd.deaths")
-model.hiv.cvd.deaths<-function(pop,
+model.cvd.deaths = function(pop){
+  n=length(pop$members)
+  invisible(lapply(c(1:n),function(x){
+    p=pop$members[[x]]
+    p.mortality.risk = p$returnCvdMortality(p,pop$params)
+    
+    if(runif(1) < p.mortality.risk)
+      p$bMarkedDead.cvd=T
+  }))
+}
+
+# removes the HIV & CVD deaths
+print("remove.hiv.cvd.deaths")
+remove.hiv.cvd.deaths<-function(pop,
                                prob.hiv.mort,
                                prob.non.hiv.mort){
   n=length(pop$members)
@@ -256,31 +299,6 @@ model.hiv.cvd.deaths<-function(pop,
   }
   pop
 }
-
-# models the CVD events
-print("model.cvd.events")
-model.cvd.events<-function(pop){
-  cat("CVD events - TBD \n")
-  # a.	First event: WHO calculator 
-  # # b.	Repeat events: 2x risk of first event (Smith-Spangler assumption) 
-  # invisible(lapply(c(1:length(pop$members)),function(x){
-  #   p<-pop$members[[x]]
-  #   
-  #   # person has no history of previous cvd events? 
-  #   # { evaluate prob of first CVD event
-  #     # if true: mark the cvd >>> evaluate prob of death following that event?
-  #     # if true: mark dead
-  #   # }
-  #   # else{
-  #   # evaluare prob of subsequent CVD events & death
-  #   # }
-  #   # model cvd events that are marked & count the incidence 
-  #   
-  # }))
-  pop
-}
-
-
 
 # update NCD state after aging
 print("update.ncd.states")
@@ -461,8 +479,8 @@ run.one.year<-function(pop){
   { #computing event probabilities from KHM
     ##Probability of HIV mortality (estimated via # events/ elig pop) --------
     khm=pop$params$khm
-    n.hiv.pos = apply(khm[[1]]$population[as.character(pop$params$CYNOW-1),-1,,],c(2:3),sum) # extract all but hiv.negative, sum over hiv states
-    target.hiv.mort = khm[[1]]$hiv.mortality[as.character(pop$params$CYNOW),,] # pull out current year; dimensions are year, age, sex
+    n.hiv.pos = apply(khm$population[as.character(pop$params$CYNOW-1),-1,,],c(2:3),sum) # extract all but hiv.negative, sum over hiv states
+    target.hiv.mort = khm$hiv.mortality[as.character(pop$params$CYNOW),,] # pull out current year; dimensions are year, age, sex
     prob.hiv.mort=target.hiv.mort/n.hiv.pos
     if(sum(prob.hiv.mort>1)>1)
       stop(paste("Error: probability of prob.hiv.mort >1 in year ",pop$params$CYNOW))
@@ -470,8 +488,8 @@ run.one.year<-function(pop){
     khm.prob.hiv.mort<-prob.hiv.mort/ANNUAL.TIMESTEPS
     
     ##Probability of non.HIV mortality (estimated via # events/ elig pop) --------
-    n.pop = apply(khm[[1]]$population[as.character(pop$params$CYNOW-1),,,],c(2:3),sum) # extract all population, sum over hiv states
-    target.non.hiv.mort = khm[[1]]$non.hiv.mortality[as.character(pop$params$CYNOW),,] # pull out current year; dimensions are year, age, sex
+    n.pop = apply(khm$population[as.character(pop$params$CYNOW-1),,,],c(2:3),sum) # extract all population, sum over hiv states
+    target.non.hiv.mort = khm$non.hiv.mortality[as.character(pop$params$CYNOW),,] # pull out current year; dimensions are year, age, sex
     prob.non.hiv.mort=target.non.hiv.mort/n.pop
     if(sum(prob.non.hiv.mort>1)>1)
       stop(paste("Error: probability of prob.non.hiv.mort >1 in year ",pop$params$CYNOW))
@@ -479,8 +497,8 @@ run.one.year<-function(pop){
     khm.prob.non.hiv.mort<-prob.non.hiv.mort/ANNUAL.TIMESTEPS
     
     ##Probability of incidence (estimated via # events/ elig pop) --------
-    n.hiv.neg = khm[[1]]$population[as.character(pop$params$CYNOW-1),"HIV.NEG",,]
-    target.inc = khm[[1]]$incidence[as.character(pop$params$CYNOW),,] # pull out current year; dimensions are year, age, sex
+    n.hiv.neg = khm$population[as.character(pop$params$CYNOW-1),"HIV.NEG",,]
+    target.inc = khm$incidence[as.character(pop$params$CYNOW),,] # pull out current year; dimensions are year, age, sex
     prob.inc=target.inc/n.hiv.neg
     if(sum(prob.inc>1)>1)
       stop(paste("Error: probability of prob.inc >1 in year ",pop$params$CYNOW))
@@ -488,21 +506,21 @@ run.one.year<-function(pop){
     khm.prob.hiv.inc<-prob.inc/ANNUAL.TIMESTEPS
     
     ##Probability of engagement (direct input to HIV model) --------
-    prob.eng=khm[[1]]$target.parameters$prob.eng[as.character(pop$params$CYNOW),,]
+    prob.eng=khm$target.parameters$prob.eng[as.character(pop$params$CYNOW),,]
     if(sum(prob.eng>1)>1)     
       stop(paste("Error: probability of engagement >1 in year ",pop$params$CYNOW))
     prob.eng[prob.eng==Inf]<-0
     khm.prob.hiv.eng<-prob.eng/ANNUAL.TIMESTEPS
     
     ##Probability of disengagement (direct input to HIV model) --------
-    prob.diseng=khm[[1]]$target.parameters$prob.diseng[as.character(pop$params$CYNOW),,]
+    prob.diseng=khm$target.parameters$prob.diseng[as.character(pop$params$CYNOW),,]
     if(sum(prob.diseng>1)>1)     
       stop(paste("Error: probability of disengagement >1 in year ",pop$params$CYNOW))
     prob.diseng[prob.diseng==Inf]<-0
     khm.prob.hiv.diseng<-prob.diseng/ANNUAL.TIMESTEPS
     
     ##Probability of diagnosis (direct input to HIV model) --------
-    prob.diag = khm[[1]]$target.parameters$prob.diag[as.character(pop$params$CYNOW),,]
+    prob.diag = khm$target.parameters$prob.diag[as.character(pop$params$CYNOW),,]
     if(sum(prob.diag>1)>1)     
       stop(paste("Error: probability of prob.diag >1 in year ",pop$params$CYNOW))
     prob.diag[prob.diag==Inf]<-0
@@ -527,7 +545,8 @@ run.one.year<-function(pop){
     # filter.stateSizes.by.field(pop$return.state.size.distribution(), years = "2015",keep.dimensions = c("year","hiv.status") )
     
     # 3- modeling HIV and CVD deaths
-    pop<-model.hiv.cvd.deaths( pop,
+    pop<-model.cvd.deaths(pop)
+    pop<-remove.hiv.cvd.deaths( pop,
                                khm.prob.hiv.mort,
                                khm.prob.non.hiv.mort)
     
@@ -547,8 +566,8 @@ run.one.year<-function(pop){
   
   ## 2-MODEL BIRTHS --------
   { # non-HIV births
-    absolute.n.births.non.hiv=khm[[1]]$target.parameters$non.hiv.births[as.character(pop$params$CYNOW)] # total non HIV births from HIV model 
-    non.hiv.births.scalar = absolute.n.births.non.hiv/sum(khm[[1]]$population[as.character(pop$params$CYNOW),,,]) # scaled to pop size from HIV model
+    absolute.n.births.non.hiv=khm$target.parameters$non.hiv.births[as.character(pop$params$CYNOW)] # total non HIV births from HIV model 
+    non.hiv.births.scalar = absolute.n.births.non.hiv/sum(khm$population[as.character(pop$params$CYNOW),,,]) # scaled to pop size from HIV model
     n.births.non.hiv = round(non.hiv.births.scalar*length(pop$members),0) # re-scaled to pop size from NCD model
   
     if(n.births.non.hiv>0){
@@ -563,8 +582,8 @@ run.one.year<-function(pop){
     }
     
     # HIV births - putting into undiagnosed for now
-    absolute.n.births.hiv=khm[[1]]$target.parameters$hiv.births[as.character(pop$params$CYNOW)] # total HIV births from HIV model
-    hiv.births.scalar = absolute.n.births.hiv/sum(khm[[1]]$population[as.character(pop$params$CYNOW),,,]) # scaled to pop size from HIV model
+    absolute.n.births.hiv=khm$target.parameters$hiv.births[as.character(pop$params$CYNOW)] # total HIV births from HIV model
+    hiv.births.scalar = absolute.n.births.hiv/sum(khm$population[as.character(pop$params$CYNOW),,,]) # scaled to pop size from HIV model
     n.births.hiv = round(hiv.births.scalar*length(pop$members),0) # re-scaled to pop size from NCD mode
     
     if(n.births.hiv>0){
