@@ -38,10 +38,6 @@ NCDTRT.NONE=1
 NCDTRT.DIAB=2
 NCDTRT.HYP=3
 NCDTRT.DIABHYP=4
-#
-CVD.NONE=1
-CVD.MI=2
-CVD.STROKE=3
 
 DIM.SEX=2
 DIM.AGE=17
@@ -69,10 +65,16 @@ generate.new.modelParameter<-function(){
   #1- load HIV data 
   # load('data/hiv_sim.RData')  #a single run from the HIV model
   load("data/hiv_simset.RData") #multiple runs from the HIV model
-  khm.hivPrev2015 = khm[[1]]$population["2015",,,]
+  MP$khm.full=khm # leaving full simset in here for plotting purposes
+  class(MP$khm.full) = "khm_simulation_output"
+  
+  n.hiv.sims = length(khm)
+  hiv.sim = sample(1:n.hiv.sims,1) # randomly sample one hiv sim from the length of n.hiv.sims
+  khm = khm[[hiv.sim]]
+  khm.hivPrev2015 = khm$population["2015",,,]
   MP$khm=khm
   MP$khm.hivPrev2015=khm.hivPrev2015
-  class(MP$khm) = "khm_simulation_output"
+  
   
   #2- load STEP dataset to generate the initial population by age, sex and ncd state
   step.dataset = read.csv("data/stepSimPop2015.csv")
@@ -101,8 +103,10 @@ generate.new.modelParameter<-function(){
   load('data/10.year.cvd.risk.by.age.sex.ncd.Rdata')
   MP$pooled.risk.by.age.sex.ncd=pooled.risk.by.age.sex.ncd
   #'@PK - setting risk of recurrent event here to 2x original risk; able to change in sensitivity analysis
-  MP$recurrent.event.risk.multiplier=2 
-  
+  MP$recurrent.event.risk.multiplier=2
+  MP$recurrent.event.mortality.multiplier=1 # this assumes same mortality for first vs. recurrent events 
+  MP$prob.first.cvd.event.mi.male = 0.5 # MELISSA fill this in 
+  MP$prob.first.cvd.event.mi.female = 0.5 # MELISSA fill this in 
   
   #5-load CVD mortality data
   load("data/monthly.stroke.mortality.Rdata")
@@ -183,6 +187,9 @@ generate.new.stat<-function(){
     n.diab.hyp.inc=v4temp,
     n.diab.inc=v4temp,
     n.hyp.inc=v4temp,
+    
+    n.mi.inc=v5temp,
+    n.stroke.inc=v5temp,
     
     # 5D arrays by age, sex, ncd & hiv state over time
     n.state.sizes=v5temp
