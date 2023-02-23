@@ -53,12 +53,13 @@ PERSON<-R6Class("PERSON",
         # risk of CVD events 
         returnCVDrisk=function(p,params){
           if(p$nMi==0 && p$nStroke==0){ # if no history of CVD, return original risk
-            annualCvdRisk=self$annualCvdRisk
+            annualCvdRisk=p$annualCvdRisk
             monthlyCvdRisk=p$monthlyCvdRisk
           } else if(p$nMi>0 || p$nStroke>0){ # if any history of CVD, return risk*multiplier
             annualCvdRisk=p$annualCvdRisk*pop$params$recurrent.event.risk.multiplier # right now 2x the risk, but can change in SA
             monthlyCvdRisk=p$monthlyCvdRisk*pop$params$recurrent.event.risk.multiplier
           }
+          monthlyCvdRisk
         },
         
         # return CVD mortality
