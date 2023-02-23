@@ -22,17 +22,17 @@ print("Sourcing Driver.R ... ")
   pop<-create.initial.population(id = 1,
                                  n = POP.SIZE)
   # setting up person attributes
-  # pop<-invisible(set.initial.hiv.status(pop ))
-  # pop<-invisible(set.annual.cvd.risk(pop))
+  pop<-invisible(set.initial.hiv.status(pop ))
+  pop<-invisible(set.annual.cvd.risk(pop))
   pop$record.annual.stats()
   pop$increaseYear() #
 }
 
 # RUNNING / DEBUGGING
 # {
-#   for(i in c(INITIAL.YEAR:END.YEAR)){
-#   pop<-run.one.year(pop)
-#    }
+  for(i in c(INITIAL.YEAR:END.YEAR)){
+  pop<-run.one.year(pop)
+   }
 
 
 

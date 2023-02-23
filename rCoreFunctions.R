@@ -214,7 +214,6 @@ model.cvd.events<-function(pop){
   invisible(lapply(c(1:length(pop$members)),function(x){
     p<-pop$members[[x]]
     
-    #'@PK - right now this function won't work because p$monthlyCvdRisk is NULL (only set at the end of the year?)
     p.cvd.risk = p$returnCVDrisk(p,
                                  pop$params) # this function evaluates whether they have history of cvd events and returns appropriate risk 
     
