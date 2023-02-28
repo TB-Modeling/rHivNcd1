@@ -113,7 +113,8 @@ set.annual.cvd.risk = function(pop){
     
     # Convert from 10-year CVD risk to annual 
     p.cvd.risk.annual = -((log(1-p.cvd.risk.10.year))/10) #'@MS: did you assume that 10-year risk decade exponentially?
-    p.cvd.risk.annual = p.cvd.risk.annual*100
+    #'@PK: removed the *100 below, because the return.monthly.prob function assumes total prob=1 (not 100)
+    # p.cvd.risk.annual = p.cvd.risk.annual*100
     p$annualCvdRisk=p.cvd.risk.annual
     p$monthlyCvdRisk= return.monthly.prob(p.cvd.risk.annual) #'@MS: should we use this?
   }))
@@ -216,7 +217,9 @@ model.cvd.events<-function(pop){
     
     p.cvd.risk = p$returnCVDrisk(p,
                                  pop$params) # this function evaluates whether they have history of cvd events and returns appropriate risk 
-    
+    # print(p.cvd.risk)
+    # if(is.nan(p.cvd.risk))
+    #   browser()
     if(runif(1) < p.cvd.risk){ # evaluate if they have a cvd event 
       
       # evaluate whether this should be a stroke event or mi event (assign default male probability, change to female if sex is female)
@@ -259,6 +262,8 @@ remove.hiv.cvd.deaths<-function(pop,
   #evaluate prob of hiv and non.hiv mortality for everyone who is not already marked dead
   invisible(lapply(c(1:n),function(x){
     p=pop$members[[x]] 
+    if(is.null(p$bMarkedDead.cvd))
+      browser()
     if (p$bMarkedDead.cvd==FALSE){
       # HIV MORTALITY
       if(p$hivState!=HIV.NEG){ # all HIV positive
