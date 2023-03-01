@@ -20,10 +20,10 @@ PERSON<-R6Class("PERSON",
         sex=NULL,
         #
         hivState=HIV.NEG,
-        tHivInc=NULL,
-        tHivDiag=NULL,
-        tHivEng=NULL,
-        tHivUneng=NULL,
+        tHivInc=-1,
+        tHivDiag=-1,
+        tHivEng=-1,
+        tHivUneng=-1,
         bMarkedHivInc=F,
         bMarkedHivDiag=F,
         bMarkedHivEng=F,
@@ -33,9 +33,9 @@ PERSON<-R6Class("PERSON",
         bMarkedTransDiabHyp=FALSE, # True if person is chosen for transition to the new state
         bMarkedTransDiab=FALSE,
         bMarkedTransHyp=FALSE,
-        tDiabInc=NULL,
-        tHypInc=NULL,
-        tDiabHypInc=NULL,
+        tDiabInc=-1,
+        tHypInc=-1,
+        tDiabHypInc=-1,
         #
         bMarkedDead.hiv=F,
         bMarkedDead.non.hiv=F,
@@ -46,36 +46,38 @@ PERSON<-R6Class("PERSON",
         nStroke=0,
         #incidence
         #recording the time
-        tMiInc=NULL,
-        tStrokeInc=NULL,
+        tMiInc=-1,
+        tStrokeInc=-1,
         
         
         # risk of CVD events 
-        returnCVDrisk=function(p,params){
-          if(p$nMi==0 && p$nStroke==0){ # if no history of CVD, return original risk
-            annualCvdRisk=p$annualCvdRisk
-            monthlyCvdRisk=p$monthlyCvdRisk
-          } else if(p$nMi>0 || p$nStroke>0){ # if any history of CVD, return risk*multiplier
-            annualCvdRisk=p$annualCvdRisk*pop$params$recurrent.event.risk.multiplier # right now 2x the risk, but can change in SA
-            monthlyCvdRisk=p$monthlyCvdRisk*pop$params$recurrent.event.risk.multiplier
+        returnCVDrisk=function(params){
+          if(self$nMi==0 && self$nStroke==0){ # if no history of CVD, return original risk
+            annualCvdRisk=self$annualCvdRisk
+            monthlyCvdRisk=self$monthlyCvdRisk
+          } else if(self$nMi>0 || self$nStroke>0){ # if any history of CVD, return risk*multiplier
+            annualCvdRisk=self$annualCvdRisk*pop$params$recurrent.event.risk.multiplier # right now 2x the risk, but can change in SA
+            monthlyCvdRisk=self$monthlyCvdRisk*pop$params$recurrent.event.risk.multiplier
           }
           monthlyCvdRisk
         },
         
         # return CVD mortality
-        returnCvdMortality = function(p,params){
+        returnCvdMortality = function(params){
+      
           p.cvd.mortality = 0
           
           # First, evaluate if they have had at least one event 
-          if(p$nMi + p$nStroke > 0){ 
+          
+          if(self$nMi + self$nStroke > 0){ 
             
             # Next, evaluate which event (stroke vs. MI) is more recent 
             ## STROKE MORE RECENT ##
-            if(p$tStrokeInc>p$tMiInc){  
-              p.months.since.stroke=tnow-p$tStrokeInc
+            if(self$tStrokeInc > self$tMiInc){  
+              p.months.since.stroke=params$TNOW-self$tStrokeInc+1
               
               # Next, evaluate if this is a first or recurrent event 
-              if(p$nMi + p$nStroke > 1) { 
+              if(self$nMi + self$nStroke > 1) { 
                 ## STROKE AS RECURRENT EVENT ##
                 p.cvd.mortality=params$stroke.monthly.mortality[min(p.months.since.stroke,60)]*params$recurrent.event.mortality.multiplier
                 # if 60 months or greater, return the value for 60 months
@@ -87,9 +89,9 @@ PERSON<-R6Class("PERSON",
               
             } else { 
               ## MI MORE RECENT ##
-              p.months.since.mi=tnow-p$tMiInc
+              p.months.since.mi=params$TNOW - self$tMiInc+1
               
-              if(p$nMi + p$nStroke > 1) {  
+              if(self$nMi + self$nStroke > 1) {  
                 ## MI AS RECURRENT EVENT ##
                 p.cvd.mortality=params$mi.monthly.mortality[min(p.months.since.mi,120)]*params$recurrent.event.mortality.multiplier 
                 # if 60 months or greater, return the value for 120 months

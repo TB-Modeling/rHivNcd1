@@ -210,29 +210,26 @@ model.hiv.transitions<-function(pop,
 # models the CVD events
 print("model.cvd.events")
 model.cvd.events<-function(pop){
-  cat("CVD events - TBD \n")
   
   invisible(lapply(c(1:length(pop$members)),function(x){
     p<-pop$members[[x]]
     
-    p.cvd.risk = p$returnCVDrisk(p,
-                                 pop$params) # this function evaluates whether they have history of cvd events and returns appropriate risk 
-    # print(p.cvd.risk)
-    # if(is.nan(p.cvd.risk))
-    #   browser()
+    p.cvd.risk = p$returnCVDrisk(pop$params) # this function evaluates whether they have history of cvd events and returns appropriate risk 
+    
     if(runif(1) < p.cvd.risk){ # evaluate if they have a cvd event 
       
       # evaluate whether this should be a stroke event or mi event (assign default male probability, change to female if sex is female)
-      prob.mi=pop$param$prob.first.cvd.event.mi.male
+      prob.mi=pop$params$prob.first.cvd.event.mi.male
       if(p$sex==FEMALE)
-        prob.mi=pop$param$prob.first.cvd.event.mi.female
+        prob.mi=pop$params$prob.first.cvd.event.mi.female
       
       if(runif(1) < prob.mi){ # mi event
-        p$model.cvd.mi.event(pop$params$tnow)
-        pop$record.inc.mi(p$agegroup(),p$sex,p$hivState,p$ncdState)
+        p$model.cvd.mi.event(pop$params$TNOW)
+        pop$record.inc.mi(p$agegroup,p$sex,p$hivState,p$ncdState)
       } else{ # stroke event
-        p$model.cvd.stroke.event(pop$params$tnow)
-        pop$record.inc.stroke(p$agegroup(),p$sex,p$hivState,p$ncdState)
+        
+        p$model.cvd.stroke.event(pop$params$TNOW)
+        pop$record.inc.stroke(p$agegroup,p$sex,p$hivState,p$ncdState)
       }
     }
     
@@ -246,11 +243,15 @@ model.cvd.deaths = function(pop){
   n=length(pop$members)
   invisible(lapply(c(1:n),function(x){
     p=pop$members[[x]]
-    p.mortality.risk = p$returnCvdMortality(p,pop$params)
-    
+
+        p.mortality.risk = p$returnCvdMortality(pop$params)
+
+        
+
     if(runif(1) < p.mortality.risk)
       p$bMarkedDead.cvd=T
   }))
+  pop
 }
 
 # removes the HIV & CVD deaths
@@ -262,8 +263,9 @@ remove.hiv.cvd.deaths<-function(pop,
   #evaluate prob of hiv and non.hiv mortality for everyone who is not already marked dead
   invisible(lapply(c(1:n),function(x){
     p=pop$members[[x]] 
-    if(is.null(p$bMarkedDead.cvd))
-      browser()
+  
+     
+    
     if (p$bMarkedDead.cvd==FALSE){
       # HIV MORTALITY
       if(p$hivState!=HIV.NEG){ # all HIV positive
@@ -535,6 +537,7 @@ run.one.year<-function(pop){
   
   ##### AT EACH TIMESTEP WITHIN THE YEAR:
   for(i in (1:ANNUAL.TIMESTEPS)){
+    
     cat("Running month ",pop$params$TNOW,"\n")
     # CVD events and HIV transitions are independent, so the order doesn't matter    # we model HIV deaths based on new HIV states after new transitions are modeled
     

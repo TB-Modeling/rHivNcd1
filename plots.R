@@ -289,3 +289,74 @@ if(1==2){
   simplot(pop$params$khm,pop,scale.population = T, facet.by="hiv.status")
   
 }
+
+
+# plot.pop.barchart=function(pop,
+#                       facet.by = NULL,
+#                       ages = DIM.NAMES.AGE, 
+#                       sexes = DIM.NAMES.SEX,
+#                       hiv.status = DIM.NAMES.HIV,
+#                       ncd.status = DIM.NAMES.NCD){
+#   
+#   keep.dimensions = union('year',facet.by)
+#   
+#   value = filter.stateSizes.by.field(pop$stats$n.state.sizes, 
+#                                          years = pop$params$YNOW,
+#                                          ages = ages, 
+#                                          sexes = sexes,
+#                                          hiv.status = hiv.status,
+#                                          ncd.status = ncd.status,
+#                                          keep.dimensions = keep.dimensions)
+#       
+#   # set up a dataframe with columns: year, value, sim id, data.type 
+#   df = reshape2::melt(value) 
+#   
+# 
+#   if(length(facet.by)>0){
+#     facet_string = paste0("~",paste0(facet.by,collapse = '+'))
+#     facet_formula = as.formula(facet_string)
+#     plot = ggplot() + 
+#       geom_point(data = df, aes(x=year,y = value,fill="red")) +
+#       facet_wrap(facet_formula, scales = "free_y")+ 
+#       ylim(0,NA)
+#   } else{
+#     plot = ggplot() + 
+#       geom_point(data = df, aes(x=year,y = value,fill="red"))+
+#       ylim(0,NA)
+#   }
+#   
+#   plot
+# }
+# plot.pop.barchart(pop,facet.by = c("sex"))
+# plot.pop.barchart(pop,facet.by = c("sex","age"))
+
+
+# plot.pop.hist.1D=function(pop,
+#                            by.dimension = "age",
+#                            ages = DIM.NAMES.AGE, 
+#                            sexes = DIM.NAMES.SEX,
+#                            hiv.status = DIM.NAMES.HIV,
+#                            ncd.status = DIM.NAMES.NCD){
+#   
+#   if (length(by)!=1) {
+#     print("please only specify one by.dimension")
+#     return (0)
+#   }
+#   
+#   keep.dimensions = union('year',by.dimension)
+#   value = filter.stateSizes.by.field(pop$stats$n.state.sizes, 
+#                                      years = pop$params$YNOW,
+#                                      ages = ages, 
+#                                      sexes = sexes,
+#                                      hiv.status = hiv.status,
+#                                      ncd.status = ncd.status,
+#                                      keep.dimensions = keep.dimensions)
+#   
+#   # set up a dataframe with columns: year, value, sim id, data.type 
+#   df = reshape2::melt(value) 
+#     plot = ggplot() + 
+#       geom_bar(data = df, aes(x=???,y = value),stat="identity")
+#       # facet_wrap(facet_formula, scales = "free_y")+ 
+#       # ylim(0,NA)
+#     plot
+# }

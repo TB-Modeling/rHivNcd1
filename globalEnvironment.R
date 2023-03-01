@@ -82,7 +82,7 @@ generate.new.modelParameter<-function(){
   MP$step.dataset=step.dataset
   
   #3- read target NCD sizes and compute the target proportions based on 2015 step dataset
-  D<-read.csv("ncd.state.sizes.2015.csv",header = T)[,2:9]
+  D<-read.csv("data/ncd.state.sizes.2015.csv",header = T)[,2:9]
   target.ncd.sizes<-array(0,
                           dim=c(DIM.AGE,DIM.SEX,DIM.NCD),
                           dimnames = list(DIM.NAMES.AGE,DIM.NAMES.SEX,DIM.NAMES.NCD))
