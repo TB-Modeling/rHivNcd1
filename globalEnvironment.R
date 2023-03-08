@@ -9,7 +9,7 @@ print("Sourcing GlobalEnvironment.R ... ")
 cat("Setting up global parameters .... \n")
 ANNUAL.TIMESTEPS=12 #how many timepsteps in a year?
 INITIAL.YEAR=2014
-END.YEAR=2060
+END.YEAR=2030
 #
 AGE.INTERVAL=5
 MIN.AGE=0
@@ -174,24 +174,27 @@ generate.new.stat<-function(){
     n.deaths.non.hiv=v1temp,
     
     #3D arrays by age, sex over time
-    n.hiv.inc=v3temp,#'@MS: redundant?
-    n.hiv.diag=v3temp,#'@MS: redundant?
-    n.hiv.eng=v3temp,#'@MS: redundant?
-    n.hiv.uneng=v3temp,#'@MS: redundant?
+    n.hiv.inc=v3temp, 
+    n.hiv.diag=v3temp, 
+    n.hiv.eng=v3temp, 
+    n.hiv.uneng=v3temp, 
     
     # 4D arrays by age, sex and hiv state over time 
     #'@MS: should we use the new n.state.sizes instead of this one to extract both HIV and NCD outputs?
     #'@MS: redundant?
     n.hiv.prev=v4temp,
     
+    #4D arrays by age, sex, hiv status over time
     n.diab.hyp.inc=v4temp,
     n.diab.inc=v4temp,
     n.hyp.inc=v4temp,
     
+    
+    #5D arrays [age, sex, hiv, ncd, year]
     n.mi.inc=v5temp,
     n.stroke.inc=v5temp,
     
-    # 5D arrays by age, sex, ncd & hiv state over time
+    # 5D arrays [age, sex, hiv, ncd, year]
     n.state.sizes=v5temp
   )
   return(stats)
