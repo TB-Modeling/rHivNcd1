@@ -34,7 +34,7 @@ print("loading function get.hiv.state.proportions")
 
 #filters the state sizes to appropriate dimensions
 print("loading function filter.stateSizes.by.field")
-filter.stateSizes.by.field<- function(stateSizes, # a 5D array
+filter.5D.stats.by.field<- function(stateSizes, # a 5D array
                                           ages = DIM.NAMES.AGE, 
                                           sexes = DIM.NAMES.SEX,
                                           hiv.status = DIM.NAMES.HIV,

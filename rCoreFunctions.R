@@ -5,7 +5,9 @@
 #####################################
 print("Sourcing rCoreFunctions.R ... ")
 
-bPrint=T #boolean option to control printing messages throughout the code.
+#boolean options to control printing messages throughout the code.
+bPrint1=T; # printing year's start/end/pop size
+bPrint2=F  #printing events: incidence, deaths, newborns
 
 #creates the initial population
 print("create.initial.pop.list")
@@ -81,7 +83,7 @@ set.initial.hiv.status = function(pop){
     rand.hiv.state = sample(x = c(1:length(p.probs)), size = 1, prob = p.probs)
     p$hivState=rand.hiv.state
   }))
-  cat("Initial HIV status set \n")
+  if(bPrint2) cat("Initial HIV status set \n")
   pop
   
 }
@@ -118,7 +120,7 @@ set.annual.cvd.risk = function(pop){
     p$annualCvdRisk=p.cvd.risk.annual
     p$monthlyCvdRisk= return.monthly.prob(p.cvd.risk.annual) #'@MS: should we use this?
   }))
-  cat("Annual CVD risks are set \n")
+  if (bPrint2) cat("Annual CVD risks are set \n")
   pop
 }
 
@@ -203,7 +205,7 @@ model.hiv.transitions<-function(pop,
       }
     }))
   }
-  if (bPrint) cat("modeled inc= ",n.inc," diag= ",n.diag," eng= ",n.eng," uneng= ",n.uneng," events \n" )
+  if (bPrint2) cat("modeled inc= ",n.inc," diag= ",n.diag," eng= ",n.eng," uneng= ",n.uneng," events \n" )
   pop
 }
 
@@ -302,7 +304,7 @@ remove.hiv.cvd.deaths<-function(pop,
     pop$stats$n.deaths.non.hiv[pop$params$YNOW]=n.deaths.non.hiv
     pop$members<-pop$members[!death.status] #only keep those who are alive
     
-    if (bPrint) cat("modeled n.deaths.cvd=",n.deaths.cvd," n.deaths.hiv=",n.deaths.hiv," n.deaths.non.hiv=",n.deaths.non.hiv,"\n")
+    if (bPrint2) cat("modeled n.deaths.cvd=",n.deaths.cvd," n.deaths.hiv=",n.deaths.hiv," n.deaths.non.hiv=",n.deaths.non.hiv,"\n")
   }
   pop
 }
@@ -454,7 +456,7 @@ update.ncd.states<-function(pop){
   
   n.hyp.inc=sum(unlist(D))
   
-  if (bPrint) cat("modeled n.diab.hyp.inc= ",n.diab.hyp.inc," n.diab.inc= ",n.diab.inc," n.hyp.inc= ",n.hyp.inc," \n")
+  if (bPrint2) cat("modeled n.diab.hyp.inc= ",n.diab.hyp.inc," n.diab.inc= ",n.diab.inc," n.hyp.inc= ",n.hyp.inc," \n")
   pop
 }
 
@@ -480,7 +482,7 @@ run.one.year<-function(pop){
   # updating cvd annual risks based on new age and ncd state
   
   #check the TNOW and break if it's not correctly set
-  cat("Beginning the year ... ",pop$params$CYNOW,"\n")
+  if(bPrint2) cat("Beginning the year ... ",pop$params$CYNOW,"\n")
   
   #### AT YEAR's BEGINNING:
   { #computing event probabilities from KHM
@@ -538,7 +540,7 @@ run.one.year<-function(pop){
   ##### AT EACH TIMESTEP WITHIN THE YEAR:
   for(i in (1:ANNUAL.TIMESTEPS)){
     
-    cat("Running month ",pop$params$TNOW,"\n")
+    if (bPrint1) cat("Running month ",pop$params$TNOW,"\n")
     # CVD events and HIV transitions are independent, so the order doesn't matter    # we model HIV deaths based on new HIV states after new transitions are modeled
     
     # 1- modeling cvd events based on current cvd annual risk    # counting new events: marking those who will die after the event
@@ -579,7 +581,7 @@ run.one.year<-function(pop){
     n.births.non.hiv = round(non.hiv.births.scalar*length(pop$members),0) # re-scaled to pop size from NCD model
   
     if(n.births.non.hiv>0){
-      cat(n.births.non.hiv," non-HIV newborns are added","\n")
+      if (bPrint2) cat(n.births.non.hiv," non-HIV newborns are added","\n")
       vIds = c((pop$params$LAST.ID+1): (pop$params$LAST.ID+n.births.non.hiv))
       pop$params$LAST.ID=pop$params$LAST.ID+n.births.non.hiv
       vSexes = sample(c(MALE,FEMALE),n.births.non.hiv,prob = c(.5,.5),replace = T) # still 50/50 male/female
@@ -595,7 +597,7 @@ run.one.year<-function(pop){
     n.births.hiv = round(hiv.births.scalar*length(pop$members),0) # re-scaled to pop size from NCD mode
     
     if(n.births.hiv>0){
-      cat(n.births.hiv," HIV newborns are added","\n")
+      if(bPrint2) cat(n.births.hiv," HIV newborns are added","\n")
       vIds = c((pop$params$LAST.ID+1): (pop$params$LAST.ID+n.births.hiv))
       pop$params$LAST.ID=pop$params$LAST.ID+n.births.hiv
       vSexes = sample(c(MALE,FEMALE),n.births.hiv,prob = c(.5,.5),replace = T)
@@ -609,7 +611,7 @@ run.one.year<-function(pop){
       }
     #record stats:
     pop$stats$n.births[pop$params$YNOW]=n.births.non.hiv + n.births.hiv
-    cat("n.births.non.hiv= ",n.births.non.hiv, " n.births.hiv= ",n.births.hiv, " modeled \n")
+    if(bPrint2) cat("n.births.non.hiv= ",n.births.non.hiv, " n.births.hiv= ",n.births.hiv, " modeled \n")
   }
   
   ## 3- MODEL AGING --------
@@ -623,8 +625,8 @@ run.one.year<-function(pop){
   
   ##############################################
   # END OF YEAR----
-  cat("Final pop size is ",length(pop$members),"\n")
-  cat("End of year: ",pop$params$CYNOW," --------------------------- \n")
+  if (bPrint1) cat("Final pop size is ",length(pop$members),"\n")
+  if (bPrint1) cat("End of year: ",pop$params$CYNOW," --------------------------- \n")
   
   # Record annual statatistics --------
   pop$record.annual.stats()
