@@ -137,6 +137,9 @@ simplot = function(...,
             } else if (setequal(keep.dimensions, c('year','hiv.status'))){
               dimnames(value) = list(year=years,
                                      hiv.status=hiv.status)
+            } else if (setequal(keep.dimensions, c('year','ncd.status'))){
+              dimnames(value) = list(year=years,
+                                     ncd.status=ncd.status)
             } else stop("need to add these dimensions")
             
             
@@ -276,17 +279,18 @@ simplot = function(...,
       ylim(0,NA)
   }
 
-  plot
+  suppressWarnings(print(plot))
 
 
 }
 
 
 if(1==2){
-  simplot(pop$params$khm,pop,scale.population = T)
-  simplot(pop$params$khm,pop,scale.population = T, facet.by = "age")
-  simplot(pop$params$khm,pop,scale.population = T, facet.by = "sex")
-  simplot(pop$params$khm,pop,scale.population = T, facet.by="hiv.status")
+  simplot(pop$params$khm.full,pop,scale.population = T)
+  simplot(pop$params$khm.full,pop,scale.population = T, facet.by = "age")
+  simplot(pop$params$khm.full,pop,scale.population = T, facet.by = "sex")
+  simplot(pop$params$khm.full,pop,scale.population = T, facet.by="hiv.status")
+  simplot(pop,scale.population = T, facet.by="ncd.status") 
   
 }
 
