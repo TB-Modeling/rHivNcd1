@@ -185,22 +185,22 @@ model.hiv.transitions<-function(pop,
       #
       if(p$bMarkedHivInc==TRUE) {
         p$hiv.getInfected(pop$params$TNOW)
-        pop$stats$n.hiv.inc[p$agegroup,p$sex,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.inc[p$agegroup,p$sex,as.character(pop$params$CYNOW)]+1
+        pop$stats$n.hiv.inc[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.inc[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)]+1
         n.inc<<-n.inc+1
       }
       if(p$bMarkedHivDiag==TRUE) {
         p$hiv.getDiagnosed(pop$params$TNOW)
-        pop$stats$n.hiv.diag[p$agegroup,p$sex,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.diag[p$agegroup,p$sex,as.character(pop$params$CYNOW)]+1
+        pop$stats$n.hiv.diag[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.diag[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)]+1
         n.diag<<-n.diag+1
       }
       if(p$bMarkedHivUneng==TRUE) {
         p$hiv.getUnengage(pop$params$TNOW)
-        pop$stats$n.hiv.uneng[p$agegroup,p$sex,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.uneng[p$agegroup,p$sex,as.character(pop$params$CYNOW)]+1
+        pop$stats$n.hiv.uneng[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.uneng[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)]+1
         n.eng<<-n.eng+1
       }
       if(p$bMarkedHivEng==TRUE) {
         p$hiv.getEngaged(pop$params$TNOW)
-        pop$stats$n.hiv.eng[p$agegroup,p$sex,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.eng[p$agegroup,p$sex,as.character(pop$params$CYNOW)]+1
+        pop$stats$n.hiv.eng[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.eng[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)]+1
         n.uneng<<-n.uneng+1
       }
     }))
