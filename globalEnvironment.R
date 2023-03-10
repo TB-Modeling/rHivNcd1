@@ -104,9 +104,10 @@ generate.new.modelParameter<-function(){
   MP$pooled.risk.by.age.sex.ncd=pooled.risk.by.age.sex.ncd
   #'@PK - setting risk of recurrent event here to 2x original risk; able to change in sensitivity analysis
   MP$recurrent.event.risk.multiplier=2
-  MP$recurrent.event.mortality.multiplier=1 # this assumes same mortality for first vs. recurrent events 
-  MP$prob.first.cvd.event.mi.male = 0.5 # MELISSA fill this in 
-  MP$prob.first.cvd.event.mi.female = 0.5 # MELISSA fill this in 
+  MP$recurrent.stroke.mortality.OR=2.53 # this is an ODDS RATIO, so have to convert to odds and then back to probability (in returnCvdMortality function)
+  MP$recurrent.MI.mortality.multiplier=1.856 
+  MP$prob.first.cvd.event.mi.male = 0.6 
+  MP$prob.first.cvd.event.mi.female = 0.6 
   
   #5-load CVD mortality data
   load("data/monthly.stroke.mortality.Rdata")
