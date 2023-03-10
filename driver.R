@@ -40,9 +40,10 @@ print("Sourcing Driver.R ... ")
    }
 #
 # @MS
-# add the mortality for those with recurrent event
-# add the choice between two CVD events
-# put all stats in a 5d format
+# add the mortality for those with recurrent event - DONE
+# add the choice between two CVD events - DONE (keeping the same for sex right now)
+# put all stats in a 5d format 
+    #'@PK - see note in globaleEnvironment about needing 4D arrays for transitions
 # plotting functions for NCD model
 # set of standard plots 
 # meeting with Todd in a couple of weeks

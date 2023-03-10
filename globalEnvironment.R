@@ -138,16 +138,28 @@ generate.new.stat<-function(){
                dimnames=list(age = DIM.NAMES.AGE,
                              sex = DIM.NAMES.SEX,
                              year = DIM.NAMES.N))
-  #4D
-  v4temp=array(rep(0,DIM.AGE*DIM.SEX*DIM.HIV*DIM.N),  
-               dim = c(DIM.AGE,
-                       DIM.SEX,
-                       DIM.HIV,
-                       DIM.N),
-               dimnames=list(age = DIM.NAMES.AGE,
-                             sex = DIM.NAMES.SEX,
-                             hiv.status = DIM.NAMES.HIV,
-                             year = DIM.NAMES.N))
+  
+  #4D - version 1; with NCD dimension (use this for HIV transitions)
+  v4temp.ncd =array(rep(0,DIM.AGE*DIM.SEX*DIM.NCD*DIM.N),  
+                    dim = c(DIM.AGE,
+                            DIM.SEX,
+                            DIM.NCD,
+                            DIM.N),
+                    dimnames=list(age = DIM.NAMES.AGE,
+                                  sex = DIM.NAMES.SEX,
+                                  ncd.status = DIM.NAMES.NCD,
+                                  year = DIM.NAMES.N))
+  
+  #4D - version 2; with HIV dimension (use this for NCD transitions)
+  v4temp.hiv =array(rep(0,DIM.AGE*DIM.SEX*DIM.HIV*DIM.N),  
+                    dim = c(DIM.AGE,
+                            DIM.SEX,
+                            DIM.HIV,
+                            DIM.N),
+                    dimnames=list(age = DIM.NAMES.AGE,
+                                  sex = DIM.NAMES.SEX,
+                                  hiv.status = DIM.NAMES.HIV,
+                                  year = DIM.NAMES.N))
   #5D
   v5temp=array(rep(0,DIM.AGE*DIM.SEX*DIM.HIV*DIM.NCD*DIM.N),  
                dim = c(DIM.AGE,
@@ -173,21 +185,18 @@ generate.new.stat<-function(){
     n.deaths.ageout=v1temp,
     n.deaths.non.hiv=v1temp,
     
-    #3D arrays by age, sex over time
-    n.hiv.inc=v3temp, 
-    n.hiv.diag=v3temp, 
-    n.hiv.eng=v3temp, 
-    n.hiv.uneng=v3temp, 
+    #'@PK - below 4D arrays inherently have to be 4D (i.e., don't have an HIV dimension for HIV transitions; same for NCD)
     
-    # 4D arrays by age, sex and hiv state over time 
-    #'@MS: should we use the new n.state.sizes instead of this one to extract both HIV and NCD outputs?
-    #'@MS: redundant?
-    n.hiv.prev=v4temp,
+    #4D arrays (version 1) by age, sex, NCD STATUS over time
+    n.hiv.inc=v4temp.ncd, 
+    n.hiv.diag=v4temp.ncd, 
+    n.hiv.eng=v4temp.ncd, 
+    n.hiv.uneng=v4temp.ncd, 
     
-    #4D arrays by age, sex, hiv status over time
-    n.diab.hyp.inc=v4temp,
-    n.diab.inc=v4temp,
-    n.hyp.inc=v4temp,
+    #4D arrays (version 2) by age, sex, HIV STATUS over time
+    n.diab.hyp.inc=v4temp.hiv,
+    n.diab.inc=v4temp.hiv,
+    n.hyp.inc=v4temp.hiv,
     
     
     #5D arrays [age, sex, hiv, ncd, year]
