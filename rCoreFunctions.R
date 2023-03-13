@@ -329,7 +329,7 @@ update.ncd.states<-function(pop){
   ####################################################################################
   # CURRENT NCD state sizes & prop
   # 3D array of ncd state sizes: age, sex, ncd, year
-  current.ncd.states = filter.stateSizes.by.field(pop$return.state.size.distribution(),
+  current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
                                                   years = as.character(pop$params$CYNOW),
                                                   keep.dimensions = c('age','sex','ncd.status','year'))
   current.ncd.states=current.ncd.states[,,,1] #to remove year dimension
@@ -374,7 +374,7 @@ update.ncd.states<-function(pop){
   # DIAB 
   ####################################################################################
   # 3D array of ncd state sizes: age, sex, ncd, year
-  current.ncd.states = filter.stateSizes.by.field(pop$return.state.size.distribution(),
+  current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
                                                   years = as.character(pop$params$CYNOW),
                                                   keep.dimensions = c('age','sex','ncd.status','year'))
   current.ncd.states=current.ncd.states[,,,1] #to remove year dimension
@@ -416,7 +416,7 @@ update.ncd.states<-function(pop){
   # HYP
   ####################################################################################
     # 3D array of ncd state sizes: age, sex, ncd, year
-  current.ncd.states = filter.stateSizes.by.field(pop$return.state.size.distribution(),
+  current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
                                                   years = as.character(pop$params$CYNOW),
                                                   keep.dimensions = c('age','sex','ncd.status','year'))
   current.ncd.states=current.ncd.states[,,,1] #to remove year dimension
@@ -606,8 +606,8 @@ run.one.year<-function(pop){
       # record stats:
       pop$stats$n.births.hiv[pop$params$YNOW]=n.births.hiv
       nMaleNewborns=sum(vSexes==MALE)
-      pop$stats$n.hiv.inc["0-4","MALE",pop$params$YNOW]=pop$stats$n.hiv.inc["0-4","MALE",pop$params$YNOW] + nMaleNewborns 
-      pop$stats$n.hiv.inc["0-4","FEMALE",pop$params$YNOW]=pop$stats$n.hiv.inc["0-4","FEMALE",pop$params$YNOW] + (n.births.hiv-nMaleNewborns)
+      pop$stats$n.hiv.inc["0-4","MALE","NCD.NEG",pop$params$YNOW]=pop$stats$n.hiv.inc["0-4","MALE","NCD.NEG",pop$params$YNOW] + nMaleNewborns 
+      pop$stats$n.hiv.inc["0-4","FEMALE","NCD.NEG",pop$params$YNOW]=pop$stats$n.hiv.inc["0-4","FEMALE","NCD.NEG",pop$params$YNOW] + (n.births.hiv-nMaleNewborns)
       }
     #record stats:
     pop$stats$n.births[pop$params$YNOW]=n.births.non.hiv + n.births.hiv
