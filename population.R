@@ -26,11 +26,27 @@ POPULATION<-R6Class("POPULATION",
                             "It has ",length(self$params), " parameters.", 
                             "Sum of all stats is ", sum(unlist(self$stats)),"\n")
                       },
-                      #adding new members to the population
+                      
+                      increaseYear=function(){
+                        self$params$YNOW<-self$params$YNOW+1
+                        self$params$CYNOW<-self$params$CYNOW+1
+                      },
+                      increaseMonth=function(){
+                        self$params$TNOW<-self$params$TNOW+1
+                      },
+                      
                       addMembers=function(memberListNew=list()){
                         self$members<-c(self$members,memberListNew)
                       },
-                      
+                     
+                      modelAging=function(){
+                        invisible(lapply(self$members,function(p) {p$incAge}))
+                      },
+                      remove.dead.ageout=function(){
+                        vdead <- unlist(invisible(lapply(self$members,function(p) {return(p$bMarkedDead.ageout)})))
+                        self$members <- self$members[!vdead] #remove dead people
+                        return(sum(vdead))
+                      },
                       return.state.size.distribution=function(){
                         n=length(self$members)
                         state.sizes<-array(0,
@@ -52,38 +68,45 @@ POPULATION<-R6Class("POPULATION",
                         self$stats$pop.size[ynow] <-length(self$members) #population size
                         self$stats$n.state.sizes[,,,,ynow] <- self$return.state.size.distribution() #state sizes
                       },
-                      increaseYear=function(){
-                        self$params$YNOW<-self$params$YNOW+1
-                        self$params$CYNOW<-self$params$CYNOW+1
+                     
+                      #record HIV events
+                      record.hiv.inc=function(age,sex,hiv,ncd){
+                        self$stats$n.hiv.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.hiv.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
-                      increaseMonth=function(){
-                        self$params$TNOW<-self$params$TNOW+1
+                      record.hiv.diag=function(age,sex,hiv,ncd){
+                        self$stats$n.hiv.diag[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.hiv.diag[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
-                      modelAging=function(){
-                        invisible(lapply(self$members,function(p) {p$incAge}))
+                      record.hiv.eng=function(age,sex,hiv,ncd){
+                        self$stats$n.hiv.eng[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.hiv.eng[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
-                      remove.dead.ageout=function(){
-                        vdead <- unlist(invisible(lapply(self$members,function(p) {return(p$bMarkedDead.ageout)})))
-                        self$members <- self$members[!vdead] #remove dead people
-                        return(sum(vdead))
+                      record.hiv.uneng=function(age,sex,hiv,ncd){
+                        self$stats$n.hiv.uneng[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.hiv.uneng[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
-                      record.inc.diab.hyp=function(age,sex,hiv){
-                        self$stats$n.diab.hyp.inc[age,sex,hiv,as.character(self$params$CYNOW)] <- 
-                          self$stats$n.diab.hyp.inc[age,sex,hiv,as.character(self$params$CYNOW)]+1
+                      
+                      #record NCD events
+                      record.diab.hyp.inc=function(age,sex,hiv,ncd){
+                        self$stats$n.diab.hyp.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.diab.hyp.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
-                      record.inc.diab=function(age,sex,hiv){
-                        self$stats$n.diab.inc[age,sex,hiv,as.character(self$params$CYNOW)] <- 
-                          self$stats$n.diab.inc[age,sex,hiv,as.character(self$params$CYNOW)]+1
+                      record.diab.inc=function(age,sex,hiv,ncd){
+                        self$stats$n.diab.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.diab.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
-                      record.inc.hyp=function(age,sex,hiv){
-                        self$stats$n.hyp.inc[age,sex,hiv,as.character(self$params$CYNOW)] <- 
-                          self$stats$n.hyp.inc[age,sex,hiv,as.character(self$params$CYNOW)]+1
+                      record.hyp.inc=function(age,sex,hiv,ncd){
+                        self$stats$n.hyp.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.hyp.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
-                      record.inc.mi=function(age,sex,hiv,ncd){
+                      
+                      #record CVD events
+                      record.mi.inc=function(age,sex,hiv,ncd){
                         self$stats$n.mi.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
                           self$stats$n.mi.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
-                      record.inc.stroke=function(age,sex,hiv,ncd){
+                      record.stroke.inc=function(age,sex,hiv,ncd){
                         self$stats$n.stroke.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
                           self$stats$n.stroke.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       }
