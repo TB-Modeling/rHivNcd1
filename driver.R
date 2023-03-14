@@ -34,7 +34,7 @@ print("Sourcing Driver.R ... ")
   pop<-run.one.year(pop)
 
   #saving population
-  saveRDS(pop,file = "outputs/pop1",compress = F)
+  # saveRDS(pop,file = "outputs/pop1",compress = F)
 }
 
 #######################################################
@@ -114,17 +114,17 @@ profvis({
 # pop$stats$n.deaths.non.hiv
 # pop$stats$n.deaths.cvd
 # #  NCD incidence
-# filter.4D.stats.by.field(pop$stats$n.diab.inc, keep.dimensions = c('year'))
-# filter.4D.stats.by.field(pop$stats$n.hyp.inc, keep.dimensions = c('year'))
-# filter.4D.stats.by.field(pop$stats$n.diab.hyp.inc, keep.dimensions = c('year'))
+filter.5D.stats.by.field(pop$stats$n.diab.inc, keep.dimensions = c('year'))
+filter.5D.stats.by.field(pop$stats$n.hyp.inc, keep.dimensions = c('year'))
+filter.5D.stats.by.field(pop$stats$n.diab.hyp.inc, keep.dimensions = c('year'))
 # # HIV events
-# filter.4D.stats.by.field(pop$stats$n.hiv.inc, keep.dimensions = c('year',"age"))
-# filter.4D.stats.by.field(pop$stats$n.diab.hyp.inc, keep.dimensions = c('year',"sex"))
-# filter.4D.stats.by.field(pop$stats$n.diab.inc, keep.dimensions = c('year',"age","sex"))
-# filter.4D.stats.by.field(pop$stats$n.hyp.inc, keep.dimensions = c('year',"age","sex"))
+filter.5D.stats.by.field(pop$stats$n.hiv.inc, keep.dimensions = c('year',"age"))
+filter.5D.stats.by.field(pop$stats$n.diab.hyp.inc, keep.dimensions = c('year',"sex"))
+filter.5D.stats.by.field(pop$stats$n.diab.inc, keep.dimensions = c('year',"age","sex"))
+filter.5D.stats.by.field(pop$stats$n.hyp.inc, keep.dimensions = c('year',"age","sex"))
 # 
-# filter.5D.stats.by.field(pop$stats$n.mi.inc, keep.dimensions = c('year'))
-# filter.5D.stats.by.field(pop$stats$n.stroke.inc, keep.dimensions = c('year'))
+filter.5D.stats.by.field(pop$stats$n.mi.inc, keep.dimensions = c('year'))
+filter.5D.stats.by.field(pop$stats$n.stroke.inc, keep.dimensions = c('year'))
 # 
 # filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year'))
 # filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year','hiv.status'))

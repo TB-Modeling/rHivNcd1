@@ -185,22 +185,22 @@ model.hiv.transitions<-function(pop,
       #
       if(p$bMarkedHivInc==TRUE) {
         p$hiv.getInfected(pop$params$TNOW)
-        pop$stats$n.hiv.inc[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.inc[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)]+1
+        pop$stats$n.hiv.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
         n.inc<<-n.inc+1
       }
       if(p$bMarkedHivDiag==TRUE) {
         p$hiv.getDiagnosed(pop$params$TNOW)
-        pop$stats$n.hiv.diag[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.diag[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)]+1
+        pop$stats$n.hiv.diag[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.diag[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
         n.diag<<-n.diag+1
       }
       if(p$bMarkedHivUneng==TRUE) {
         p$hiv.getUnengage(pop$params$TNOW)
-        pop$stats$n.hiv.uneng[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.uneng[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)]+1
+        pop$stats$n.hiv.uneng[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.uneng[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
         n.eng<<-n.eng+1
       }
       if(p$bMarkedHivEng==TRUE) {
         p$hiv.getEngaged(pop$params$TNOW)
-        pop$stats$n.hiv.eng[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.eng[p$agegroup,p$sex,p$ncdState,as.character(pop$params$CYNOW)]+1
+        pop$stats$n.hiv.eng[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.eng[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
         n.uneng<<-n.uneng+1
       }
     }))
@@ -365,7 +365,7 @@ update.ncd.states<-function(pop){
   D<-lapply(pop$members,function(p) {
     if (p$bMarkedTransDiabHyp==T){
       p$diab.hyp.getInfected(pop$params$TNOW)
-      pop$stats$n.diab.hyp.inc[p$agegroup,p$sex,p$hivState,as.character(pop$params$CYNOW)] <- pop$stats$n.diab.hyp.inc[p$agegroup,p$sex,p$hivState,as.character(pop$params$CYNOW)]+1
+      pop$stats$n.diab.hyp.inc[p$agegroup,p$sex,p$hivState,p$ncdState, as.character(pop$params$CYNOW)] <- pop$stats$n.diab.hyp.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
       return(1)
     }})
   n.diab.hyp.inc=sum(unlist(D))
@@ -408,7 +408,7 @@ update.ncd.states<-function(pop){
   D<-lapply(pop$members,function(p) {
     if (p$bMarkedTransDiab==T){
       p$diab.getInfected(pop$params$TNOW)
-      pop$stats$n.diab.inc[p$agegroup,p$sex,p$hivState,as.character(pop$params$CYNOW)] <- pop$stats$n.diab.inc[p$agegroup,p$sex,p$hivState,as.character(pop$params$CYNOW)]+1
+      pop$stats$n.diab.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.diab.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
       return(1)
     }})
   n.diab.inc=sum(unlist(D))
@@ -450,7 +450,7 @@ update.ncd.states<-function(pop){
   D<-lapply(pop$members,function(p) {
     if (p$bMarkedTransHyp==T){
       p$hyp.getInfected(pop$params$TNOW)
-      pop$stats$n.hyp.inc[p$agegroup,p$sex,p$hivState,as.character(pop$params$CYNOW)] <- pop$stats$n.hyp.inc[p$agegroup,p$sex,p$hivState,as.character(pop$params$CYNOW)]+1
+      pop$stats$n.hyp.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hyp.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
       return(1)
     }})
   
@@ -606,8 +606,8 @@ run.one.year<-function(pop){
       # record stats:
       pop$stats$n.births.hiv[pop$params$YNOW]=n.births.hiv
       nMaleNewborns=sum(vSexes==MALE)
-      pop$stats$n.hiv.inc["0-4","MALE","NCD.NEG",pop$params$YNOW]=pop$stats$n.hiv.inc["0-4","MALE","NCD.NEG",pop$params$YNOW] + nMaleNewborns 
-      pop$stats$n.hiv.inc["0-4","FEMALE","NCD.NEG",pop$params$YNOW]=pop$stats$n.hiv.inc["0-4","FEMALE","NCD.NEG",pop$params$YNOW] + (n.births.hiv-nMaleNewborns)
+      pop$stats$n.hiv.inc["0-4","MALE","HIV.NEG", "NCD.NEG",pop$params$YNOW]=pop$stats$n.hiv.inc["0-4","MALE","HIV.NEG","NCD.NEG",pop$params$YNOW] + nMaleNewborns 
+      pop$stats$n.hiv.inc["0-4","FEMALE","HIV.NEG","NCD.NEG",pop$params$YNOW]=pop$stats$n.hiv.inc["0-4","FEMALE","HIV.NEG","NCD.NEG",pop$params$YNOW] + (n.births.hiv-nMaleNewborns)
       }
     #record stats:
     pop$stats$n.births[pop$params$YNOW]=n.births.non.hiv + n.births.hiv
