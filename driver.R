@@ -19,23 +19,23 @@ print("Sourcing Driver.R ... ")
 }
 #######################################################
 # SINGLE RUN
-# { 
-#   # Create the population in year 2014; save the stats and move the clock to 2015
-#   bDebugMode=T
-#   set.seed(1)
-#   pop<-create.initial.population(id = 1,n = POP.SIZE)
-#   # setting up person attributes
-#   pop<-invisible(set.initial.hiv.status(pop ))
-#   pop<-invisible(set.annual.cvd.risk(pop))
-#   pop$record.annual.stats()
-#   pop$increaseYear() 
-#   # run
-#   while(pop$params$CYNOW<= END.YEAR)
-#   pop<-run.one.year(pop)
-# 
-#   #saving population
-#   saveRDS(pop,file = "outputs/pop1",compress = F)
-# }
+{
+  # Create the population in year 2014; save the stats and move the clock to 2015
+  bDebugMode=T
+  set.seed(1)
+  pop<-create.initial.population(id = 1,n = POP.SIZE)
+  # setting up person attributes
+  pop<-invisible(set.initial.hiv.status(pop ))
+  pop<-invisible(set.annual.cvd.risk(pop))
+  pop$record.annual.stats()
+  pop$increaseYear()
+  # run
+  while(pop$params$CYNOW<= END.YEAR)
+  pop<-run.one.year(pop)
+
+  #saving population
+  saveRDS(pop,file = "outputs/pop1",compress = F)
+}
 
 #######################################################
 # multiple reps:
