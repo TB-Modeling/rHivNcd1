@@ -1,3 +1,6 @@
+# output folder
+outputs/
+
 # History files
 .Rhistory
 .Rapp.history
@@ -37,3 +40,6 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+outputs/pop1
+outputs/pop2
+outputs/pop3
