@@ -17,33 +17,83 @@ print("Sourcing Driver.R ... ")
   source("testing_ncd_prevalences.R")
   source("ncdTestFunctions.R")
 }
+#######################################################
+# SINGLE RUN
+# { 
+#   # Create the population in year 2014; save the stats and move the clock to 2015
+#   bDebugMode=T
+#   set.seed(1)
+#   pop<-create.initial.population(id = 1,n = POP.SIZE)
+#   # setting up person attributes
+#   pop<-invisible(set.initial.hiv.status(pop ))
+#   pop<-invisible(set.annual.cvd.risk(pop))
+#   pop$record.annual.stats()
+#   pop$increaseYear() 
+#   # run
+#   while(pop$params$CYNOW<= END.YEAR)
+#   pop<-run.one.year(pop)
+# 
+#   #saving population
+#   saveRDS(pop,file = "outputs/pop1",compress = F)
+# }
 
-{ 
-  bDebugMode=T
-  set.seed(1)
-  # -- Create the population in year 2014; save the stats and move the clock to 2015
-  pop<-create.initial.population(id = 1,
-                                 n = POP.SIZE)
-  
-  
-  # setting up person attributes
-  pop<-invisible(set.initial.hiv.status(pop ))
-  pop<-invisible(set.annual.cvd.risk(pop))
-  pop$record.annual.stats()
-  pop$increaseYear() #
-}
+#######################################################
+# multiple reps:
+# lapply(c(1:5),function(rep){
+#   bDebugMode=T
+#   set.seed(1)
+#   # create pop
+#   pop<-create.initial.population(id = rep, n = POP.SIZE)
+#   # setting up person attributes
+#   pop<-invisible(set.initial.hiv.status(pop ))
+#   pop<-invisible(set.annual.cvd.risk(pop))
+#   pop$record.annual.stats()
+#   pop$increaseYear() #
+#   #run
+#   while(pop$params$CYNOW<= END.YEAR)
+#     pop<-run.one.year(pop)
+#   #saving population
+#   saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
+# })
 
-# RUNNING / DEBUGGING
-# {
-  while(pop$params$YNOW< END.YEAR){
-  pop<-run.one.year(pop)
-   }
-#
+#######################################################
+# # Reading populations back into a simset object
+# simset=list()
+# lapply(c(1:4),function(rep){
+#   pop<-readRDS(sprintf("outputs/pop%g",rep))
+#   simset[[sprintf("pop%g",rep)]]<<-pop
+# })
+# simset
+
+#######################################################
+# PROFILING A SINGLE RUN
+library(profvis)
+profvis({
+  {
+    # Create the population in year 2014; save the stats and move the clock to 2015
+    bDebugMode=T
+    set.seed(1)
+    pop<-create.initial.population(id = 1,n = POP.SIZE)
+    # setting up person attributes
+    pop<-invisible(set.initial.hiv.status(pop ))
+    pop<-invisible(set.annual.cvd.risk(pop))
+    pop$record.annual.stats()
+    pop$increaseYear()
+    # run
+    while(pop$params$CYNOW<= END.YEAR)
+      pop<-run.one.year(pop)
+    
+    #saving population
+    # saveRDS(pop,file = "outputs/pop1",compress = F)
+  }
+})
+#######################################################
+
 # @MS
 # add the mortality for those with recurrent event - DONE
 # add the choice between two CVD events - DONE (keeping the same for sex right now)
 # put all stats in a 5d format 
-    #'@PK - see note in globaleEnvironment about needing 4D arrays for transitions
+#'@PK - see note in globaleEnvironment about needing 4D arrays for transitions
 # plotting functions for NCD model
 # set of standard plots 
 # meeting with Todd in a couple of weeks
@@ -55,30 +105,30 @@ print("Sourcing Driver.R ... ")
 
 
 
-pop$stats$n.births
-pop$stats$n.births.non.hiv
-pop$stats$n.births.hiv
-# #
-pop$stats$n.deaths.ageout
-pop$stats$n.deaths.hiv
-pop$stats$n.deaths.non.hiv
-pop$stats$n.deaths.cvd
-#  NCD incidence
-filter.4D.stats.by.field(pop$stats$n.diab.inc, keep.dimensions = c('year'))
-filter.4D.stats.by.field(pop$stats$n.hyp.inc, keep.dimensions = c('year'))
-filter.4D.stats.by.field(pop$stats$n.diab.hyp.inc, keep.dimensions = c('year'))
-# HIV events
-filter.4D.stats.by.field.ncd(pop$stats$n.hiv.inc, keep.dimensions = c('year',"age"))
-filter.4D.stats.by.field(pop$stats$n.diab.hyp.inc, keep.dimensions = c('year',"sex"))
-filter.4D.stats.by.field(pop$stats$n.diab.inc, keep.dimensions = c('year',"age","sex"))
-filter.4D.stats.by.field(pop$stats$n.hyp.inc, keep.dimensions = c('year',"age","sex"))
-
-filter.5D.stats.by.field(pop$stats$n.mi.inc, keep.dimensions = c('year'))
-filter.5D.stats.by.field(pop$stats$n.stroke.inc, keep.dimensions = c('year'))
-
-filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year'))
-filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year','hiv.status'))
-filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year','ncd.status'))
+# pop$stats$n.births
+# pop$stats$n.births.non.hiv
+# pop$stats$n.births.hiv
+# # #
+# pop$stats$n.deaths.ageout
+# pop$stats$n.deaths.hiv
+# pop$stats$n.deaths.non.hiv
+# pop$stats$n.deaths.cvd
+# #  NCD incidence
+# filter.4D.stats.by.field(pop$stats$n.diab.inc, keep.dimensions = c('year'))
+# filter.4D.stats.by.field(pop$stats$n.hyp.inc, keep.dimensions = c('year'))
+# filter.4D.stats.by.field(pop$stats$n.diab.hyp.inc, keep.dimensions = c('year'))
+# # HIV events
+# filter.4D.stats.by.field(pop$stats$n.hiv.inc, keep.dimensions = c('year',"age"))
+# filter.4D.stats.by.field(pop$stats$n.diab.hyp.inc, keep.dimensions = c('year',"sex"))
+# filter.4D.stats.by.field(pop$stats$n.diab.inc, keep.dimensions = c('year',"age","sex"))
+# filter.4D.stats.by.field(pop$stats$n.hyp.inc, keep.dimensions = c('year',"age","sex"))
+# 
+# filter.5D.stats.by.field(pop$stats$n.mi.inc, keep.dimensions = c('year'))
+# filter.5D.stats.by.field(pop$stats$n.stroke.inc, keep.dimensions = c('year'))
+# 
+# filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year'))
+# filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year','hiv.status'))
+# filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year','ncd.status'))
 
 # ####################################################################################
 # for(i in c(INITIAL.YEAR:END.YEAR)){
