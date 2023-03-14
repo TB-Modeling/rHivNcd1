@@ -68,7 +68,7 @@ filter.4D.stats.by.field(pop$stats$n.diab.inc, keep.dimensions = c('year'))
 filter.4D.stats.by.field(pop$stats$n.hyp.inc, keep.dimensions = c('year'))
 filter.4D.stats.by.field(pop$stats$n.diab.hyp.inc, keep.dimensions = c('year'))
 # HIV events
-filter.4D.stats.by.field(pop$stats$n.hiv.inc, keep.dimensions = c('year',"age"))
+filter.4D.stats.by.field.ncd(pop$stats$n.hiv.inc, keep.dimensions = c('year',"age"))
 filter.4D.stats.by.field(pop$stats$n.diab.hyp.inc, keep.dimensions = c('year',"sex"))
 filter.4D.stats.by.field(pop$stats$n.diab.inc, keep.dimensions = c('year',"age","sex"))
 filter.4D.stats.by.field(pop$stats$n.hyp.inc, keep.dimensions = c('year',"age","sex"))
