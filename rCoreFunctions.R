@@ -244,11 +244,9 @@ update.ncd.states<-function(pop){
                                                 years = as.character(pop$params$CYNOW),
                                                 keep.dimensions = c('age','sex','ncd.status','year'))
   current.ncd.states=current.ncd.states[,,,1] #to remove year dimension
-  # dimnames(current.ncd.states)
   current.ncd.props<-return.prop.sex.age(vFreq = current.ncd.states)
   
   # DIFFERENCE in prevalence of NCDs
-  # dimnames(pop$params$target.ncd.props)
   diff.props =  pop$params$target.ncd.props-current.ncd.props
   
   # ADDITIONAL Transitions required to reach the target proportions in our current population:
@@ -277,7 +275,6 @@ update.ncd.states<-function(pop){
                                                 years = as.character(pop$params$CYNOW),
                                                 keep.dimensions = c('age','sex','ncd.status','year'))
   current.ncd.states=current.ncd.states[,,,1] #to remove year dimension
-  # dimnames(current.ncd.states)
   current.ncd.props<-return.prop.sex.age(current.ncd.states)
   
   # DIFFERENCE in prevalence of NCDs
@@ -309,7 +306,6 @@ update.ncd.states<-function(pop){
                                                 years = as.character(pop$params$CYNOW),
                                                 keep.dimensions = c('age','sex','ncd.status','year'))
   current.ncd.states=current.ncd.states[,,,1] #to remove year dimension
-  # dimnames(current.ncd.states)
   current.ncd.props<-return.prop.sex.age(current.ncd.states)
   
   # DIFFERENCE in prevalence of NCDs
@@ -338,27 +334,9 @@ update.ncd.states<-function(pop){
   pop
 }
 
-# model one simulated year
+# model one simulated year (from Jan 1st to Dec 31st)
 print("Loading function model.annual.dynamics")
-run.one.year<-function(pop){
-  # current age at year's beginning:
-  # Jan 1st to Dec 31st:
-  
-  # each months:
-  ## changes in HIV states from khm
-  ## new cvd events based on current risks
-  ## deaths from khm (HIV and age-specific deaths) > these include some CVD deaths too
-  ## deaths from CVD events
-  
-  # end of year:
-  # deaths due to aging
-  # remaining deaths to balance with khm population
-  # new births 
-  
-  # aging >>  
-  # changes in NCD states
-  # updating cvd annual risks based on new age and ncd state
-  
+run.one.year<-function(pop){ 
   #check the TNOW and break if it's not correctly set
   if(bPrint2) cat("Beginning the year ... ",pop$params$CYNOW,"\n")
   
