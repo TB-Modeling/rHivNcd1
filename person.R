@@ -26,9 +26,6 @@ PERSON<-R6Class("PERSON",
         tHivUneng=-1,
         #
         ncdState=NCD.NEG, 
-        bMarkedTransDiabHyp=FALSE, # True if person is chosen for transition to the new state
-        bMarkedTransDiab=FALSE,
-        bMarkedTransHyp=FALSE,
         tDiabInc=-1,
         tHypInc=-1,
         tDiabHypInc=-1,

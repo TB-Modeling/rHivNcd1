@@ -144,7 +144,7 @@ model.hiv.transitions<-function(pop,
 # models the CVD events
 print("Loading function model.cvd.events")
 model.cvd.events<-function(pop){
-    invisible(lapply(pop$members,function(p){
+  invisible(lapply(pop$members,function(p){
     p.cvd.risk = p$return.cvd.risk(pop$params) # this function evaluates whether they have history of cvd events and returns appropriate risk 
     
     if(runif(1) < p.cvd.risk){ # evaluate if they have a cvd event 
@@ -156,7 +156,7 @@ model.cvd.events<-function(pop){
         p$model.mi.event(pop$params$TNOW)
         pop$record.mi.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
       } else{ # stroke event
-          p$model.stroke.event(pop$params$TNOW)
+        p$model.stroke.event(pop$params$TNOW)
         pop$record.stroke.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
       }}}))
   pop
@@ -166,7 +166,7 @@ model.cvd.events<-function(pop){
 print("Loading function model.cvd.deaths")
 model.cvd.deaths = function(pop){
   invisible(lapply(pop$members,function(p){
-      if(runif(1) < p$return.cvd.mortality(pop$params))
+    if(runif(1) < p$return.cvd.mortality(pop$params))
       p$bMarkedDead.cvd=T
   }))
   pop
@@ -177,7 +177,7 @@ print("Loading function remove.hiv.cvd.deaths")
 remove.hiv.cvd.deaths<-function(pop,
                                 prob.hiv.mort,
                                 prob.non.hiv.mort){
-  n=length(pop$members)
+  
   #evaluate prob of hiv and non.hiv mortality for everyone who is not already marked dead
   invisible(lapply(pop$members,function(p){
     if (p$bMarkedDead.cvd==FALSE){
@@ -189,33 +189,35 @@ remove.hiv.cvd.deaths<-function(pop,
       # NON.HIV MORTALITY 
       if(runif(1)< prob.non.hiv.mort[p$agegroup,p$sex])
         p$bMarkedDead.non.hiv=T
-    }
-    }))
+    }}))
   
   # removing deaths & saving stats
-  {
-    # cvd deaths
-    n=length(pop$members)
-    death.status=unlist(invisible(lapply(c(1:n),function(x){return(pop$members[[x]]$bMarkedDead.cvd)  })))
-    n.deaths.cvd<-sum(death.status)
-    pop$stats$n.deaths.cvd[pop$params$YNOW]=n.deaths.cvd
-    pop$members<-pop$members[!death.status] #only keep those who are alive
+  { death.ids=NULL
+    n.cvd.deaths=0
+    n.hiv.deaths=0
+    n.nonHiv.deaths=0
+    lapply(1:length(pop$members),function(x){
+      p=pop$members[[x]]
+      if (bMarkedDead.cvd==TRUE) {
+        n.cvd.deaths<<-n.cvd.deaths+1
+        death.ids<<-c(death.ids,x)
+      }else{
+        if (bMarkedDead.hiv ==TRUE) {
+          n.hiv.deaths<<-n.hiv.deaths+1
+          death.ids<<-c(death.ids,x)
+        }else{
+          if (bMarkedDead.non.hiv ==TRUE) {
+            n.nonHiv.deaths<<-n.nonHiv.deaths+1
+            death.ids<<-c(death.ids,x)
+          }}}})
+    #removing dead people:
+    pop$members<-pop$members[-death.ids]
+    #stats
+    pop$stats$n.deaths.cvd[pop$params$YNOW]=n.cvd.deaths
+    pop$stats$n.deaths.hiv[pop$params$YNOW]=n.hiv.deaths
+    pop$stats$n.deaths.non.hiv[pop$params$YNOW]=n.nonHiv.deaths
     
-    # hiv deaths
-    n=length(pop$members)
-    death.status=unlist(invisible(lapply(c(1:n),function(x){return(pop$members[[x]]$bMarkedDead.hiv)  })))
-    n.deaths.hiv<-sum(death.status)
-    pop$stats$n.deaths.hiv[pop$params$YNOW]=n.deaths.hiv
-    pop$members<-pop$members[!death.status] #only keep those who are alive
-    
-    # non.hiv deaths
-    n=length(pop$members)
-    death.status=unlist(invisible(lapply(c(1:n),function(x){return(pop$members[[x]]$bMarkedDead.non.hiv)  })))
-    n.deaths.non.hiv<-sum(death.status)
-    pop$stats$n.deaths.non.hiv[pop$params$YNOW]=n.deaths.non.hiv
-    pop$members<-pop$members[!death.status] #only keep those who are alive
-    
-    if (bPrint2) cat("modeled n.deaths.cvd=",n.deaths.cvd," n.deaths.hiv=",n.deaths.hiv," n.deaths.non.hiv=",n.deaths.non.hiv,"\n")
+    if (bPrint2) cat("modeled n.deaths.cvd=",n.cvd.deaths," n.deaths.hiv=",n.hiv.deaths," n.deaths.non.hiv=",n.nonHiv.deaths,"\n")
   }
   pop
 }
@@ -235,11 +237,9 @@ update.ncd.states<-function(pop){
   # TARGET ncNCDd state sizes and proportions 
   # target.ncd.sizes
   # target.ncd.props
-  ####################################################################################
-  # DIAB_HYP
-  ####################################################################################
+  
+  # DIAB HYP #######################################
   # CURRENT NCD state sizes & prop
-  # 3D array of ncd state sizes: age, sex, ncd, year
   current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
                                                 years = as.character(pop$params$CYNOW),
                                                 keep.dimensions = c('age','sex','ncd.status','year'))
@@ -258,34 +258,21 @@ update.ncd.states<-function(pop){
       lapply(1:DIM.NCD, function(ncd){
         trans.freq[ag,sex,ncd]<<-diff.props[ag,sex,ncd]*sum(current.ncd.states[ag,sex,]) # the required number of new transitions
       })})}))
-  # trans.freq[trans.freq<0]<-0  
+  trans.freq[trans.freq<0]<-0
   
   #PROBABILITY Of transition to DH for those in D or H state
   trans.prob.diab.hyp=
     trans.freq[,,"NCD.DIAB_HYP"]/(current.ncd.states[,,"NCD.DIAB"]+current.ncd.states[,,"NCD.HYP"])
   
   # TRANSITION to DH from D or H 
-  invisible(lapply(c(1:length(pop$members)),function(x){
-    p=pop$members[[x]] 
+  invisible(lapply(pop$members,function(p){
     if(p$ncdState==NCD.DIAB || p$ncdState==NCD.HYP){ 
-      if(runif(1) < trans.prob.diab.hyp[p$agegroup,p$sex])
-        p$bMarkedTransDiabHyp=T}
-  }))
+      if(runif(1) < trans.prob.diab.hyp[p$agegroup,p$sex]){
+        p$model.diab.hyp.inc(pop$params$TNOW)
+        pop$record.diab.hyp.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
+      }}}))
   
-  #model events
-  D<-lapply(pop$members,function(p) {
-    if (p$bMarkedTransDiabHyp==T){
-      p$model.diab.hyp.inc(pop$params$TNOW)
-      pop$record.diab.hyp.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
-      # pop$stats$n.diab.hyp.inc[p$agegroup,p$sex,p$hivState,p$ncdState, as.character(pop$params$CYNOW)] <- pop$stats$n.diab.hyp.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
-      return(1)
-    }})
-  n.diab.hyp.inc=sum(unlist(D))
-  
-  ####################################################################################
-  # DIAB 
-  ####################################################################################
-  # 3D array of ncd state sizes: age, sex, ncd, year
+  # DIAB #######################################
   current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
                                                 years = as.character(pop$params$CYNOW),
                                                 keep.dimensions = c('age','sex','ncd.status','year'))
@@ -312,23 +299,12 @@ update.ncd.states<-function(pop){
   invisible(lapply(c(1:length(pop$members)),function(x){
     p=pop$members[[x]] 
     if(p$ncdState==NCD.NEG){
-      if(runif(1)<trans.prob.diab[p$agegroup,p$sex])
-        p$bMarkedTransDiab=T}
-  }))
+      if(runif(1)<trans.prob.diab[p$agegroup,p$sex]){
+        p$model.diab.inc(pop$params$TNOW)
+        pop$record.diab.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
+        }}}))
   
-  #model events
-  D<-lapply(pop$members,function(p) {
-    if (p$bMarkedTransDiab==T){
-      p$model.diab.inc(pop$params$TNOW)
-      pop$record.diab.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
-      # pop$stats$n.diab.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.diab.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
-      return(1)
-    }})
-  n.diab.inc=sum(unlist(D))
-  ####################################################################################
-  # HYP
-  ####################################################################################
-  # 3D array of ncd state sizes: age, sex, ncd, year
+  # HYP #############################################################################
   current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
                                                 years = as.character(pop$params$CYNOW),
                                                 keep.dimensions = c('age','sex','ncd.status','year'))
@@ -355,22 +331,10 @@ update.ncd.states<-function(pop){
   invisible(lapply(c(1:length(pop$members)),function(x){
     p=pop$members[[x]] 
     if(p$ncdState==NCD.NEG){
-      if(runif(1)<trans.prob.diab[p$agegroup,p$sex])
-        p$bMarkedTransHyp=T}
-  }))
-  
-  #model events
-  D<-lapply(pop$members,function(p) {
-    if (p$bMarkedTransHyp==T){
+      if(runif(1)<trans.prob.diab[p$agegroup,p$sex]){
       p$model.hyp.inc(pop$params$TNOW)
       pop$record.hyp.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
-      # pop$stats$n.hyp.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hyp.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
-      return(1)
-    }})
-  
-  n.hyp.inc=sum(unlist(D))
-  
-  if (bPrint2) cat("modeled n.diab.hyp.inc= ",n.diab.hyp.inc," n.diab.inc= ",n.diab.inc," n.hyp.inc= ",n.hyp.inc," \n")
+      }}}))
   pop
 }
 
