@@ -9,7 +9,7 @@ print("Sourcing GlobalEnvironment.R ... ")
 cat("Setting up global parameters .... \n")
 ANNUAL.TIMESTEPS=12 #how many timepsteps in a year?
 INITIAL.YEAR=2014
-END.YEAR=2030
+END.YEAR=2015
 #
 AGE.INTERVAL=5
 MIN.AGE=0
@@ -60,17 +60,14 @@ generate.new.modelParameter<-function(){
     TNOW=1, #current timestep
     YNOW=1, #variable showing current year
     CYNOW=INITIAL.YEAR, #calendar year (we start one year earlier, so that we save the initial population state before simulation begins)
-    LAST.ID=0)
+    LAST.PERSON.ID=0)
   
   #1- load HIV data 
   # load('data/hiv_sim.RData')  #a single run from the HIV model
   load("data/hiv_simset.RData") #multiple runs from the HIV model
   MP$khm.full=khm # leaving full simset in here for plotting purposes
   class(MP$khm.full) = "khm_simulation_output"
-  
-  n.hiv.sims = length(khm)
-  hiv.sim = sample(1:n.hiv.sims,1) # randomly sample one hiv sim from the length of n.hiv.sims
-  khm = khm[[hiv.sim]]
+  khm = khm[[sample(1:length(khm),1)]]# randomly sample one hiv sim from the length of n.hiv.sims
   khm.hivPrev2015 = khm$population["2015",,,]
   MP$khm=khm
   MP$khm.hivPrev2015=khm.hivPrev2015
@@ -89,7 +86,6 @@ generate.new.modelParameter<-function(){
   invisible(lapply(1:4,function(i){
     target.ncd.sizes[,,i]<<-array(unlist(D[,(i*2-1):(i*2)]),dim = c(DIM.AGE,DIM.SEX) )}))
   MP$target.ncd.sizes= target.ncd.sizes
-  
   #proportions 
   target.ncd.props<-target.ncd.sizes
   invisible(sapply(1:length(DIM.NAMES.SEX), function(sex){
@@ -99,21 +95,47 @@ generate.new.modelParameter<-function(){
   target.ncd.props[is.na(target.ncd.props)]<-0
   MP$target.ncd.props=target.ncd.props
   
-  #4-load pooled CVD risk by age/sex/ncd category
+  #4-load pooled 10-year CVD risk by age/sex/ncd category
   load('data/10.year.cvd.risk.by.age.sex.ncd.Rdata')
-  MP$pooled.risk.by.age.sex.ncd=pooled.risk.by.age.sex.ncd
-  #'@PK - setting risk of recurrent event here to 2x original risk; able to change in sensitivity analysis
-  MP$recurrent.event.risk.multiplier=2
-  MP$recurrent.stroke.mortality.OR=2.53 # this is an ODDS RATIO, so have to convert to odds and then back to probability (in returnCvdMortality function)
-  MP$recurrent.MI.mortality.multiplier=1.856 
+  q=pooled.risk.by.age.sex.ncd
+  # dimnames(q)
+  x=array(0,dim = c(DIM.AGE,DIM.SEX,DIM.NCD),dimnames = list(DIM.NAMES.AGE,DIM.NAMES.SEX,DIM.NAMES.NCD))
+  # dimnames(x)
+  x[unlist(dimnames(q)[1]),unlist(dimnames(q)[2]),unlist(dimnames(q)[3])]<-q
+  #applying values for 40-44 to younger agegroups and from 70-74 to older agegroups
+  for(i in 1:8) x[c(DIM.NAMES.AGE[i]),,]=x["40-44",,]
+  for(i in 16:17) x[c(DIM.NAMES.AGE[i]),,]=x["70-74",,]
+  
+  #@MS: we can just compute the annual cvd risk here instead of calculating it for each agent everytime we read it
+  #do we even need the annual value?
+  # annual risk computed from an exponential decay
+  MP$annual.cvd.risk.by.age.sex=-((log(1- x/100 ))/10)
+  #assuming geometric distribution of risk over time
+  MP$monthly.cvd.risk.by.age.sex=(1-(1-MP$annual.cvd.risk.by.age.sex)^(1/12))
+  
+  # risk of recurrent event here to 2x original risk; able to change in sensitivity analysis
+  MP$recurrent.cvd.event.risk.multiplier=2
+  #probability that the first CVD event is mi (vs stroke)
   MP$prob.first.cvd.event.mi.male = 0.6 
   MP$prob.first.cvd.event.mi.female = 0.6 
   
   #5-load CVD mortality data
   load("data/monthly.stroke.mortality.Rdata")
   load("data/monthly.mi.mortality.Rdata")
-  MP$stroke.monthly.mortality = stroke.monthly.mortality
-  MP$mi.monthly.mortality = mi.monthly.mortality
+  MP$first.stroke.monthly.mortality = stroke.monthly.mortality #first time stroke mortality
+  MP$first.mi.monthly.mortality = mi.monthly.mortality
+  #recurrent events
+  recur.stroke.mort.OR.multiplier=2.53 # this is an ODDS RATIO (relative to current probability), so have to convert to odds and then back to probability (in returnCvdMortality function)
+  #adjusted OR:
+  x=stroke.monthly.mortality/(1-stroke.monthly.mortality) * recur.stroke.mort.OR.multiplier
+  MP$rec.stroke.monthly.mortality= x/ (1+x) #back to prob
+  
+  recur.mi.mortality.multiplier=1.856 
+  MP$rec.mi.monthly.mortality= mi.monthly.mortality * recur.mi.mortality.multiplier
+  
+  
+
+  
   
   
   return(MP)
@@ -131,36 +153,8 @@ generate.new.stat<-function(){
   v1temp=rep(0,DIM.N,
              dim=DIM.N,
              dimnames = list(year=DIM.NAMES.N))
-  #3D
-  v3temp=array(rep(0,DIM.AGE*DIM.SEX*DIM.N),  
-               dim = c(DIM.AGE,
-                       DIM.SEX,
-                       DIM.N),
-               dimnames=list(age = DIM.NAMES.AGE,
-                             sex = DIM.NAMES.SEX,
-                             year = DIM.NAMES.N))
+ 
   
-  #4D - version 1; with NCD dimension (use this for HIV transitions)
-  v4temp.ncd =array(rep(0,DIM.AGE*DIM.SEX*DIM.NCD*DIM.N),  
-                    dim = c(DIM.AGE,
-                            DIM.SEX,
-                            DIM.NCD,
-                            DIM.N),
-                    dimnames=list(age = DIM.NAMES.AGE,
-                                  sex = DIM.NAMES.SEX,
-                                  ncd.status = DIM.NAMES.NCD,
-                                  year = DIM.NAMES.N))
-  
-  #4D - version 2; with HIV dimension (use this for NCD transitions)
-  v4temp.hiv =array(rep(0,DIM.AGE*DIM.SEX*DIM.HIV*DIM.N),  
-                    dim = c(DIM.AGE,
-                            DIM.SEX,
-                            DIM.HIV,
-                            DIM.N),
-                    dimnames=list(age = DIM.NAMES.AGE,
-                                  sex = DIM.NAMES.SEX,
-                                  hiv.status = DIM.NAMES.HIV,
-                                  year = DIM.NAMES.N))
   #5D
   v5temp=array(rep(0,DIM.AGE*DIM.SEX*DIM.HIV*DIM.NCD*DIM.N),  
                dim = c(DIM.AGE,
@@ -188,24 +182,19 @@ generate.new.stat<-function(){
     
     #'@PK - below 4D arrays inherently have to be 4D (i.e., don't have an HIV dimension for HIV transitions; same for NCD)
     
-    #4D arrays (version 1) by age, sex, NCD STATUS over time
-    n.hiv.inc=v4temp.ncd, 
-    n.hiv.diag=v4temp.ncd, 
-    n.hiv.eng=v4temp.ncd, 
-    n.hiv.uneng=v4temp.ncd, 
-    
-    #4D arrays (version 2) by age, sex, HIV STATUS over time
-    n.diab.hyp.inc=v4temp.hiv,
-    n.diab.inc=v4temp.hiv,
-    n.hyp.inc=v4temp.hiv,
-    
-    
     #5D arrays [age, sex, hiv, ncd, year]
+    n.hiv.inc=v5temp, 
+    n.hiv.diag=v5temp, 
+    n.hiv.eng=v5temp, 
+    n.hiv.uneng=v5temp, 
+    
+    n.diab.hyp.inc=v5temp,
+    n.diab.inc=v5temp,
+    n.hyp.inc=v5temp,
     n.mi.inc=v5temp,
     n.stroke.inc=v5temp,
     
-    # 5D arrays [age, sex, hiv, ncd, year]
-    n.state.sizes=v5temp
+        n.state.sizes=v5temp
   )
   return(stats)
 }
@@ -232,3 +221,9 @@ generate.new.stat<-function(){
 #                                                      p$ncdstate] +1
 #   }))
 # write.csv(ncd.state.sizes,file = "ncd.state.sizes.2015.csv")
+
+
+
+
+
+

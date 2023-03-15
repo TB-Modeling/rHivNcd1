@@ -24,15 +24,8 @@ PERSON<-R6Class("PERSON",
         tHivDiag=-1,
         tHivEng=-1,
         tHivUneng=-1,
-        bMarkedHivInc=F,
-        bMarkedHivDiag=F,
-        bMarkedHivEng=F,
-        bMarkedHivUneng=F,
         #
         ncdState=NCD.NEG, 
-        bMarkedTransDiabHyp=FALSE, # True if person is chosen for transition to the new state
-        bMarkedTransDiab=FALSE,
-        bMarkedTransHyp=FALSE,
         tDiabInc=-1,
         tHypInc=-1,
         tDiabHypInc=-1,
@@ -42,88 +35,13 @@ PERSON<-R6Class("PERSON",
         bMarkedDead.cvd=F,
         bMarkedDead.ageout=F,
         #
+        monthlyCvdRisk=NULL,
+        
         nMi=0,
         nStroke=0,
-        #incidence
-        #recording the time
         tMiInc=-1,
         tStrokeInc=-1,
         
-        
-        # risk of CVD events 
-        returnCVDrisk=function(params){
-          if(self$nMi==0 && self$nStroke==0){ # if no history of CVD, return original risk
-            annualCvdRisk=self$annualCvdRisk
-            monthlyCvdRisk=self$monthlyCvdRisk
-          } else if(self$nMi>0 || self$nStroke>0){ # if any history of CVD, return risk*multiplier
-            annualCvdRisk=self$annualCvdRisk*pop$params$recurrent.event.risk.multiplier # right now 2x the risk, but can change in SA
-            monthlyCvdRisk=self$monthlyCvdRisk*pop$params$recurrent.event.risk.multiplier
-          }
-          monthlyCvdRisk
-        },
-        
-        # return CVD mortality
-        returnCvdMortality = function(params){
-      
-          p.cvd.mortality = 0
-          
-          # First, evaluate if they have had at least one event 
-          
-          if(self$nMi + self$nStroke > 0){ 
-            
-            # Next, evaluate which event (stroke vs. MI) is more recent 
-            ## STROKE MORE RECENT ##
-            if(self$tStrokeInc > self$tMiInc){  
-              p.months.since.stroke=params$TNOW-self$tStrokeInc+1
-              
-              # Next, evaluate if this is a first or recurrent event 
-              if(self$nMi + self$nStroke > 1) { 
-                ## STROKE AS RECURRENT EVENT ## params value is an ODDS RATIO so have to convert to odds, multiply, then back to probability
-                non.recurrent.stroke.mortality.prob = params$stroke.monthly.mortality[min(p.months.since.stroke,60)] # start with base probability 
-                non.recurrent.stroke.mortality.odds = non.recurrent.stroke.mortality.prob/(1-non.recurrent.stroke.mortality.prob) # convert to odds 
-                recurrent.stroke.mortality.odds = non.recurrent.stroke.mortality.odds*params$recurrent.stroke.mortality.OR # multiply by odds ratio 
-                recurrent.stroke.mortality.prob = recurrent.stroke.mortality.odds/(1+recurrent.stroke.mortality.odds) # convert back to probability 
-                
-                p.cvd.mortality=recurrent.stroke.mortality.prob
-            
-              } else { 
-                ## STROKE AS FIRST EVENT ##
-                p.cvd.mortality=params$stroke.monthly.mortality[min(p.months.since.stroke,60)]
-              }
-              
-            } else { 
-              ## MI MORE RECENT ##
-              p.months.since.mi=params$TNOW - self$tMiInc+1
-              
-              if(self$nMi + self$nStroke > 1) {  
-                ## MI AS RECURRENT EVENT ##
-                p.cvd.mortality=params$mi.monthly.mortality[min(p.months.since.mi,120)]*params$recurrent.MI.mortality.multiplier 
-                # if 60 months or greater, return the value for 120 months
-                
-              } else { 
-                ## MI AS FIRST EVENT ##
-                p.cvd.mortality=params$mi.monthly.mortality[min(p.months.since.mi,120)]
-              }
-            }
-          } # (If no events, don't need to return anything since we already set p.cvd.mortality to 0)
-          
-          p.cvd.mortality
-        },
-        
-        annualCvdRisk=NULL,
-        monthlyCvdRisk=NULL,
-        
-        
-        tDiabDiag=NULL,
-        tDiabTrt=NULL,
-        tHypDiag=NULL,
-        tHypTrt=NULL,
-
-        
-  
-        ncdtrtState=NULL,
-        bNcdscreened=F,
-        tNcdscreened=F,
         ################################
         #define public functions here:
         initialize=function(id=NA,sex=NA,age=NA,tborn=0,hivState=NA,ncdState=NA,tDiabInc=NA,tHypInc=NA,tDiabHypInc=NA){
@@ -140,55 +58,91 @@ PERSON<-R6Class("PERSON",
         greet = function() {
           cat(paste0("Hello, my id is ", self$id,", age=",self$age,", sex=",self$sex," , hivState=",self$hivState,",ncdState=",self$ncdState, ".\n"))
         },
-        #HIV transitions:
-        hiv.getInfected=function(tnow){
+       
+         ### HIV transitions:
+        model.hiv.inc=function(tnow){
           self$hivState=HIV.UNDIAG
           self$tHivInc=tnow
           self$bMarkedHivInc=F
         },
-        hiv.getDiagnosed=function(tnow){
+        model.hiv.diag=function(tnow){
           self$hivState=HIV.UNENG
           self$tHivDiag=tnow
           self$bMarkedHivDiag=F
         },
-        hiv.getEngaged=function(tnow){
+        model.hiv.eng=function(tnow){
           self$hivState=HIV.ENG
           self$tHivEng=tnow
           self$bMarkedHivEng=F
         },
-        hiv.getUnengage=function(tnow){
+        model.hiv.uneng=function(tnow){
           self$hivState=HIV.UNENG
           self$tHivUneng=tnow
           self$bMarkedHivUneng=FALSE
         },
-        #NCD incidence 
-        diab.getInfected=function(tnow){
+        ### NCD incidence 
+        model.diab.inc=function(tnow){
           self$ncdState=NCD.DIAB
           self$tDiabInc=tnow
           self$bMarkedTransDiab=F
         },
-        hyp.getInfected=function(tnow){
+        model.hyp.inc=function(tnow){
           self$ncdState=NCD.HYP
           self$tHypInc=tnow
           self$bMarkedTransHyp=F
         },
-       diab.hyp.getInfected=function(tnow){
+       model.diab.hyp.inc=function(tnow){
             self$ncdState=NCD.DIAB_HYP
             self$tDiabHypInc=tnow
             self$bMarkedTransDiabHyp=F
           },
-       model.cvd.mi.event=function(tnow){
+       ### CVD events
+       model.mi.event=function(tnow){
          self$nMi=self$nMi+1
          self$tMiInc=tnow
        },
-       model.cvd.stroke.event=function(tnow){
+       model.stroke.event=function(tnow){
          self$nStroke=self$nStroke+1
          self$tStrokeInc=tnow
+       },
+       
+       ### risk of CVD events 
+       return.cvd.risk=function(params){
+         if(self$nMi+ self$nStroke==0) # if no history of CVD, return original risk
+           risk =self$monthlyCvdRisk
+          else 
+           risk =self$monthlyCvdRisk* params$recurrent.cvd.event.risk.multiplier
+         risk 
+       },
+       
+       ### return CVD mortality
+       return.cvd.mortality = function(params){
+         p.cvd.mortality = 0
+         
+         # First, evaluate if they have had at least one event 
+         if(self$nMi + self$nStroke > 0){ 
+           # Next, evaluate which event (stroke vs. MI) is more recent 
+           ## STROKE MORE RECENT ##
+           if(self$tStrokeInc >= self$tMiInc){  
+             p.months.since.stroke=params$TNOW-self$tStrokeInc+1
+             
+             # Next, evaluate if this is a first or recurrent event 
+             if(self$nMi + self$nStroke > 1) ## STROKE AS RECURRENT EVENT 
+               p.cvd.mortality=params$rec.stroke.monthly.mortality[min(p.months.since.stroke,60)] 
+               else ## STROKE AS FIRST EVENT ##
+               p.cvd.mortality=params$first.stroke.monthly.mortality[min(p.months.since.stroke,60)]
+              } else { 
+             ## MI MORE RECENT ##
+             p.months.since.mi=params$TNOW - self$tMiInc+1
+             if(self$nMi + self$nStroke > 1)  ## MI AS RECURRENT EVENT ##
+               p.cvd.mortality=params$rec.mi.monthly.mortality[min(p.months.since.mi,120)]
+               else       ## MI AS FIRST EVENT ##
+               p.cvd.mortality=params$first.mi.monthly.mortality[min(p.months.since.mi,120)]
+           }
+         } # (If no events, don't need to return anything since we already set p.cvd.mortality to 0)
+         p.cvd.mortality
        }
        
-
-        
-        
         #' @JP: we need to check this
         # #run a function when the object is garbage collected
         # finalize = function() {
