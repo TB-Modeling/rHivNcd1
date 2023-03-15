@@ -110,37 +110,35 @@ model.hiv.transitions<-function(pop,
                                 prob.eng,
                                 prob.diseng,
                                 prob.diag){
-  
   invisible(lapply(pop$members,function(p){
     #1-ENGAGEMENT
     if (p$hivState == HIV.UNENG) {
       if (runif(1) < prob.eng[p$agegroup,p$sex]){
-        p$hiv.getEngaged(pop$params$TNOW)
+        p$model.hiv.eng(pop$params$TNOW)
         pop$record.hiv.eng(p$agegroup,p$sex,p$hivState,p$ncdState)
       }
     }else{      #2- DISENGAGEMENT
       if (p$hivState== HIV.ENG) {
         if (runif(1)<prob.diseng[p$agegroup,p$sex]){
-          p$hiv.getUnengage(pop$params$TNOW)
+          p$model.hiv.uneng(pop$params$TNOW)
           pop$record.hiv.uneng(p$agegroup,p$sex,p$hivState,p$ncdState)
         }
       }else{        #3- DIAGNOSIS
         if (p$hivState== HIV.UNDIAG) {
           if (runif(1)<prob.diag[p$agegroup,p$sex]){
-            p$hiv.getDiagnosed(pop$params$TNOW)
+            p$model.hiv.diag(pop$params$TNOW)
             pop$record.hiv.diag(p$agegroup,p$sex,p$hivState,p$ncdState)
           }
         }else{          #4- INCIDENCE
           if (p$hivState== HIV.NEG) {
             if (runif(1)<prob.inc[p$agegroup,p$sex]){
-              p$hiv.getInfected(pop$params$TNOW)
+              p$model.hiv.inc(pop$params$TNOW)
               pop$record.hiv.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
             }
           }else {
             browser()
             stop(paste("Error: Person ",x," hivState is ",p$hivState," and it didnt meet any criteria"))
           }}}}}))
-  
   pop
 }
 
@@ -148,29 +146,23 @@ model.hiv.transitions<-function(pop,
 print("Loading function model.cvd.events")
 model.cvd.events<-function(pop){
   
-  invisible(lapply(c(1:length(pop$members)),function(x){
-    p<-pop$members[[x]]
-    
+  invisible(lapply(pop$members,function(p){
     p.cvd.risk = p$returnCVDrisk(pop$params) # this function evaluates whether they have history of cvd events and returns appropriate risk 
     
     if(runif(1) < p.cvd.risk){ # evaluate if they have a cvd event 
       
       # evaluate whether this should be a stroke event or mi event (assign default male probability, change to female if sex is female)
       prob.mi=pop$params$prob.first.cvd.event.mi.male
-      if(p$sex==FEMALE)
-        prob.mi=pop$params$prob.first.cvd.event.mi.female
+      if(p$sex==FEMALE) prob.mi=pop$params$prob.first.cvd.event.mi.female
       
       if(runif(1) < prob.mi){ # mi event
-        p$model.cvd.mi.event(pop$params$TNOW)
+        p$model.mi.event(pop$params$TNOW)
         pop$record.mi.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
       } else{ # stroke event
-        
-        p$model.cvd.stroke.event(pop$params$TNOW)
+          p$model.stroke.event(pop$params$TNOW)
         pop$record.stroke.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
       }
-    }
-    
-  }))
+      }}))
   pop
 }
 
@@ -299,7 +291,7 @@ update.ncd.states<-function(pop){
   #model events
   D<-lapply(pop$members,function(p) {
     if (p$bMarkedTransDiabHyp==T){
-      p$diab.hyp.getInfected(pop$params$TNOW)
+      p$model.diab.hyp.inc(pop$params$TNOW)
       pop$record.diab.hyp.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
       # pop$stats$n.diab.hyp.inc[p$agegroup,p$sex,p$hivState,p$ncdState, as.character(pop$params$CYNOW)] <- pop$stats$n.diab.hyp.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
       return(1)
@@ -343,7 +335,7 @@ update.ncd.states<-function(pop){
   #model events
   D<-lapply(pop$members,function(p) {
     if (p$bMarkedTransDiab==T){
-      p$diab.getInfected(pop$params$TNOW)
+      p$model.diab.inc(pop$params$TNOW)
       pop$record.diab.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
       # pop$stats$n.diab.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.diab.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
       return(1)
@@ -386,7 +378,7 @@ update.ncd.states<-function(pop){
   #model events
   D<-lapply(pop$members,function(p) {
     if (p$bMarkedTransHyp==T){
-      p$hyp.getInfected(pop$params$TNOW)
+      p$model.hyp.inc(pop$params$TNOW)
       pop$record.hyp.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
       # pop$stats$n.hyp.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hyp.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
       return(1)
