@@ -90,36 +90,14 @@ set.initial.hiv.status = function(pop){
 }
 
 # sets the annual CVD risk (from 10-year risk of cvd events)
-print("Loading function set.annual.cvd.risk")
-set.annual.cvd.risk = function(pop){
-  #read pooled 10-year CVD risk data by age, sex and ncd status
-  cvd.risk = pop$params$pooled.cvd.risk.by.age.sex
-  younger.age.groups = c(1:8) #c("0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39")
-  older.age.groups = c(16:17) #c("75-79","80-85")
-  
-  invisible(lapply(c(1:length(pop$members)),function(x){
-    p<-pop$members[[x]]
-    
+print("Loading function set.cvd.risk")
+set.cvd.risk = function(pop){
+    invisible(lapply(pop$members,function(p){
     # for whatever age group they are in, access the 10-year risk for the previous age group 
     # this is what is used to calculate annual risk
-    p.age.indicator = p$agegroup-1 
-    p.age.indicator = pmax(1,p.age.indicator) # for the youngest age group, just make this 1, not 0
-    
-    if(p.age.indicator %in% younger.age.groups) { # if younger than 40, assume CVD risk of 40-44
-      p.cvd.risk.10.year = (cvd.risk["40-44",p$sex,p$ncdState])/100
-    } else if(p.age.indicator %in% older.age.groups) { # if older than 75, assume CVD risk of 70-74
-      p.cvd.risk.10.year = (cvd.risk["70-74",p$sex,p$ncdState])/100
-    } else if(!(p.age.indicator %in% younger.age.groups) & !(p.age.indicator %in% older.age.groups)){ # if not in youngest/oldest, use actual age
-      p.age.group=DIM.NAMES.AGE[p.age.indicator] # access age group name
-      p.cvd.risk.10.year = (cvd.risk[p.age.group,p$sex,p$ncdState])/100
-    } else stop("age group not within CVD risk calculator")
-    
-    # Convert from 10-year CVD risk to annual 
-    p.cvd.risk.annual = -((log(1-p.cvd.risk.10.year))/10) #'@MS: did you assume that 10-year risk decade exponentially?
-    #'@PK: removed the *100 below, because the return.monthly.prob function assumes total prob=1 (not 100)
-    # p.cvd.risk.annual = p.cvd.risk.annual*100
-    p$annualCvdRisk=p.cvd.risk.annual
-    p$monthlyCvdRisk= return.monthly.prob(p.cvd.risk.annual) #'@MS: should we use this?
+    p.agegroup=pmax(1, p$agegroup-1 )# for the youngest age group, just make this 1, not 0
+    p$annualCvdRisk = pop$params$annual.cvd.risk.by.age.sex[p.agegroup,p$sex,p$ncdState]
+    p$monthlyCvdRisk= pop$params$monthly.cvd.risk.by.age.sex[p.agegroup,p$sex,p$ncdState]
   }))
   if (bPrint2) cat("Annual CVD risks are set \n")
   pop
@@ -624,7 +602,7 @@ run.one.year<-function(pop){
   
   ## 4- UPDATE NCD STATES & CVD RISKS FOR NEXT YEAR --------
   pop<-update.ncd.states(pop)
-  pop<-invisible(set.annual.cvd.risk(pop))
+  pop<-invisible(set.cvd.risk(pop))
   
   
   ##############################################

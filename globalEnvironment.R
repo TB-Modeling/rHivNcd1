@@ -105,7 +105,11 @@ generate.new.modelParameter<-function(){
   for(i in 1:8) x[c(DIM.NAMES.AGE[i]),,]=x["40-44",,]
   for(i in 16:17) x[c(DIM.NAMES.AGE[i]),,]=x["70-74",,]
   
-  MP$pooled.cvd.risk.by.age.sex=x
+  #@MS: we can just compute the annual cvd risk here instead of calculating it for each agent everytime we read it
+  #do we even need the annual value?
+  MP$annual.cvd.risk.by.age.sex=-((log(1- x/100 ))/10)
+  MP$monthly.cvd.risk.by.age.sex=(1-(1-MP$annual.cvd.risk.by.age.sex)^(1/12))
+  
   # risk of recurrent event here to 2x original risk; able to change in sensitivity analysis
   MP$recurrent.cvd.event.risk.multiplier=2
   #probability that the first CVD event is mi (vs stroke)
