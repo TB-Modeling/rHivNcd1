@@ -95,7 +95,6 @@ set.cvd.risk = function(pop){
   invisible(lapply(pop$members,function(p){
     # for whatever age group they are in, access the 10-year risk for the previous age group 
     p.agegroup=pmax(1, p$agegroup-1 )# for the youngest age group, just make this 1, not 0
-    p$annualCvdRisk = pop$params$annual.cvd.risk.by.age.sex[p.agegroup,p$sex,p$ncdState]
     p$monthlyCvdRisk= pop$params$monthly.cvd.risk.by.age.sex[p.agegroup,p$sex,p$ncdState]
   }))
   if (bPrint2) cat("Annual CVD risks are set \n")
@@ -145,12 +144,10 @@ model.hiv.transitions<-function(pop,
 # models the CVD events
 print("Loading function model.cvd.events")
 model.cvd.events<-function(pop){
-  
-  invisible(lapply(pop$members,function(p){
-    p.cvd.risk = p$returnCVDrisk(pop$params) # this function evaluates whether they have history of cvd events and returns appropriate risk 
+    invisible(lapply(pop$members,function(p){
+    p.cvd.risk = p$return.cvd.risk(pop$params) # this function evaluates whether they have history of cvd events and returns appropriate risk 
     
     if(runif(1) < p.cvd.risk){ # evaluate if they have a cvd event 
-      
       # evaluate whether this should be a stroke event or mi event (assign default male probability, change to female if sex is female)
       prob.mi=pop$params$prob.first.cvd.event.mi.male
       if(p$sex==FEMALE) prob.mi=pop$params$prob.first.cvd.event.mi.female
@@ -161,23 +158,15 @@ model.cvd.events<-function(pop){
       } else{ # stroke event
           p$model.stroke.event(pop$params$TNOW)
         pop$record.stroke.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
-      }
-      }}))
+      }}}))
   pop
 }
 
 # models the CVD deaths
-print("Loading function model.hiv.cvd.deaths")
+print("Loading function model.cvd.deaths")
 model.cvd.deaths = function(pop){
-  n=length(pop$members)
-  invisible(lapply(c(1:n),function(x){
-    p=pop$members[[x]]
-    
-    p.mortality.risk = p$returnCvdMortality(pop$params)
-    
-    
-    
-    if(runif(1) < p.mortality.risk)
+  invisible(lapply(pop$members,function(p){
+      if(runif(1) < p$return.cvd.mortality(pop$params))
       p$bMarkedDead.cvd=T
   }))
   pop
@@ -190,25 +179,20 @@ remove.hiv.cvd.deaths<-function(pop,
                                 prob.non.hiv.mort){
   n=length(pop$members)
   #evaluate prob of hiv and non.hiv mortality for everyone who is not already marked dead
-  invisible(lapply(c(1:n),function(x){
-    p=pop$members[[x]] 
-    
-    
-    
+  invisible(lapply(pop$members,function(p){
     if (p$bMarkedDead.cvd==FALSE){
       # HIV MORTALITY
       if(p$hivState!=HIV.NEG){ # all HIV positive
-        p.prob = prob.hiv.mort[p$agegroup,p$sex]
-        if(runif(1)<p.prob)
+        if(runif(1)<prob.hiv.mort[p$agegroup,p$sex])
           p$bMarkedDead.hiv=T
       }
       # NON.HIV MORTALITY 
-      p.prob = prob.non.hiv.mort[p$agegroup,p$sex]
-      if(runif(1)<p.prob)
+      if(runif(1)< prob.non.hiv.mort[p$agegroup,p$sex])
         p$bMarkedDead.non.hiv=T
-    }}))
+    }
+    }))
   
-  # modeling deaths & saving pop$stats$
+  # removing deaths & saving stats
   {
     # cvd deaths
     n=length(pop$members)

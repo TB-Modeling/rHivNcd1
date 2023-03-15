@@ -122,10 +122,19 @@ generate.new.modelParameter<-function(){
   #5-load CVD mortality data
   load("data/monthly.stroke.mortality.Rdata")
   load("data/monthly.mi.mortality.Rdata")
-  MP$stroke.monthly.mortality = stroke.monthly.mortality
-  MP$mi.monthly.mortality = mi.monthly.mortality
-  MP$recurrent.stroke.mortality.OR=2.53 # this is an ODDS RATIO (relative to current probability), so have to convert to odds and then back to probability (in returnCvdMortality function)
-  MP$recurrent.MI.mortality.multiplier=1.856 
+  MP$first.stroke.monthly.mortality = stroke.monthly.mortality #first time stroke mortality
+  MP$first.mi.monthly.mortality = mi.monthly.mortality
+  #recurrent events
+  recur.stroke.mort.OR.multiplier=2.53 # this is an ODDS RATIO (relative to current probability), so have to convert to odds and then back to probability (in returnCvdMortality function)
+  #adjusted OR:
+  x=stroke.monthly.mortality/(1-stroke.monthly.mortality) * recur.stroke.mort.OR.multiplier
+  MP$rec.stroke.monthly.mortality= x/ (1+x) #back to prob
+  
+  recur.mi.mortality.multiplier=1.856 
+  MP$rec.mi.monthly.mortality= mi.monthly.mortality * recur.mi.mortality.multiplier
+  
+  
+
   
   
   

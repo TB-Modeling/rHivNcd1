@@ -38,8 +38,8 @@ PERSON<-R6Class("PERSON",
         bMarkedDead.cvd=F,
         bMarkedDead.ageout=F,
         #
-        annualCvdRisk=NULL,
         monthlyCvdRisk=NULL,
+        
         nMi=0,
         nStroke=0,
         tMiInc=-1,
@@ -109,65 +109,43 @@ PERSON<-R6Class("PERSON",
          self$tStrokeInc=tnow
        },
        
-       # return CVD mortality
-       returnCvdMortality = function(params){
+       ### risk of CVD events 
+       return.cvd.risk=function(params){
+         if(self$nMi+ self$nStroke==0) # if no history of CVD, return original risk
+           risk =self$monthlyCvdRisk
+          else 
+           risk =self$monthlyCvdRisk* params$recurrent.cvd.event.risk.multiplier
+         risk 
+       },
+       
+       ### return CVD mortality
+       return.cvd.mortality = function(params){
          p.cvd.mortality = 0
          
          # First, evaluate if they have had at least one event 
-         
          if(self$nMi + self$nStroke > 0){ 
-           
            # Next, evaluate which event (stroke vs. MI) is more recent 
            ## STROKE MORE RECENT ##
-           if(self$tStrokeInc > self$tMiInc){  
+           if(self$tStrokeInc >= self$tMiInc){  
              p.months.since.stroke=params$TNOW-self$tStrokeInc+1
              
              # Next, evaluate if this is a first or recurrent event 
-             if(self$nMi + self$nStroke > 1) { 
-               ## STROKE AS RECURRENT EVENT ## params value is an ODDS RATIO so have to convert to odds, multiply, then back to probability
-               non.recurrent.stroke.mortality.prob = params$stroke.monthly.mortality[min(p.months.since.stroke,60)] # start with base probability 
-               non.recurrent.stroke.mortality.odds = non.recurrent.stroke.mortality.prob/(1-non.recurrent.stroke.mortality.prob) # convert to odds 
-               recurrent.stroke.mortality.odds = non.recurrent.stroke.mortality.odds*params$recurrent.stroke.mortality.OR # multiply by odds ratio 
-               recurrent.stroke.mortality.prob = recurrent.stroke.mortality.odds/(1+recurrent.stroke.mortality.odds) # convert back to probability 
-               
-               p.cvd.mortality=recurrent.stroke.mortality.prob
-               
-             } else { 
-               ## STROKE AS FIRST EVENT ##
-               p.cvd.mortality=params$stroke.monthly.mortality[min(p.months.since.stroke,60)]
-             }
-             
-           } else { 
+             if(self$nMi + self$nStroke > 1) ## STROKE AS RECURRENT EVENT 
+               p.cvd.mortality=params$rec.stroke.monthly.mortality[min(p.months.since.stroke,60)] 
+               else ## STROKE AS FIRST EVENT ##
+               p.cvd.mortality=params$first.stroke.monthly.mortality[min(p.months.since.stroke,60)]
+              } else { 
              ## MI MORE RECENT ##
              p.months.since.mi=params$TNOW - self$tMiInc+1
-             
-             if(self$nMi + self$nStroke > 1) {  
-               ## MI AS RECURRENT EVENT ##
-               p.cvd.mortality=params$mi.monthly.mortality[min(p.months.since.mi,120)]*params$recurrent.MI.mortality.multiplier 
-               # if 60 months or greater, return the value for 120 months
-               
-             } else { 
-               ## MI AS FIRST EVENT ##
-               p.cvd.mortality=params$mi.monthly.mortality[min(p.months.since.mi,120)]
-             }
+             if(self$nMi + self$nStroke > 1)  ## MI AS RECURRENT EVENT ##
+               p.cvd.mortality=params$rec.mi.monthly.mortality[min(p.months.since.mi,120)]
+               else       ## MI AS FIRST EVENT ##
+               p.cvd.mortality=params$first.mi.monthly.mortality[min(p.months.since.mi,120)]
            }
          } # (If no events, don't need to return anything since we already set p.cvd.mortality to 0)
-         
          p.cvd.mortality
-       },
-       
-       # risk of CVD events 
-       returnCVDrisk=function(params){
-         if(self$nMi==0 && self$nStroke==0){ # if no history of CVD, return original risk
-           annualCvdRisk=self$annualCvdRisk
-           monthlyCvdRisk=self$monthlyCvdRisk
-         } else if(self$nMi>0 || self$nStroke>0){ # if any history of CVD, return risk*multiplier
-           annualCvdRisk=self$annualCvdRisk* params$recurrent.cvd.event.risk.multiplier # right now 2x the risk, but can change in SA
-           monthlyCvdRisk=self$monthlyCvdRisk* params$recurrent.cvd.event.risk.multiplier
-         }
-         monthlyCvdRisk
        }
-        
+       
         #' @JP: we need to check this
         # #run a function when the object is garbage collected
         # finalize = function() {
