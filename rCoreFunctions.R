@@ -10,17 +10,16 @@ bPrint1=T; # printing year's start/end/pop size
 bPrint2=F  #printing events: incidence, deaths, newborns
 
 #creates the initial population
-print("create.initial.pop.list")
+print("Loading function create.initial.pop.list")
 create.initial.population <- function( id=0,
                                        n=0 # number of people if not specified as in mc
 ){
   # 1- create an empty population
-  pop<-POPULATION$new(id = 0,
+  pop<-POPULATION$new(id = id,
                       members = list(),
                       params = generate.new.modelParameter(),
-                      stats = generate.new.stat())
-  # pop$greet()
-  
+                      stats =  generate.new.stat())
+
   # 2- create member list of persons for this population 
   #subset the first n row to create n persons
   sim.pop=pop$params$step.dataset
@@ -36,14 +35,16 @@ create.initial.population <- function( id=0,
   sim.pop$ncd[sim.pop$hypertension==1 & sim.pop$diabetes==0] = NCD.HYP #3, hypertensive
   sim.pop$ncd[sim.pop$hypertension==1 & sim.pop$diabetes==1] = NCD.DIAB_HYP #4, both
   #vector of attributes for agents
-  vIds = sim.pop$X
+  vIds = c(1:n) #@MS: the person id is a unique number that we use to differentiate people. 
+  # we need to start this from 0 and add it over time. 
+  # otherwise, the future values may overlap with ones you're reading from the step dataset sim.pop$X
   vAges = sim.pop$age
   vSexes = as.numeric(sim.pop$sex)
   vNcdState = sim.pop$ncd
   vHivState = rep(HIV.NEG,n)
-  vtDiabInc= c(sim.pop$ncd%in%c(NCD.DIAB))*-1
-  vtHypInc= c(sim.pop$ncd%in%c(NCD.HYP))*-1
-  vtDiabHypInc= c(sim.pop$ncd%in%c(NCD.DIAB_HYP))*-1
+  vtDiabInc= c(sim.pop$ncd%in%c(NCD.DIAB))*0
+  vtHypInc= c(sim.pop$ncd%in%c(NCD.HYP))*0
+  vtDiabHypInc= c(sim.pop$ncd%in%c(NCD.DIAB_HYP))*0
   
   memberList = (mapply(PERSON$new, 
                        vIds,
@@ -65,14 +66,14 @@ create.initial.population <- function( id=0,
 }
 
 
-# sets the initial HIV status (based on HIV state prevalences in 2015) 
-print("set.initial.hiv.status")
+# sets the initial HIV status (based on HIV state prevalence in year 2015) 
+print("Loading function set.initial.hiv.status")
 set.initial.hiv.status = function(pop){
   #get hiv state proportions by age and sex
   hiv.probs = transform.hiv.data.1d.to.3d(pop$params$khm.hivPrev2015)
+  # dim(hiv.probs)
   
-  invisible(lapply(c(1:length(pop$members)),function(x){
-    p<-pop$members[[x]]
+  invisible(lapply(pop$members,function(p){
     p.probs = hiv.probs[,p$agegroup,p$sex]
     # break to ensure that sum of p.probs==1
     if(round(sum(p.probs),0)!=1){
@@ -83,16 +84,16 @@ set.initial.hiv.status = function(pop){
     rand.hiv.state = sample(x = c(1:length(p.probs)), size = 1, prob = p.probs)
     p$hivState=rand.hiv.state
   }))
+  
   if(bPrint2) cat("Initial HIV status set \n")
   pop
-  
 }
 
 # sets the annual CVD risk (from 10-year risk of cvd events)
-print("set.annual.cvd.risk")
+print("Loading function set.annual.cvd.risk")
 set.annual.cvd.risk = function(pop){
   #read pooled 10-year CVD risk data by age, sex and ncd status
-  cvd.risk = pop$params$pooled.risk.by.age.sex.ncd
+  cvd.risk = pop$params$pooled.cvd.risk.by.age.sex
   younger.age.groups = c(1:8) #c("0-4","5-9","10-14","15-19","20-24","25-29","30-34","35-39")
   older.age.groups = c(16:17) #c("75-79","80-85")
   
@@ -126,7 +127,7 @@ set.annual.cvd.risk = function(pop){
 
 
 # models the HIV transitions 
-print("model.hiv.transitions")
+print("Loading function model.hiv.transitions")
 model.hiv.transitions<-function(pop,
                                 prob.inc,
                                 prob.eng,
@@ -210,7 +211,7 @@ model.hiv.transitions<-function(pop,
 }
 
 # models the CVD events
-print("model.cvd.events")
+print("Loading function model.cvd.events")
 model.cvd.events<-function(pop){
   
   invisible(lapply(c(1:length(pop$members)),function(x){
@@ -240,7 +241,7 @@ model.cvd.events<-function(pop){
 }
 
 # models the CVD deaths
-print("model.hiv.cvd.deaths")
+print("Loading function model.hiv.cvd.deaths")
 model.cvd.deaths = function(pop){
   n=length(pop$members)
   invisible(lapply(c(1:n),function(x){
@@ -257,7 +258,7 @@ model.cvd.deaths = function(pop){
 }
 
 # removes the HIV & CVD deaths
-print("remove.hiv.cvd.deaths")
+print("Loading function remove.hiv.cvd.deaths")
 remove.hiv.cvd.deaths<-function(pop,
                                prob.hiv.mort,
                                prob.non.hiv.mort){
@@ -310,7 +311,7 @@ remove.hiv.cvd.deaths<-function(pop,
 }
 
 # update NCD state after aging
-print("update.ncd.states")
+print("Loading function update.ncd.states")
 update.ncd.states<-function(pop){ 
   # for each age/sex subgroup:
   #   compute current prp of ncd states, compare to baseline proportions, and estimate the difference
@@ -464,7 +465,7 @@ update.ncd.states<-function(pop){
 }
 
 # model one simulated year
-print("model.annual.dynamics")
+print("Loading function model.annual.dynamics")
 run.one.year<-function(pop){
   # current age at year's beginning:
   # Jan 1st to Dec 31st:
@@ -585,8 +586,8 @@ run.one.year<-function(pop){
   
     if(n.births.non.hiv>0){
       if (bPrint2) cat(n.births.non.hiv," non-HIV newborns are added","\n")
-      vIds = c((pop$params$LAST.ID+1): (pop$params$LAST.ID+n.births.non.hiv))
-      pop$params$LAST.ID=pop$params$LAST.ID+n.births.non.hiv
+      vIds = c((pop$params$LAST.PERSON.ID+1): (pop$params$LAST.PERSON.ID+n.births.non.hiv))
+      pop$params$LAST.PERSON.ID=pop$params$LAST.PERSON.ID+n.births.non.hiv
       vSexes = sample(c(MALE,FEMALE),n.births.non.hiv,prob = c(.5,.5),replace = T) # still 50/50 male/female
       memberListNew = (mapply(PERSON$new, vIds,vSexes,0,pop$params$TNOW,HIV.NEG,NCD.NEG)) #'@JP: do we need to delete pop1 and open memory?
       pop$addMembers(unlist(memberListNew))
@@ -601,8 +602,8 @@ run.one.year<-function(pop){
     
     if(n.births.hiv>0){
       if(bPrint2) cat(n.births.hiv," HIV newborns are added","\n")
-      vIds = c((pop$params$LAST.ID+1): (pop$params$LAST.ID+n.births.hiv))
-      pop$params$LAST.ID=pop$params$LAST.ID+n.births.hiv
+      vIds = c((pop$params$LAST.PERSON.ID+1): (pop$params$LAST.PERSON.ID+n.births.hiv))
+      pop$params$LAST.PERSON.ID=pop$params$LAST.PERSON.ID+n.births.hiv
       vSexes = sample(c(MALE,FEMALE),n.births.hiv,prob = c(.5,.5),replace = T)
       memberListNew = (mapply(PERSON$new, vIds,vSexes,0,pop$params$TNOW,HIV.UNDIAG,NCD.NEG)) #'@JP: do we need to delete pop1 and open memory?
       pop$addMembers(memberListNew)

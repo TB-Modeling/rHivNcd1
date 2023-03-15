@@ -14,7 +14,7 @@ END.YEAR=2015
 AGE.INTERVAL=5
 MIN.AGE=0
 MAX.AGE=85
-POP.SIZE=100
+POP.SIZE=10000
 #
 FEMALE=1
 MALE=2
@@ -60,17 +60,14 @@ generate.new.modelParameter<-function(){
     TNOW=1, #current timestep
     YNOW=1, #variable showing current year
     CYNOW=INITIAL.YEAR, #calendar year (we start one year earlier, so that we save the initial population state before simulation begins)
-    LAST.ID=0)
+    LAST.PERSON.ID=0)
   
   #1- load HIV data 
   # load('data/hiv_sim.RData')  #a single run from the HIV model
   load("data/hiv_simset.RData") #multiple runs from the HIV model
   MP$khm.full=khm # leaving full simset in here for plotting purposes
   class(MP$khm.full) = "khm_simulation_output"
-  
-  n.hiv.sims = length(khm)
-  hiv.sim = sample(1:n.hiv.sims,1) # randomly sample one hiv sim from the length of n.hiv.sims
-  khm = khm[[hiv.sim]]
+  khm = khm[[sample(1:length(khm),1)]]# randomly sample one hiv sim from the length of n.hiv.sims
   khm.hivPrev2015 = khm$population["2015",,,]
   MP$khm=khm
   MP$khm.hivPrev2015=khm.hivPrev2015
@@ -89,7 +86,6 @@ generate.new.modelParameter<-function(){
   invisible(lapply(1:4,function(i){
     target.ncd.sizes[,,i]<<-array(unlist(D[,(i*2-1):(i*2)]),dim = c(DIM.AGE,DIM.SEX) )}))
   MP$target.ncd.sizes= target.ncd.sizes
-  
   #proportions 
   target.ncd.props<-target.ncd.sizes
   invisible(sapply(1:length(DIM.NAMES.SEX), function(sex){
@@ -101,11 +97,18 @@ generate.new.modelParameter<-function(){
   
   #4-load pooled CVD risk by age/sex/ncd category
   load('data/10.year.cvd.risk.by.age.sex.ncd.Rdata')
-  MP$pooled.risk.by.age.sex.ncd=pooled.risk.by.age.sex.ncd
-  #'@PK - setting risk of recurrent event here to 2x original risk; able to change in sensitivity analysis
-  MP$recurrent.event.risk.multiplier=2
-  MP$recurrent.stroke.mortality.OR=2.53 # this is an ODDS RATIO, so have to convert to odds and then back to probability (in returnCvdMortality function)
-  MP$recurrent.MI.mortality.multiplier=1.856 
+  q=pooled.risk.by.age.sex.ncd
+  # dimnames(q)
+  x=array(0,dim = c(DIM.AGE,DIM.SEX,DIM.NCD),dimnames = list(DIM.NAMES.AGE,DIM.NAMES.SEX,DIM.NAMES.NCD))
+  # dimnames(x)
+  x[unlist(dimnames(q)[1]),unlist(dimnames(q)[2]),unlist(dimnames(q)[3])]<-q
+  for(i in 1:8) x[c(DIM.NAMES.AGE[i]),,]=x["40-44",,]
+  for(i in 16:17) x[c(DIM.NAMES.AGE[i]),,]=x["70-74",,]
+  
+  MP$pooled.cvd.risk.by.age.sex=x
+  # risk of recurrent event here to 2x original risk; able to change in sensitivity analysis
+  MP$recurrent.cvd.event.risk.multiplier=2
+  #probability that the first CVD event is mi (vs stroke)
   MP$prob.first.cvd.event.mi.male = 0.6 
   MP$prob.first.cvd.event.mi.female = 0.6 
   
@@ -114,6 +117,9 @@ generate.new.modelParameter<-function(){
   load("data/monthly.mi.mortality.Rdata")
   MP$stroke.monthly.mortality = stroke.monthly.mortality
   MP$mi.monthly.mortality = mi.monthly.mortality
+  MP$recurrent.stroke.mortality.OR=2.53 # this is an ODDS RATIO (relative to current probability), so have to convert to odds and then back to probability (in returnCvdMortality function)
+  MP$recurrent.MI.mortality.multiplier=1.856 
+  
   
   
   return(MP)
@@ -199,3 +205,9 @@ generate.new.stat<-function(){
 #                                                      p$ncdstate] +1
 #   }))
 # write.csv(ncd.state.sizes,file = "ncd.state.sizes.2015.csv")
+
+
+
+
+
+
