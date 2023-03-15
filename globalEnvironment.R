@@ -9,12 +9,12 @@ print("Sourcing GlobalEnvironment.R ... ")
 cat("Setting up global parameters .... \n")
 ANNUAL.TIMESTEPS=12 #how many timepsteps in a year?
 INITIAL.YEAR=2014
-END.YEAR=2015
+END.YEAR=2030
 #
 AGE.INTERVAL=5
 MIN.AGE=0
 MAX.AGE=85
-POP.SIZE=10000
+POP.SIZE=100
 #
 FEMALE=1
 MALE=2
@@ -106,10 +106,8 @@ generate.new.modelParameter<-function(){
   for(i in 1:8) x[c(DIM.NAMES.AGE[i]),,]=x["40-44",,]
   for(i in 16:17) x[c(DIM.NAMES.AGE[i]),,]=x["70-74",,]
   
-  #@MS: we can just compute the annual cvd risk here instead of calculating it for each agent everytime we read it
-  #do we even need the annual value?
   # annual risk computed from an exponential decay
-  MP$annual.cvd.risk.by.age.sex=-((log(1- x/100 ))/10)
+  annual.cvd.risk.by.age.sex=-((log(1- x/100 ))/10) # not included in MP since we only need monthly values 
   #assuming geometric distribution of risk over time
   MP$monthly.cvd.risk.by.age.sex=(1-(1-MP$annual.cvd.risk.by.age.sex)^(1/12))
   

@@ -137,19 +137,12 @@ simplot = function(...,
       ncd.data.type.x = ncd.data.types[[data.type]]
       if(is.null(ncd.data.type.x))
         stop("Haven't set up to pull this data type from ncd model")
-      if(data.type %in% c("population","mi.inc","stroke.inc")){
+      if(data.type %in% c("population","incidence","mi.inc","stroke.inc","hyp.inc","diab.inc","diab.hyp.inc")){
         value = filter.5D.stats.by.field(sim$stats[[ncd.data.type.x]], 
                                          years = years,
                                          ages = ages, 
                                          sexes = sexes,
                                          hiv.status = hiv.status,
-                                         ncd.status = ncd.status,
-                                         keep.dimensions = keep.dimensions)
-      } else if(data.type=="incidence"){
-        value = filter.4D.stats.by.field.ncd(sim$stats[[ncd.data.type.x]], 
-                                         years = years,
-                                         ages = ages, 
-                                         sexes = sexes,
                                          ncd.status = ncd.status,
                                          keep.dimensions = keep.dimensions)
       } else if(data.type=="prevalence"){
@@ -163,13 +156,6 @@ simplot = function(...,
                                          # note that this overrides any hiv.status specified in the arguments
                                          ncd.status = ncd.status,
                                          keep.dimensions = keep.dimensions)
-      } else if(data.type %in% c("hyp.inc","diab.inc","diab.hyp.inc")){
-        value = filter.4D.stats.by.field(sim$stats[[ncd.data.type.x]], 
-                                             years = years,
-                                             ages = ages, 
-                                             sexes = sexes,
-                                             hiv.status = hiv.status,
-                                             keep.dimensions = keep.dimensions)
       } else 
         stop("Haven't set up to pull this data type from ncd model")
       
@@ -242,6 +228,10 @@ simplot = function(...,
         stop("Can only facet.by ncd status for NCD model")
       if(data.type %in% c("hyp.inc","diab.inc","diab.hyp.inc","mi.inc","stroke.inc"))
         stop("Can only plot NCD/CVD incidence for NCD model")
+      
+      if(data.type=="incidence" & "hiv.status" %in% keep.dimensions)
+        stop("Can't facet incidence by hiv.status")
+      
       # if this is a single simulation, need to make it a list with one element
       if(class(sim[[1]])=="array"){
         sim = list(sim)     
@@ -364,7 +354,7 @@ if(1==2){
   simplot(pop$params$khm.full,pop,scale.population = T, facet.by = "age")
   simplot(pop$params$khm.full,pop,scale.population = T, facet.by = "sex")
   simplot(pop$params$khm.full,pop,scale.population = T, facet.by="hiv.status")
-  simplot(pop,scale.population = T, facet.by="ncd.status")
+  simplot(pop,facet.by="ncd.status")
   
   # Plot type 2: HIV incidence
   simplot(pop$params$khm.full, pop, data.type = "incidence", scale.population = T)
@@ -395,6 +385,7 @@ if(1==2){
   simplot(pop, data.type = "diab.hyp.inc", facet.by = "age")
   simplot(pop, data.type = "diab.hyp.inc", facet.by = "sex")
   simplot(pop, data.type = "diab.hyp.inc", facet.by = "hiv.status")
+  # simplot(pop, data.type = "diab.hyp.inc", facet.by = "ncd.status")
   
   # Plot type 7: MI and stroke incidence 
   simplot(pop, data.type = "mi.inc")
@@ -420,6 +411,9 @@ if(1==2){
   simplot(pop$params$khm.full, pop, data.type = "mi.inc") 
   # gives an error because we can't facet by ncd.status for HIV model (this is correct)
   simplot(pop$params$khm.full, pop, data.type = "prevalence", facet.by = "ncd.status") 
+  # facet incidence by HIV status - shouldn't work; but actually does work for NCD model...
+  simplot(pop$params$khm.full, pop, data.type = "incidence", scale.population = T, facet.by = "hiv.status")
+  simplot(pop, data.type = "incidence", scale.population = T, facet.by = "hiv.status")
   
 }
 
