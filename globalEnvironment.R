@@ -95,19 +95,22 @@ generate.new.modelParameter<-function(){
   target.ncd.props[is.na(target.ncd.props)]<-0
   MP$target.ncd.props=target.ncd.props
   
-  #4-load pooled CVD risk by age/sex/ncd category
+  #4-load pooled 10-year CVD risk by age/sex/ncd category
   load('data/10.year.cvd.risk.by.age.sex.ncd.Rdata')
   q=pooled.risk.by.age.sex.ncd
   # dimnames(q)
   x=array(0,dim = c(DIM.AGE,DIM.SEX,DIM.NCD),dimnames = list(DIM.NAMES.AGE,DIM.NAMES.SEX,DIM.NAMES.NCD))
   # dimnames(x)
   x[unlist(dimnames(q)[1]),unlist(dimnames(q)[2]),unlist(dimnames(q)[3])]<-q
+  #applying values for 40-44 to younger agegroups and from 70-74 to older agegroups
   for(i in 1:8) x[c(DIM.NAMES.AGE[i]),,]=x["40-44",,]
   for(i in 16:17) x[c(DIM.NAMES.AGE[i]),,]=x["70-74",,]
   
   #@MS: we can just compute the annual cvd risk here instead of calculating it for each agent everytime we read it
   #do we even need the annual value?
+  # annual risk computed from an exponential decay
   MP$annual.cvd.risk.by.age.sex=-((log(1- x/100 ))/10)
+  #assuming geometric distribution of risk over time
   MP$monthly.cvd.risk.by.age.sex=(1-(1-MP$annual.cvd.risk.by.age.sex)^(1/12))
   
   # risk of recurrent event here to 2x original risk; able to change in sensitivity analysis

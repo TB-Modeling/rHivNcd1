@@ -38,7 +38,7 @@ POPULATION<-R6Class("POPULATION",
                       addMembers=function(memberListNew=list()){
                         self$members<-c(self$members,memberListNew)
                       },
-                     
+                      
                       modelAging=function(){
                         invisible(lapply(self$members,function(p) {p$incAge}))
                       },
@@ -52,14 +52,14 @@ POPULATION<-R6Class("POPULATION",
                         state.sizes<-array(0,
                                            dim=c(DIM.AGE,DIM.SEX,DIM.HIV,DIM.NCD, 1),
                                            dimnames = list(DIM.NAMES.AGE,DIM.NAMES.SEX,DIM.NAMES.HIV,DIM.NAMES.NCD, as.character(self$params$CYNOW)))
-                        invisible(lapply(c(1:n),function(x){
-                          state.sizes[  self$members[[x]]$agegroup,
-                                        self$members[[x]]$sex, 
-                                        self$members[[x]]$hivState,
-                                        self$members[[x]]$ncdState,1] <<- state.sizes[  self$members[[x]]$agegroup,
-                                                                                        self$members[[x]]$sex, 
-                                                                                        self$members[[x]]$hivState, 
-                                                                                        self$members[[x]]$ncdState,1] +1  }))
+                        invisible(lapply(self$members,function(p){
+                          state.sizes[  p$agegroup,
+                                        p$sex, 
+                                        p$hivState,
+                                        p$ncdState,1] <<- state.sizes[  p$agegroup,
+                                                                        p$sex, 
+                                                                        p$hivState, 
+                                                                        p$ncdState,1] +1}))
                         state.sizes
                       },
                       
@@ -68,7 +68,7 @@ POPULATION<-R6Class("POPULATION",
                         self$stats$pop.size[ynow] <-length(self$members) #population size
                         self$stats$n.state.sizes[,,,,ynow] <- self$return.state.size.distribution() #state sizes
                       },
-                     
+                      
                       #record HIV events
                       record.hiv.inc=function(age,sex,hiv,ncd){
                         self$stats$n.hiv.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 

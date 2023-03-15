@@ -19,7 +19,7 @@ create.initial.population <- function( id=0,
                       members = list(),
                       params = generate.new.modelParameter(),
                       stats =  generate.new.stat())
-
+  
   # 2- create member list of persons for this population 
   #subset the first n row to create n persons
   sim.pop=pop$params$step.dataset
@@ -89,12 +89,11 @@ set.initial.hiv.status = function(pop){
   pop
 }
 
-# sets the annual CVD risk (from 10-year risk of cvd events)
+# sets the monthly CVD risk 
 print("Loading function set.cvd.risk")
 set.cvd.risk = function(pop){
-    invisible(lapply(pop$members,function(p){
+  invisible(lapply(pop$members,function(p){
     # for whatever age group they are in, access the 10-year risk for the previous age group 
-    # this is what is used to calculate annual risk
     p.agegroup=pmax(1, p$agegroup-1 )# for the youngest age group, just make this 1, not 0
     p$annualCvdRisk = pop$params$annual.cvd.risk.by.age.sex[p.agegroup,p$sex,p$ncdState]
     p$monthlyCvdRisk= pop$params$monthly.cvd.risk.by.age.sex[p.agegroup,p$sex,p$ncdState]
@@ -112,79 +111,36 @@ model.hiv.transitions<-function(pop,
                                 prob.diseng,
                                 prob.diag){
   
-  n=length(pop$members)
-  { invisible(lapply(c(1:n),function(x){
-    p=pop$members[[x]] 
+  invisible(lapply(pop$members,function(p){
     #1-ENGAGEMENT
     if (p$hivState == HIV.UNENG) {
-       if (runif(1) < prob.eng[p$agegroup,p$sex])
-        p$bMarkedHivEng=T
-    }else{
-      #2- DISENGAGEMENT
-      if (p$hivState== HIV.ENG) {
-        if (runif(1)<prob.diseng[p$agegroup,p$sex])
-          p$bMarkedHivUneng=T
-      }else{
-        #3- DIAGNOSIS
-        if (p$hivState== HIV.UNDIAG) {
-          if (runif(1)<prob.diag[p$agegroup,p$sex])
-            p$bMarkedHivDiag=T
-        }else{
-          #4- INCIDENCE
-          if (p$hivState== HIV.NEG) {
-            if (runif(1)<prob.inc[p$agegroup,p$sex])
-              p$bMarkedHivInc=T
-          }else         {
-            browser()
-            stop(paste("Error: Person ",x," hivState is ",p$hivState," and it didnt meet anuy criteria"))
-          }}}}}))
-  }
-  ######
-  # modeling the events
-  ######
-  # here the order in which the events are modeled will matter for collecting statistics
-  # assuming that HIV.cascade.events take place first, then mortality, aging and births 
-  n.inc=0
-  n.diag=0
-  n.eng=0
-  n.uneng=0
-  {
-    n=length(pop$members)
-    # 1- Modeling Hiv cascade events  
-    invisible(lapply(c(1:n),function(x){
-      p=pop$members[[x]] 
-      if (p$bMarkedHivInc+p$bMarkedHivDiag+p$bMarkedHivUneng+p$bMarkedHivEng >1){
-        browser()
-        stop(paste("can not model more than one hiv transition for person ",x," at year",pop$params$YNOW," time ",pop$params$TNOW))
-      }
-      #
-      if(p$bMarkedHivInc==TRUE) {
-        p$hiv.getInfected(pop$params$TNOW)
-        pop$record.hiv.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
-        # pop$stats$n.hiv.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.inc[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
-        n.inc<<-n.inc+1
-      }
-      if(p$bMarkedHivDiag==TRUE) {
-        p$hiv.getDiagnosed(pop$params$TNOW)
-        pop$record.hiv.diag(p$agegroup,p$sex,p$hivState,p$ncdState)
-        # pop$stats$n.hiv.diag[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.diag[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
-        n.diag<<-n.diag+1
-      }
-      if(p$bMarkedHivUneng==TRUE) {
-        p$hiv.getUnengage(pop$params$TNOW)
-        pop$record.hiv.uneng(p$agegroup,p$sex,p$hivState,p$ncdState)
-        # pop$stats$n.hiv.uneng[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.uneng[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
-        n.eng<<-n.eng+1
-      }
-      if(p$bMarkedHivEng==TRUE) {
+      if (runif(1) < prob.eng[p$agegroup,p$sex]){
         p$hiv.getEngaged(pop$params$TNOW)
         pop$record.hiv.eng(p$agegroup,p$sex,p$hivState,p$ncdState)
-        # pop$stats$n.hiv.eng[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)] <- pop$stats$n.hiv.eng[p$agegroup,p$sex,p$hivState,p$ncdState,as.character(pop$params$CYNOW)]+1
-        n.uneng<<-n.uneng+1
       }
-    }))
-  }
-  if (bPrint2) cat("modeled inc= ",n.inc," diag= ",n.diag," eng= ",n.eng," uneng= ",n.uneng," events \n" )
+    }else{      #2- DISENGAGEMENT
+      if (p$hivState== HIV.ENG) {
+        if (runif(1)<prob.diseng[p$agegroup,p$sex]){
+          p$hiv.getUnengage(pop$params$TNOW)
+          pop$record.hiv.uneng(p$agegroup,p$sex,p$hivState,p$ncdState)
+        }
+      }else{        #3- DIAGNOSIS
+        if (p$hivState== HIV.UNDIAG) {
+          if (runif(1)<prob.diag[p$agegroup,p$sex]){
+            p$hiv.getDiagnosed(pop$params$TNOW)
+            pop$record.hiv.diag(p$agegroup,p$sex,p$hivState,p$ncdState)
+          }
+        }else{          #4- INCIDENCE
+          if (p$hivState== HIV.NEG) {
+            if (runif(1)<prob.inc[p$agegroup,p$sex]){
+              p$hiv.getInfected(pop$params$TNOW)
+              pop$record.hiv.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
+            }
+          }else {
+            browser()
+            stop(paste("Error: Person ",x," hivState is ",p$hivState," and it didnt meet any criteria"))
+          }}}}}))
+  
   pop
 }
 
@@ -224,11 +180,11 @@ model.cvd.deaths = function(pop){
   n=length(pop$members)
   invisible(lapply(c(1:n),function(x){
     p=pop$members[[x]]
-
-        p.mortality.risk = p$returnCvdMortality(pop$params)
-
-        
-
+    
+    p.mortality.risk = p$returnCvdMortality(pop$params)
+    
+    
+    
     if(runif(1) < p.mortality.risk)
       p$bMarkedDead.cvd=T
   }))
@@ -238,14 +194,14 @@ model.cvd.deaths = function(pop){
 # removes the HIV & CVD deaths
 print("Loading function remove.hiv.cvd.deaths")
 remove.hiv.cvd.deaths<-function(pop,
-                               prob.hiv.mort,
-                               prob.non.hiv.mort){
+                                prob.hiv.mort,
+                                prob.non.hiv.mort){
   n=length(pop$members)
   #evaluate prob of hiv and non.hiv mortality for everyone who is not already marked dead
   invisible(lapply(c(1:n),function(x){
     p=pop$members[[x]] 
-  
-     
+    
+    
     
     if (p$bMarkedDead.cvd==FALSE){
       # HIV MORTALITY
@@ -309,8 +265,8 @@ update.ncd.states<-function(pop){
   # CURRENT NCD state sizes & prop
   # 3D array of ncd state sizes: age, sex, ncd, year
   current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
-                                                  years = as.character(pop$params$CYNOW),
-                                                  keep.dimensions = c('age','sex','ncd.status','year'))
+                                                years = as.character(pop$params$CYNOW),
+                                                keep.dimensions = c('age','sex','ncd.status','year'))
   current.ncd.states=current.ncd.states[,,,1] #to remove year dimension
   # dimnames(current.ncd.states)
   current.ncd.props<-return.prop.sex.age(vFreq = current.ncd.states)
@@ -355,8 +311,8 @@ update.ncd.states<-function(pop){
   ####################################################################################
   # 3D array of ncd state sizes: age, sex, ncd, year
   current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
-                                                  years = as.character(pop$params$CYNOW),
-                                                  keep.dimensions = c('age','sex','ncd.status','year'))
+                                                years = as.character(pop$params$CYNOW),
+                                                keep.dimensions = c('age','sex','ncd.status','year'))
   current.ncd.states=current.ncd.states[,,,1] #to remove year dimension
   # dimnames(current.ncd.states)
   current.ncd.props<-return.prop.sex.age(current.ncd.states)
@@ -396,10 +352,10 @@ update.ncd.states<-function(pop){
   ####################################################################################
   # HYP
   ####################################################################################
-    # 3D array of ncd state sizes: age, sex, ncd, year
+  # 3D array of ncd state sizes: age, sex, ncd, year
   current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
-                                                  years = as.character(pop$params$CYNOW),
-                                                  keep.dimensions = c('age','sex','ncd.status','year'))
+                                                years = as.character(pop$params$CYNOW),
+                                                keep.dimensions = c('age','sex','ncd.status','year'))
   current.ncd.states=current.ncd.states[,,,1] #to remove year dimension
   # dimnames(current.ncd.states)
   current.ncd.props<-return.prop.sex.age(current.ncd.states)
@@ -539,8 +495,8 @@ run.one.year<-function(pop){
     # 3- modeling HIV and CVD deaths
     pop<-model.cvd.deaths(pop)
     pop<-remove.hiv.cvd.deaths( pop,
-                               khm.prob.hiv.mort,
-                               khm.prob.non.hiv.mort)
+                                khm.prob.hiv.mort,
+                                khm.prob.non.hiv.mort)
     
     pop$increaseMonth()
     
@@ -552,16 +508,16 @@ run.one.year<-function(pop){
       x$bMarkedDead.ageout=T;
       return(1)
     }}))))
-    # modeling deaths
-    n.deaths.ageout=pop$remove.dead.ageout()
-    pop$stats$n.deaths.ageout[pop$params$YNOW]=n.deaths.ageout
+  # modeling deaths
+  n.deaths.ageout=pop$remove.dead.ageout()
+  pop$stats$n.deaths.ageout[pop$params$YNOW]=n.deaths.ageout
   
   ## 2-MODEL BIRTHS --------
   { # non-HIV births
     absolute.n.births.non.hiv=khm$target.parameters$non.hiv.births[as.character(pop$params$CYNOW)] # total non HIV births from HIV model 
     non.hiv.births.scalar = absolute.n.births.non.hiv/sum(khm$population[as.character(pop$params$CYNOW),,,]) # scaled to pop size from HIV model
     n.births.non.hiv = round(non.hiv.births.scalar*length(pop$members),0) # re-scaled to pop size from NCD model
-  
+    
     if(n.births.non.hiv>0){
       if (bPrint2) cat(n.births.non.hiv," non-HIV newborns are added","\n")
       vIds = c((pop$params$LAST.PERSON.ID+1): (pop$params$LAST.PERSON.ID+n.births.non.hiv))
@@ -590,7 +546,7 @@ run.one.year<-function(pop){
       nMaleNewborns=sum(vSexes==MALE)
       pop$stats$n.hiv.inc["0-4","MALE","HIV.NEG", "NCD.NEG",pop$params$YNOW]=pop$stats$n.hiv.inc["0-4","MALE","HIV.NEG","NCD.NEG",pop$params$YNOW] + nMaleNewborns 
       pop$stats$n.hiv.inc["0-4","FEMALE","HIV.NEG","NCD.NEG",pop$params$YNOW]=pop$stats$n.hiv.inc["0-4","FEMALE","HIV.NEG","NCD.NEG",pop$params$YNOW] + (n.births.hiv-nMaleNewborns)
-      }
+    }
     #record stats:
     pop$stats$n.births[pop$params$YNOW]=n.births.non.hiv + n.births.hiv
     if(bPrint2) cat("n.births.non.hiv= ",n.births.non.hiv, " n.births.hiv= ",n.births.hiv, " modeled \n")
