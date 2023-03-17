@@ -109,7 +109,7 @@ generate.new.modelParameter<-function(){
   # annual risk computed from an exponential decay
   annual.cvd.risk.by.age.sex=-((log(1- x/100 ))/10) # not included in MP since we only need monthly values 
   #assuming geometric distribution of risk over time
-  MP$monthly.cvd.risk.by.age.sex=(1-(1-MP$annual.cvd.risk.by.age.sex)^(1/12))
+  MP$monthly.cvd.risk.by.age.sex=(1-(1-annual.cvd.risk.by.age.sex)^(1/12))
   
   # risk of recurrent event here to 2x original risk; able to change in sensitivity analysis
   MP$recurrent.cvd.event.risk.multiplier=2
