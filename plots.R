@@ -116,6 +116,15 @@ simplot = function(...,
   sims = list(...)
   keep.dimensions = union('year',union(facet.by, split.by))
   
+  ncd.data.types = list("population"="n.state.sizes",
+                        "incidence"="n.hiv.inc",
+                        "prevalence"="n.state.sizes",
+                        "hyp.inc" = "n.hyp.inc",
+                        "diab.inc" = "n.diab.inc",
+                        "diab.hyp.inc" = "n.diab.hyp.inc",
+                        "mi.inc" = "n.mi.inc",
+                        "stroke.inc" = "n.stroke.inc")
+  
   df.sim = NULL
   
   for(i in 1:length(sims)){
@@ -124,99 +133,107 @@ simplot = function(...,
     ##----------------------##
     ##----- NCD OUTPUT -----##
     ##----------------------##
-    # have to repeat everything because hiv sims are within a for loop of the length of sim (ncd sims have their own length)
+  
+    # if this is a single simulation, need to make it a list with one element
     if("R6" %in% class(sim)){
-      ncd.data.types = list("population"="n.state.sizes",
-                            "incidence"="n.hiv.inc",
-                            "prevalence"="n.state.sizes",
-                            "hyp.inc" = "n.hyp.inc",
-                            "diab.inc" = "n.diab.inc",
-                            "diab.hyp.inc" = "n.diab.hyp.inc",
-                            "mi.inc" = "n.mi.inc",
-                            "stroke.inc" = "n.stroke.inc")
-      ncd.data.type.x = ncd.data.types[[data.type]]
-      if(is.null(ncd.data.type.x))
-        stop("Haven't set up to pull this data type from ncd model")
-      if(data.type %in% c("population","incidence","mi.inc","stroke.inc","hyp.inc","diab.inc","diab.hyp.inc")){
-        value = filter.5D.stats.by.field(sim$stats[[ncd.data.type.x]], 
-                                         years = years,
-                                         ages = ages, 
-                                         sexes = sexes,
-                                         hiv.status = hiv.status,
-                                         ncd.status = ncd.status,
-                                         keep.dimensions = keep.dimensions)
-      } else if(data.type=="prevalence"){
-        hiv.status = DIM.NAMES.HIV[-1]
-        # note that this overrides any hiv.status specified in the arguments
-        value = filter.5D.stats.by.field(sim$stats$n.state.sizes, 
-                                         years = years,
-                                         ages = ages, 
-                                         sexes = sexes,
-                                         hiv.status = DIM.NAMES.HIV[-1], # extract population, remove HIV negative
-                                         # note that this overrides any hiv.status specified in the arguments
-                                         ncd.status = ncd.status,
-                                         keep.dimensions = keep.dimensions)
-      } else 
-        stop("Haven't set up to pull this data type from ncd model")
+      sim = list(sim)   
+    }
+    
+    if("R6" %in% class(sim[[1]])){
+      for(j in 1:length(sim)){
       
-      # For scale.population, divide by 2015 population size - have to do this separately for each combo of keep.dimensions
-      if(scale.population){
+        ncd.data.type.x = ncd.data.types[[data.type]]
+        if(is.null(ncd.data.type.x))
+          stop("Haven't set up to pull this data type from ncd model")
         
-        # Keep dimensions = year only 
-        if(setequal(keep.dimensions,"year")){
-          value = value/value[years=="2015"]
+        if(data.type %in% c("population","incidence","mi.inc","stroke.inc","hyp.inc","diab.inc","diab.hyp.inc")){
+          value = filter.5D.stats.by.field(sim[[j]]$stats[[ncd.data.type.x]], 
+                                           years = years,
+                                           ages = ages, 
+                                           sexes = sexes,
+                                           hiv.status = hiv.status,
+                                           ncd.status = ncd.status,
+                                           keep.dimensions = keep.dimensions)
+        } else if(data.type=="prevalence"){
+          hiv.status = DIM.NAMES.HIV[-1]
+          # note that this overrides any hiv.status specified in the arguments
+          value = filter.5D.stats.by.field(sim[[j]]$stats$n.state.sizes, 
+                                           years = years,
+                                           ages = ages, 
+                                           sexes = sexes,
+                                           hiv.status = DIM.NAMES.HIV[-1], # extract population, remove HIV negative
+                                           # note that this overrides any hiv.status specified in the arguments
+                                           ncd.status = ncd.status,
+                                           keep.dimensions = keep.dimensions)
+        } else 
+          stop("Haven't set up to pull this data type from ncd model")
+        
+        # For scale.population, divide by 2015 population size - have to do this separately for each combo of keep.dimensions
+        # RIGHT NOW, IF 2015 VALUE IS 0, MANUALLY SETTING TO 1# 
+        if(scale.population){
           
-          # 2 keep dimensions 
-        } else if(length(keep.dimensions)==2){
-          value = sapply(1:dim(value)[2],function(j){
-            sapply(1:dim(value)[1],function(i){
-              value[i,j]/value["2015",j]
-            })
-          })
-          if (setequal(keep.dimensions, c('year','age'))){
-            dimnames(value) = list(year=years,
-                                   age=ages)
-          } else if (setequal(keep.dimensions, c('year','sex'))){ 
-            dimnames(value) = list(year=years,
-                                   sex=sexes)
-          } else if (setequal(keep.dimensions, c('year','hiv.status'))){
-            dimnames(value) = list(year=years,
-                                   hiv.status=hiv.status)
-          } else if (setequal(keep.dimensions, c('year','ncd.status'))){
-            dimnames(value) = list(year=years,
-                                   ncd.status=ncd.status)
-          } else stop("Need to add these dimensions")
-          
-          
-          # 3 keep dimensions
-        } else if(length(keep.dimensions)==3){
-          value = sapply(1:dim(value)[3],function(k){
-            sapply(1:dim(value)[2],function(j){
+          # Keep dimensions = year only 
+          if(setequal(keep.dimensions,"year")){
+            if(value[years=="2015"]==0) # can't divide by 0, set to 1 for now 
+              value[years=="2015"]=1
+            value = value/value[years=="2015"]
+            
+            # 2 keep dimensions 
+          } else if(length(keep.dimensions)==2){
+            value = sapply(1:dim(value)[2],function(j){
               sapply(1:dim(value)[1],function(i){
-                value[i,j,k]/value["2015",j,k]  
+                if(value["2015",j]==0) # can't divide by 0, set to 1 for now 
+                  value["2015",j]=1
+                value[i,j]/value["2015",j]
               })
             })
-          })
-          if (setequal(keep.dimensions, c('year','age','sex'))){
-            if(!all(keep.dimensions==c("year","age","sex")))
-              stop("keep.dimensions must be in the order: year, age, sex")
-            dim.names = list("year"=years,
-                             "age"=ages,
-                             "sex"=sexes)
-            dim(value) = sapply(dim.names,length)
-            dimnames(value) = dim.names
-          } else stop("Need to add these dimensions")
+            if (setequal(keep.dimensions, c('year','age'))){
+              dimnames(value) = list(year=years,
+                                     age=ages)
+            } else if (setequal(keep.dimensions, c('year','sex'))){ 
+              dimnames(value) = list(year=years,
+                                     sex=sexes)
+            } else if (setequal(keep.dimensions, c('year','hiv.status'))){
+              dimnames(value) = list(year=years,
+                                     hiv.status=hiv.status)
+            } else if (setequal(keep.dimensions, c('year','ncd.status'))){
+              dimnames(value) = list(year=years,
+                                     ncd.status=ncd.status)
+            } else stop("Need to add these dimensions")
+            
+            
+            # 3 keep dimensions
+          } else if(length(keep.dimensions)==3){
+            value = sapply(1:dim(value)[3],function(k){
+              sapply(1:dim(value)[2],function(j){
+                sapply(1:dim(value)[1],function(i){
+                  if(value["2015",j,k]==0) # can't divide by 0, set to 1 for now 
+                    value["2015",j,k]=1
+                  value[i,j,k]/value["2015",j,k]  
+                })
+              })
+            })
+            if (setequal(keep.dimensions, c('year','age','sex'))){
+              if(!all(keep.dimensions==c("year","age","sex")))
+                stop("keep.dimensions must be in the order: year, age, sex")
+              dim.names = list("year"=years,
+                               "age"=ages,
+                               "sex"=sexes)
+              dim(value) = sapply(dim.names,length)
+              dimnames(value) = dim.names
+            } else stop("Need to add these dimensions")
+          }
         }
+        
+        # set up a dataframe with columns: year, value, sim id, data.type 
+        one.df = reshape2::melt(value) 
+        one.df$sim.id = i
+        one.df$sim.number = j 
+        # one.df$data.type = d
+        
+        df.sim = rbind(df.sim, one.df)   
+        
       }
-      
-      # set up a dataframe with columns: year, value, sim id, data.type 
-      one.df = reshape2::melt(value) 
-      one.df$sim.id = i
-      one.df$sim.number = 1 # hard coding 1 for sim number for ncd since we don't do simsets
-      # one.df$data.type = d
-      
-      df.sim = rbind(df.sim, one.df)   
-      
       
       ##----------------------##
       ##----- HIV OUTPUT -----##
@@ -224,6 +241,7 @@ simplot = function(...,
       
       # HIV SIMSET OBJECT OR INDIVIDUAL HIV SIMULATION
     } else {
+      
       if("ncd.status" %in% keep.dimensions)
         stop("Can only facet.by ncd status for NCD model")
       if(data.type %in% c("hyp.inc","diab.inc","diab.hyp.inc","mi.inc","stroke.inc"))
@@ -335,10 +353,12 @@ simplot = function(...,
     plot = ggplot() + 
       geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id)) +
       facet_wrap(facet_formula, scales = "free_y") + 
+      labs(title = paste0(data.type))+
       ylim(0,NA)
   } else{
     plot = ggplot() + 
       geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id)) +
+      labs(title = paste0(data.type))+
       ylim(0,NA)
   }
   
@@ -349,71 +369,76 @@ simplot = function(...,
 
 
 if(1==2){
+  khm.full = simset[[1]]$params$khm.full # HIV simset 
+  ncd.simset = simset # NCD simset
+  
   # Plot type 1: population - SEE STANDARD PLOTS LIST (WORD DOC)
-  simplot(pop$params$khm.full,pop,scale.population = T)
-  simplot(pop$params$khm.full,pop,scale.population = T, facet.by = "age")
-  simplot(pop$params$khm.full,pop,scale.population = T, facet.by = "sex")
-  simplot(pop$params$khm.full,pop,scale.population = T, facet.by="hiv.status")
-  simplot(pop,facet.by="ncd.status")
+  simplot(khm.full,ncd.simset,scale.population = T)
+  simplot(khm.full,ncd.simset,scale.population = T, facet.by = "age")
+  simplot(khm.full,ncd.simset,scale.population = T, facet.by = "sex")
+  simplot(khm.full,ncd.simset,scale.population = T, facet.by="hiv.status")
+  simplot(ncd.simset,facet.by="ncd.status")
   
   # Plot type 2: HIV incidence
-  simplot(pop$params$khm.full, pop, data.type = "incidence", scale.population = T)
-  simplot(pop$params$khm.full, pop, data.type = "incidence", scale.population = T, facet.by = "age")
-  simplot(pop$params$khm.full, pop, data.type = "incidence", scale.population = T, facet.by = "sex")
-  simplot(pop, data.type = "incidence", facet.by = "ncd.status")
+  simplot(khm.full, ncd.simset, data.type = "incidence", scale.population = T)
+  simplot(khm.full, ncd.simset, data.type = "incidence", scale.population = T, facet.by = "age")
+  simplot(khm.full, ncd.simset, data.type = "incidence", scale.population = T, facet.by = "sex")
+  simplot(ncd.simset, data.type = "incidence")
+  simplot(ncd.simset, data.type = "incidence", facet.by = "ncd.status")
   
   # Plot type 3: HIV prevalence
-  simplot(pop$params$khm.full, pop, data.type = "prevalence", scale.population = T, facet.by = "age")
-  simplot(pop$params$khm.full, pop, data.type = "prevalence", scale.population = T, facet.by = "sex")
-  simplot(pop$params$khm.full, pop, data.type = "prevalence", scale.population = T, facet.by = "hiv.status")
-  simplot(pop, data.type = "prevalence", facet.by = "ncd.status")
+  simplot(khm.full, ncd.simset, data.type = "prevalence", scale.population = T, facet.by = "age")
+  simplot(khm.full, ncd.simset, data.type = "prevalence", scale.population = T, facet.by = "sex")
+  simplot(khm.full, ncd.simset, data.type = "prevalence", scale.population = T, facet.by = "hiv.status")
+  simplot(ncd.simset, data.type = "prevalence")
+  simplot(ncd.simset, data.type = "prevalence", facet.by = "ncd.status")
   
   # Plot type 4: Diabetes incidence
-  simplot(pop, data.type = "diab.inc")
-  simplot(pop, data.type = "diab.inc", facet.by = "age")
-  simplot(pop, data.type = "diab.inc", facet.by = "sex")
-  simplot(pop, data.type = "diab.inc", facet.by = "hiv.status")
+  simplot(ncd.simset, data.type = "diab.inc")
+  simplot(ncd.simset, data.type = "diab.inc", facet.by = "age")
+  simplot(ncd.simset, data.type = "diab.inc", facet.by = "sex")
+  simplot(ncd.simset, data.type = "diab.inc", facet.by = "hiv.status")
   
   # Plot type 5: Hypertension incidence
-  simplot(pop, data.type = "hyp.inc")
-  simplot(pop, data.type = "hyp.inc", facet.by = "age")
-  simplot(pop, data.type = "hyp.inc", facet.by = "sex")
-  simplot(pop, data.type = "hyp.inc", facet.by = "hiv.status")
+  simplot(ncd.simset, data.type = "hyp.inc")
+  simplot(ncd.simset, data.type = "hyp.inc", facet.by = "age")
+  simplot(ncd.simset, data.type = "hyp.inc", facet.by = "sex")
+  simplot(ncd.simset, data.type = "hyp.inc", facet.by = "hiv.status")
   
   # Plot type 6: Diabetes + Hypertension incidence 
-  simplot(pop, data.type = "diab.hyp.inc")
-  simplot(pop, data.type = "diab.hyp.inc", facet.by = "age")
-  simplot(pop, data.type = "diab.hyp.inc", facet.by = "sex")
-  simplot(pop, data.type = "diab.hyp.inc", facet.by = "hiv.status")
-  # simplot(pop, data.type = "diab.hyp.inc", facet.by = "ncd.status")
+  simplot(ncd.simset, data.type = "diab.hyp.inc")
+  simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "age")
+  simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "sex")
+  simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "hiv.status")
+  # simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "ncd.status")
   
   # Plot type 7: MI and stroke incidence 
-  simplot(pop, data.type = "mi.inc")
-  simplot(pop, data.type = "mi.inc", facet.by = "age")
-  simplot(pop, data.type = "mi.inc", facet.by = "sex")
-  simplot(pop, data.type = "mi.inc", facet.by = "ncd.status")
-  simplot(pop, data.type = "mi.inc", facet.by = "hiv.status")
-  simplot(pop, data.type = "stroke.inc")
-  simplot(pop, data.type = "stroke.inc", facet.by = "age")
-  simplot(pop, data.type = "stroke.inc", facet.by = "sex")
-  simplot(pop, data.type = "stroke.inc", facet.by = "ncd.status")
-  simplot(pop, data.type = "stroke.inc", facet.by = "ncd.status", scale.population = T)
-  simplot(pop, data.type = "stroke.inc", facet.by = "hiv.status")
+  simplot(ncd.simset, data.type = "mi.inc")
+  simplot(ncd.simset, data.type = "mi.inc", facet.by = "age")
+  simplot(ncd.simset, data.type = "mi.inc", facet.by = "sex")
+  simplot(ncd.simset, data.type = "mi.inc", facet.by = "ncd.status")
+  simplot(ncd.simset, data.type = "mi.inc", facet.by = "hiv.status")
+  simplot(ncd.simset, data.type = "stroke.inc")
+  simplot(ncd.simset, data.type = "stroke.inc", facet.by = "age")
+  simplot(ncd.simset, data.type = "stroke.inc", facet.by = "sex")
+  simplot(ncd.simset, data.type = "stroke.inc", facet.by = "ncd.status")
+  simplot(ncd.simset, data.type = "stroke.inc", facet.by = "ncd.status", scale.population = T)
+  simplot(ncd.simset, data.type = "stroke.inc", facet.by = "hiv.status")
   
   # Plot type X: not yet completed 
-  simplot(pop$params$khm.full, data.type = "engagement") # need to make this a proportion 
-  simplot(pop$params$khm.full, data.type = "suppression") # need to make this a proportion 
-  simplot(pop$params$khm.full, data.type = "hiv.mortality") 
+  simplot(khm.full, data.type = "engagement") # need to make this a proportion 
+  simplot(khm.full, data.type = "suppression") # need to make this a proportion 
+  simplot(khm.full, data.type = "hiv.mortality") 
   
   
   # Testing that error messages work correctly
   # gives an error because we can't show CVD incidence for HIV model (this is correct)
-  simplot(pop$params$khm.full, pop, data.type = "mi.inc") 
+  simplot(khm.full, ncd.simset, data.type = "mi.inc") 
   # gives an error because we can't facet by ncd.status for HIV model (this is correct)
-  simplot(pop$params$khm.full, pop, data.type = "prevalence", facet.by = "ncd.status") 
+  simplot(khm.full, ncd.simset, data.type = "prevalence", facet.by = "ncd.status") 
   # facet incidence by HIV status - shouldn't work; but actually does work for NCD model...
-  simplot(pop$params$khm.full, pop, data.type = "incidence", scale.population = T, facet.by = "hiv.status")
-  simplot(pop, data.type = "incidence", scale.population = T, facet.by = "hiv.status")
+  simplot(khm.full, ncd.simset, data.type = "incidence", scale.population = T, facet.by = "hiv.status")
+  simplot(ncd.simset, data.type = "incidence", scale.population = T, facet.by = "hiv.status")
   
 }
 
