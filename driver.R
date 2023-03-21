@@ -6,10 +6,13 @@
 #  Driver.R class
 #  
 #####################################
-list.of.packages <- c("ggplot2", "R6","Rcpp")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
+# list.of.packages <- c("ggplot2", "R6","Rcpp")
+# new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+# if(length(new.packages)) install.packages(new.packages)
 
+install.packages("ggplot2")
+install.packages("R6")
+install.packages("Rcpp")
 
 library(R6)
 library(Rcpp)
