@@ -16,5 +16,6 @@
 #SBATCH --mail-type=end
 #SBATCH --mail-user=pkasaie@jh.edu
 
+rm /home/pkasaie/source/hivncd/rHivNcd/outputs/*
 module load r
 Rscript driver.R
