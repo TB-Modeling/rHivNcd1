@@ -317,4 +317,6 @@ lapply(c(1:5),function(rep){
 
 
 end_time <- Sys.time()
-print(paste("Total time=",end_time - start_time))
+session_time=end_time - start_time
+print(paste("Session time=",session_time))
+write.table(x = session_time,file = "outputs/out-sessionTime",col.names = F,row.names = F)
