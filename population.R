@@ -6,7 +6,7 @@
 print("Sourcing Population.R ... ")
 
 # The R6 library has a lightweight class
-library(R6)
+# library(R6)
 
 POPULATION<-R6Class("POPULATION",
                     public=list(
