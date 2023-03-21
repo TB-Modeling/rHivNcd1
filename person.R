@@ -4,9 +4,7 @@
 #  
 #####################################
 print("Sourcing Person.R ... ")
-
-# The R6 library has a lightweight class
-library(R6)
+# library(R6)
 
 # We create class instances with the Agent$new()
 # function, which calls the 'initialize()' function

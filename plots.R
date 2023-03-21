@@ -5,7 +5,7 @@
 #####################################
 print("Sourcing Plot.R ... ")
 
-library(ggplot2)
+# library(ggplot2)
 
 # Function to extract data from HIV model (khm) output object - either a simset or a single sim (for now, if it's a simset, take only one sim)
 # Specify the khm.output object, what ages/sexes/hiv statuses/years to include, and then what dimensions to report by 

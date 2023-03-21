@@ -6,6 +6,15 @@
 #  Driver.R class
 #  
 #####################################
+list.of.packages <- c("ggplot2", "R6","Rcpp")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+
+library(R6)
+library(Rcpp)
+library(ggplot2)
+
 print("Sourcing Driver.R ... ")
 {
   source("globalEnvironment.R")
