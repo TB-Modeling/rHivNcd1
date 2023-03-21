@@ -10,14 +10,15 @@
 # new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 # if(length(new.packages)) install.packages(new.packages)
 
-install.packages("ggplot2")
-install.packages("R6")
-install.packages("Rcpp")
+# install.packages("ggplot2")
+# install.packages("R6")
+# install.packages("Rcpp")
+start_time <- Sys.time()
 
 library(R6)
 library(Rcpp)
 library(ggplot2)
-
+ 
 print("Sourcing Driver.R ... ")
 {
   source("globalEnvironment.R")
@@ -315,4 +316,5 @@ lapply(c(1:5),function(rep){
 #' #why accessing previous agegroup?
 
 
-
+end_time <- Sys.time()
+print(paste("Total time=",end_time - start_time))
