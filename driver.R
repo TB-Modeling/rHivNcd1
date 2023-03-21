@@ -19,45 +19,27 @@ print("Sourcing Driver.R ... ")
 }
 #######################################################
 # SINGLE RUN
-{
-  # Create the population in year 2014; save the stats and move the clock to 2015
-  rep=1
-  bDebugMode=T
-  set.seed(1)
-  pop<-create.initial.population(id = rep,n = POP.SIZE)
-  # setting up person attributes
-  pop<-invisible(set.initial.hiv.status(pop ))
-  pop<-invisible(set.cvd.risk(pop))
-  pop$record.annual.stats()
-  pop$increaseYear()
-  # run
-  while(pop$params$CYNOW<= END.YEAR)
-  pop<-run.one.year(pop)
-
-  #saving population
-  # saveRDS(pop,file = "outputs/pop1",compress = F)
-}
-
-#######################################################
-# multiple reps:
-<<<<<<< HEAD
-# lapply(c(1:5),function(rep){
+# {
+#   # Create the population in year 2014; save the stats and move the clock to 2015
+#   rep=1
 #   bDebugMode=T
 #   set.seed(1)
-#   # create pop
-#   pop<-create.initial.population(id = rep, n = POP.SIZE)
+#   pop<-create.initial.population(id = rep,n = POP.SIZE)
 #   # setting up person attributes
 #   pop<-invisible(set.initial.hiv.status(pop ))
 #   pop<-invisible(set.cvd.risk(pop))
 #   pop$record.annual.stats()
-#   pop$increaseYear() #
-#   #run
+#   pop$increaseYear()
+#   # run
 #   while(pop$params$CYNOW<= END.YEAR)
-#     pop<-run.one.year(pop)
+#   pop<-run.one.year(pop)
+# 
 #   #saving population
-#   saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
-# })
-=======
+#   # saveRDS(pop,file = "outputs/pop1",compress = F)
+# }
+
+#######################################################
+# multiple reps:
 lapply(c(1:5),function(rep){
   bDebugMode=F
   set.seed(1)
@@ -74,66 +56,65 @@ lapply(c(1:5),function(rep){
   #saving population
   saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
 })
->>>>>>> 35753e213a21e94357dced1204a681c36f69d75e
-
+ 
 #######################################################
 # # Reading populations back into a simset object
-simset=list()
-lapply(c(1:5),function(rep){
-  pop<-readRDS(sprintf("outputs/pop%g",rep))
-  simset[[sprintf("pop%g",rep)]]<<-pop
-})
-simset
-
-#######################################################
-# PROFILING A SINGLE RUN
-library(profvis)
-profvis({
-  {
-    # Create the population in year 2014; save the stats and move the clock to 2015
-    bDebugMode=T
-    set.seed(1)
-    pop<-create.initial.population(id = 1,n = POP.SIZE)
-    # setting up person attributes
-    pop<-invisible(set.initial.hiv.status(pop ))
-    pop<-invisible(set.cvd.risk(pop))
-    pop$record.annual.stats()
-    pop$increaseYear()
-    # run
-    while(pop$params$CYNOW<= END.YEAR)
-      pop<-run.one.year(pop)
-    
-    #saving population
-    # saveRDS(pop,file = "outputs/pop1",compress = F)
-  }
-})
-#######################################################
-
-
-# pop$stats$n.births
-# pop$stats$n.births.non.hiv
-# pop$stats$n.births.hiv
-# # #
-# pop$stats$n.deaths.ageout
-# pop$stats$n.deaths.hiv
-# pop$stats$n.deaths.non.hiv
-# pop$stats$n.deaths.cvd
-# #  NCD incidence
-filter.5D.stats.by.field(pop$stats$n.diab.inc, keep.dimensions = c('year'))
-filter.5D.stats.by.field(pop$stats$n.hyp.inc, keep.dimensions = c('year'))
-filter.5D.stats.by.field(pop$stats$n.diab.hyp.inc, keep.dimensions = c('year'))
-# # HIV events
-filter.5D.stats.by.field(pop$stats$n.hiv.inc, keep.dimensions = c('year',"age"))
-filter.5D.stats.by.field(pop$stats$n.diab.hyp.inc, keep.dimensions = c('year',"sex"))
-filter.5D.stats.by.field(pop$stats$n.diab.inc, keep.dimensions = c('year',"age","sex"))
-filter.5D.stats.by.field(pop$stats$n.hyp.inc, keep.dimensions = c('year',"age","sex"))
+# simset=list()
+# lapply(c(1:5),function(rep){
+#   pop<-readRDS(sprintf("outputs/pop%g",rep))
+#   simset[[sprintf("pop%g",rep)]]<<-pop
+# })
+# simset
 # 
-filter.5D.stats.by.field(pop$stats$n.mi.inc, keep.dimensions = c('year'))
-filter.5D.stats.by.field(pop$stats$n.stroke.inc, keep.dimensions = c('year'))
+# #######################################################
+# # PROFILING A SINGLE RUN
+# library(profvis)
+# profvis({
+#   {
+#     # Create the population in year 2014; save the stats and move the clock to 2015
+#     bDebugMode=T
+#     set.seed(1)
+#     pop<-create.initial.population(id = 1,n = POP.SIZE)
+#     # setting up person attributes
+#     pop<-invisible(set.initial.hiv.status(pop ))
+#     pop<-invisible(set.cvd.risk(pop))
+#     pop$record.annual.stats()
+#     pop$increaseYear()
+#     # run
+#     while(pop$params$CYNOW<= END.YEAR)
+#       pop<-run.one.year(pop)
+#     
+#     #saving population
+#     # saveRDS(pop,file = "outputs/pop1",compress = F)
+#   }
+# })
+# #######################################################
 # 
-filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year'))
-filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year','hiv.status'))
-filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year','ncd.status'))
+# 
+# # pop$stats$n.births
+# # pop$stats$n.births.non.hiv
+# # pop$stats$n.births.hiv
+# # # #
+# # pop$stats$n.deaths.ageout
+# # pop$stats$n.deaths.hiv
+# # pop$stats$n.deaths.non.hiv
+# # pop$stats$n.deaths.cvd
+# # #  NCD incidence
+# filter.5D.stats.by.field(pop$stats$n.diab.inc, keep.dimensions = c('year'))
+# filter.5D.stats.by.field(pop$stats$n.hyp.inc, keep.dimensions = c('year'))
+# filter.5D.stats.by.field(pop$stats$n.diab.hyp.inc, keep.dimensions = c('year'))
+# # # HIV events
+# filter.5D.stats.by.field(pop$stats$n.hiv.inc, keep.dimensions = c('year',"age"))
+# filter.5D.stats.by.field(pop$stats$n.diab.hyp.inc, keep.dimensions = c('year',"sex"))
+# filter.5D.stats.by.field(pop$stats$n.diab.inc, keep.dimensions = c('year',"age","sex"))
+# filter.5D.stats.by.field(pop$stats$n.hyp.inc, keep.dimensions = c('year',"age","sex"))
+# # 
+# filter.5D.stats.by.field(pop$stats$n.mi.inc, keep.dimensions = c('year'))
+# filter.5D.stats.by.field(pop$stats$n.stroke.inc, keep.dimensions = c('year'))
+# # 
+# filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year'))
+# filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year','hiv.status'))
+# filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year','ncd.status'))
 
 # ####################################################################################
 # for(i in c(INITIAL.YEAR:END.YEAR)){
@@ -282,44 +263,44 @@ filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year','nc
 # dev.off()
 # }
 
-
-     
-# @MS:
-#' @step.dataset has been randomized, correct?
-
-
-#seems like lapply over the pop$member is the winner
-system.time(
-  invisible(sapply(pop$members,function(p){
-    p.probs = hiv.probs[,p$agegroup,p$sex]
-    if (p$hivState==HIV.NEG) p$bMarkedDead.hiv=T
-  })), gcFirst = TRUE)
-system.time(
-  invisible(lapply(pop$members,function(p){
-    p.probs = hiv.probs[,p$agegroup,p$sex]
-    if (p$hivState==HIV.NEG) p$bMarkedDead.hiv=T
-  })), gcFirst = TRUE)
-
-system.time(
-  invisible(lapply((1:length(pop$members)),function(x){
-    p=pop$members[[x]]
-    p.probs = hiv.probs[,p$agegroup,p$sex]
-    if (p$hivState==HIV.NEG) p$bMarkedDead.hiv=T
-  })), gcFirst = TRUE)
-system.time(
-  invisible(sapply((1:length(pop$members)),function(x){
-    p=pop$members[[x]]
-    p.probs = hiv.probs[,p$agegroup,p$sex]
-    if (p$hivState==HIV.NEG) p$bMarkedDead.hiv=T
-  })), gcFirst = TRUE)
-
-
-#@MS
-MP$annual.cvd.risk.by.age.sex=-((log(1- x/100 ))/10)
-#assuming geometric distribution of risk over time
-MP$monthly.cvd.risk.by.age.sex=(1-(1-MP$annual.cvd.risk.by.age.sex)^(1/12))
-# why using differnt approaches to convert risk?
-#why accessing previous agegroup?
+#' 
+#'      
+#' # @MS:
+#' #' @step.dataset has been randomized, correct?
+#' 
+#' 
+#' #seems like lapply over the pop$member is the winner
+#' system.time(
+#'   invisible(sapply(pop$members,function(p){
+#'     p.probs = hiv.probs[,p$agegroup,p$sex]
+#'     if (p$hivState==HIV.NEG) p$bMarkedDead.hiv=T
+#'   })), gcFirst = TRUE)
+#' system.time(
+#'   invisible(lapply(pop$members,function(p){
+#'     p.probs = hiv.probs[,p$agegroup,p$sex]
+#'     if (p$hivState==HIV.NEG) p$bMarkedDead.hiv=T
+#'   })), gcFirst = TRUE)
+#' 
+#' system.time(
+#'   invisible(lapply((1:length(pop$members)),function(x){
+#'     p=pop$members[[x]]
+#'     p.probs = hiv.probs[,p$agegroup,p$sex]
+#'     if (p$hivState==HIV.NEG) p$bMarkedDead.hiv=T
+#'   })), gcFirst = TRUE)
+#' system.time(
+#'   invisible(sapply((1:length(pop$members)),function(x){
+#'     p=pop$members[[x]]
+#'     p.probs = hiv.probs[,p$agegroup,p$sex]
+#'     if (p$hivState==HIV.NEG) p$bMarkedDead.hiv=T
+#'   })), gcFirst = TRUE)
+#' 
+#' 
+#' #@MS
+#' MP$annual.cvd.risk.by.age.sex=-((log(1- x/100 ))/10)
+#' #assuming geometric distribution of risk over time
+#' MP$monthly.cvd.risk.by.age.sex=(1-(1-MP$annual.cvd.risk.by.age.sex)^(1/12))
+#' # why using differnt approaches to convert risk?
+#' #why accessing previous agegroup?
 
 
 
