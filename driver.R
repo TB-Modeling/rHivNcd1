@@ -40,6 +40,7 @@ print("Sourcing Driver.R ... ")
 
 #######################################################
 # multiple reps:
+<<<<<<< HEAD
 # lapply(c(1:5),function(rep){
 #   bDebugMode=T
 #   set.seed(1)
@@ -56,15 +57,33 @@ print("Sourcing Driver.R ... ")
 #   #saving population
 #   saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
 # })
+=======
+lapply(c(1:5),function(rep){
+  bDebugMode=F
+  set.seed(1)
+  # create pop
+  pop<-create.initial.population(id = rep, n = POP.SIZE)
+  # setting up person attributes
+  pop<-invisible(set.initial.hiv.status(pop ))
+  pop<-invisible(set.cvd.risk(pop))
+  pop$record.annual.stats()
+  pop$increaseYear() #
+  #run
+  while(pop$params$CYNOW<= END.YEAR)
+    pop<-run.one.year(pop)
+  #saving population
+  saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
+})
+>>>>>>> 35753e213a21e94357dced1204a681c36f69d75e
 
 #######################################################
 # # Reading populations back into a simset object
-# simset=list()
-# lapply(c(1:4),function(rep){
-#   pop<-readRDS(sprintf("outputs/pop%g",rep))
-#   simset[[sprintf("pop%g",rep)]]<<-pop
-# })
-# simset
+simset=list()
+lapply(c(1:5),function(rep){
+  pop<-readRDS(sprintf("outputs/pop%g",rep))
+  simset[[sprintf("pop%g",rep)]]<<-pop
+})
+simset
 
 #######################################################
 # PROFILING A SINGLE RUN
@@ -89,21 +108,6 @@ profvis({
   }
 })
 #######################################################
-
-# @MS
-# add the mortality for those with recurrent event - DONE
-# add the choice between two CVD events - DONE (keeping the same for sex right now)
-# put all stats in a 5d format 
-#'@PK - see note in globaleEnvironment about needing 4D arrays for transitions
-# plotting functions for NCD model
-# set of standard plots 
-# meeting with Todd in a couple of weeks
-
-# @PK
-# work on saving a single replication to file for future simset (Todd)
-# profiling the code :: 100,000 / 1m
-# run the model on cloud
-
 
 
 # pop$stats$n.births

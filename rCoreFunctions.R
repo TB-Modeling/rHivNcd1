@@ -113,26 +113,26 @@ model.hiv.transitions<-function(pop,
     #1-ENGAGEMENT
     if (p$hivState == HIV.UNENG) {
       if (runif(1) < prob.eng[p$agegroup,p$sex]){
-        p$model.hiv.eng(pop$params$TNOW)
         pop$record.hiv.eng(p$agegroup,p$sex,p$hivState,p$ncdState)
+        p$model.hiv.eng(pop$params$TNOW)
       }
     }else{      #2- DISENGAGEMENT
       if (p$hivState== HIV.ENG) {
         if (runif(1)<prob.diseng[p$agegroup,p$sex]){
-          p$model.hiv.uneng(pop$params$TNOW)
           pop$record.hiv.uneng(p$agegroup,p$sex,p$hivState,p$ncdState)
+          p$model.hiv.uneng(pop$params$TNOW)
         }
       }else{        #3- DIAGNOSIS
         if (p$hivState== HIV.UNDIAG) {
           if (runif(1)<prob.diag[p$agegroup,p$sex]){
-            p$model.hiv.diag(pop$params$TNOW)
             pop$record.hiv.diag(p$agegroup,p$sex,p$hivState,p$ncdState)
+            p$model.hiv.diag(pop$params$TNOW)
           }
         }else{          #4- INCIDENCE
           if (p$hivState== HIV.NEG) {
             if (runif(1)<prob.inc[p$agegroup,p$sex]){
-              p$model.hiv.inc(pop$params$TNOW)
               pop$record.hiv.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
+              p$model.hiv.inc(pop$params$TNOW)
             }
           }else {
             browser()
@@ -153,11 +153,11 @@ model.cvd.events<-function(pop){
       if(p$sex==FEMALE) prob.mi=pop$params$prob.first.cvd.event.mi.female
       
       if(runif(1) < prob.mi){ # mi event
-        p$model.mi.event(pop$params$TNOW)
         pop$record.mi.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
+        p$model.mi.event(pop$params$TNOW)
       } else{ # stroke event
-        p$model.stroke.event(pop$params$TNOW)
         pop$record.stroke.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
+        p$model.stroke.event(pop$params$TNOW)
       }}}))
   pop
 }
@@ -198,20 +198,21 @@ remove.hiv.cvd.deaths<-function(pop,
     n.nonHiv.deaths=0
     lapply(1:length(pop$members),function(x){
       p=pop$members[[x]]
-      if (bMarkedDead.cvd==TRUE) {
+      if (p$bMarkedDead.cvd==TRUE) {
         n.cvd.deaths<<-n.cvd.deaths+1
         death.ids<<-c(death.ids,x)
       }else{
-        if (bMarkedDead.hiv ==TRUE) {
+        if (p$bMarkedDead.hiv ==TRUE) {
           n.hiv.deaths<<-n.hiv.deaths+1
           death.ids<<-c(death.ids,x)
         }else{
-          if (bMarkedDead.non.hiv ==TRUE) {
+          if (p$bMarkedDead.non.hiv ==TRUE) {
             n.nonHiv.deaths<<-n.nonHiv.deaths+1
             death.ids<<-c(death.ids,x)
           }}}})
     #removing dead people:
-    pop$members<-pop$members[-death.ids]
+    if(!is.null(death.ids))
+      pop$members<-pop$members[-death.ids]
     #stats
     pop$stats$n.deaths.cvd[pop$params$YNOW]=n.cvd.deaths
     pop$stats$n.deaths.hiv[pop$params$YNOW]=n.hiv.deaths
@@ -266,8 +267,8 @@ update.ncd.states<-function(pop){
   invisible(lapply(pop$members,function(p){
     if(p$ncdState==NCD.DIAB || p$ncdState==NCD.HYP){ 
       if(runif(1) < trans.prob.diab.hyp[p$agegroup,p$sex]){
-        p$model.diab.hyp.inc(pop$params$TNOW)
         pop$record.diab.hyp.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
+        p$model.diab.hyp.inc(pop$params$TNOW)
       }}}))
   
   # DIAB #######################################
@@ -297,8 +298,8 @@ update.ncd.states<-function(pop){
     p=pop$members[[x]] 
     if(p$ncdState==NCD.NEG){
       if(runif(1)<trans.prob.diab[p$agegroup,p$sex]){
-        p$model.diab.inc(pop$params$TNOW)
         pop$record.diab.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
+        p$model.diab.inc(pop$params$TNOW)
         }}}))
   
   # HYP #############################################################################
@@ -328,8 +329,8 @@ update.ncd.states<-function(pop){
     p=pop$members[[x]] 
     if(p$ncdState==NCD.NEG){
       if(runif(1)<trans.prob.diab[p$agegroup,p$sex]){
-      p$model.hyp.inc(pop$params$TNOW)
-      pop$record.hyp.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
+        pop$record.hyp.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
+        p$model.hyp.inc(pop$params$TNOW)
       }}}))
   pop
 }

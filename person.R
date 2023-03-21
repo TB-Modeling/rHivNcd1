@@ -63,38 +63,31 @@ PERSON<-R6Class("PERSON",
         model.hiv.inc=function(tnow){
           self$hivState=HIV.UNDIAG
           self$tHivInc=tnow
-          self$bMarkedHivInc=F
         },
         model.hiv.diag=function(tnow){
           self$hivState=HIV.UNENG
           self$tHivDiag=tnow
-          self$bMarkedHivDiag=F
         },
         model.hiv.eng=function(tnow){
           self$hivState=HIV.ENG
           self$tHivEng=tnow
-          self$bMarkedHivEng=F
         },
         model.hiv.uneng=function(tnow){
           self$hivState=HIV.UNENG
           self$tHivUneng=tnow
-          self$bMarkedHivUneng=FALSE
         },
         ### NCD incidence 
         model.diab.inc=function(tnow){
           self$ncdState=NCD.DIAB
           self$tDiabInc=tnow
-          self$bMarkedTransDiab=F
         },
         model.hyp.inc=function(tnow){
           self$ncdState=NCD.HYP
           self$tHypInc=tnow
-          self$bMarkedTransHyp=F
         },
        model.diab.hyp.inc=function(tnow){
             self$ncdState=NCD.DIAB_HYP
             self$tDiabHypInc=tnow
-            self$bMarkedTransDiabHyp=F
           },
        ### CVD events
        model.mi.event=function(tnow){
