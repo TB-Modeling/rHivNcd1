@@ -426,7 +426,7 @@ if(1==2){
         f.label=f
       
       jpeg(file=paste0("plots/ncd/",d,"_",f.label,".jpeg"), width = 2500,height = 1500,res=200)
-      simplot(ncd.simset,data.type=d,scale.population = F, facet.by = f, years=as.character(2016:2030))
+      simplot(ncd.simset,data.type=d,scale.population = F, facet.by = f)
       dev.off()    
     }
   }
