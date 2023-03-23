@@ -17,4 +17,4 @@ invisible(lapply(1:nrow(step.dataset),function(x){
                                                      p$sex,
                                                      p$ncdstate] +1
   }))
-write.csv(ncd.state.sizes,file = "ncd.state.sizes.2015.csv")
+write.csv(ncd.state.sizes,file = "data/ncd.state.sizes.2015.csv")
