@@ -103,7 +103,11 @@ generate.new.modelParameter<-function(){
   # dimnames(x)
   x[unlist(dimnames(q)[1]),unlist(dimnames(q)[2]),unlist(dimnames(q)[3])]<-q
   #applying values for 40-44 to younger agegroups and from 70-74 to older agegroups
-  for(i in 1:8) x[c(DIM.NAMES.AGE[i]),,]=x["40-44",,]
+  MP$cvd.risk.multiplier.15.to.24 = 1/10 # PLACEHOLDER 
+  MP$cvd.risk.multiplier.25.to.39 = 1/3 # PLACEHOLDER
+  for(i in 1:3) x[c(DIM.NAMES.AGE[i]),,]=0 # no risk below 15 
+  for(i in 4:5) x[c(DIM.NAMES.AGE[i]),,]=x["40-44",,]*MP$cvd.risk.multiplier.15.to.24 # 15-19, 20-24
+  for(i in 6:8) x[c(DIM.NAMES.AGE[i]),,]=x["40-44",,]*MP$cvd.risk.multiplier.25.to.39 # 25-29, 30-34, 35-39
   for(i in 16:17) x[c(DIM.NAMES.AGE[i]),,]=x["70-74",,]
   
   # annual risk computed from an exponential decay
