@@ -1,3 +1,4 @@
+# https://adv-r.hadley.nz/vectors-chap.html
 # https://gallery.rcpp.org/articles/handling-R6-objects-in-rcpp/
 
 #package is outdates, so instead we install from github
