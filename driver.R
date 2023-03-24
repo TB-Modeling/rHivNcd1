@@ -13,10 +13,10 @@
 # install.packages("ggplot2")
 # install.packages("R6")
 # install.packages("Rcpp")
-start_time <- Sys.time()
+
 
 library(R6)
-library(Rcpp)
+# library(Rcpp)
 library(ggplot2)
  
 print("Sourcing Driver.R ... ")
@@ -27,8 +27,8 @@ print("Sourcing Driver.R ... ")
   source("rHelperFunctions.R")
   source("rCoreFunctions.R")
   source("plots.R")
-  source("testing_ncd_prevalences.R")
-  source("ncdTestFunctions.R")
+  # source("testing_ncd_prevalences.R")
+  # source("ncdTestFunctions.R")
 }
 #######################################################
 # SINGLE RUN
@@ -54,8 +54,9 @@ print("Sourcing Driver.R ... ")
 #######################################################
 # multiple reps:
 lapply(c(1:5),function(rep){
+  start_time <- Sys.time()
   bDebugMode=F
-  set.seed(1)
+  # set.seed(1)
   # create pop
   pop<-create.initial.population(id = rep, n = POP.SIZE)
   # setting up person attributes
@@ -68,6 +69,11 @@ lapply(c(1:5),function(rep){
     pop<-run.one.year(pop)
   #saving population
   saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
+  #
+  end_time <- Sys.time()
+  session_time=end_time - start_time
+  txt=paste("Model ",rep," >> session time ",session_time)
+  write.table(x = txt,file = "outputs/out-sessionTime.txt",col.names = F,row.names = F,append = T)
 })
  
 #######################################################
