@@ -22,6 +22,9 @@ return.khm.data = function(khm.output, # object from khm model including all sta
   if(all(keep.dimensions!='year'))
     stop("Must keep year dimension")
   
+  if(data.type=="hiv.incidence")
+    data.type="incidence"
+  
   #full names of all dimensions
   full.dim.names = list(
     age = ages,
@@ -117,11 +120,14 @@ simplot = function(...,
   keep.dimensions = union('year',union(facet.by, split.by))
   
   ncd.data.types = list("population"="n.state.sizes",
-                        "incidence"="n.hiv.inc",
-                        "prevalence"="n.state.sizes",
+                        "hiv.incidence"="n.hiv.inc",
+                        "hiv.prevalence"="n.state.sizes",
                         "hyp.inc" = "n.hyp.inc",
                         "diab.inc" = "n.diab.inc",
                         "diab.hyp.inc" = "n.diab.hyp.inc",
+                        "hyp.prev" = "n.state.sizes",
+                        "diab.prev" = "n.state.sizes",
+                        "diab.hyp.prev" = "n.state.sizes",
                         "mi.inc" = "n.mi.inc",
                         "stroke.inc" = "n.stroke.inc")
   
@@ -146,7 +152,7 @@ simplot = function(...,
         if(is.null(ncd.data.type.x))
           stop("Haven't set up to pull this data type from ncd model")
         
-        if(data.type %in% c("population","incidence","mi.inc","stroke.inc","hyp.inc","diab.inc","diab.hyp.inc")){
+        if(data.type %in% c("population","hiv.incidence","mi.inc","stroke.inc","hyp.inc","diab.inc","diab.hyp.inc")){
           value = filter.5D.stats.by.field(sim[[j]]$stats[[ncd.data.type.x]], 
                                            years = years,
                                            ages = ages, 
@@ -154,7 +160,7 @@ simplot = function(...,
                                            hiv.status = hiv.status,
                                            ncd.status = ncd.status,
                                            keep.dimensions = keep.dimensions)
-        } else if(data.type=="prevalence"){
+        } else if(data.type=="hiv.prevalence"){
           hiv.status = DIM.NAMES.HIV[-1]
           # note that this overrides any hiv.status specified in the arguments
           value = filter.5D.stats.by.field(sim[[j]]$stats$n.state.sizes, 
@@ -165,7 +171,24 @@ simplot = function(...,
                                            # note that this overrides any hiv.status specified in the arguments
                                            ncd.status = ncd.status,
                                            keep.dimensions = keep.dimensions)
-        } else 
+        } else if(data.type %in% c("hyp.prev","diab.prev","diab.hyp.prev")){
+          if(data.type=="hyp.prev")
+            ncd.status = "NCD.HYP"
+          else if(data.type=="diab.prev")
+            ncd.status = "NCD.DIAB"
+          else if(data.type=="diab.hyp.prev")
+            ncd.status = "NCD.DIAB_HYP"
+          
+          # note that this overrides any ncd.status specified in the arguments
+          value = filter.5D.stats.by.field(sim[[j]]$stats$n.state.sizes, 
+                                           years = years,
+                                           ages = ages, 
+                                           sexes = sexes,
+                                           hiv.status = hiv.status,
+                                           ncd.status = ncd.status,
+                                           # note that this overrides any hiv.status specified in the arguments
+                                           keep.dimensions = keep.dimensions)
+        } else  
           stop("Haven't set up to pull this data type from ncd model")
         
         # For scale.population, divide by 2015 population size - have to do this separately for each combo of keep.dimensions
@@ -247,8 +270,8 @@ simplot = function(...,
       if(data.type %in% c("hyp.inc","diab.inc","diab.hyp.inc","mi.inc","stroke.inc"))
         stop("Can only plot NCD/CVD incidence for NCD model")
       
-      if(data.type=="incidence" & "hiv.status" %in% keep.dimensions)
-        stop("Can't facet incidence by hiv.status")
+      if(data.type=="hiv.incidence" & "hiv.status" %in% keep.dimensions)
+        stop("Can't facet hiv.incidence by hiv.status")
       
       # if this is a single simulation, need to make it a list with one element
       if(class(sim[[1]])=="array"){
@@ -256,7 +279,7 @@ simplot = function(...,
       }
       
       for(j in 1:length(sim)){
-        if(data.type=="prevalence"){
+        if(data.type=="hiv.prevalence"){
           hiv.status = DIM.NAMES.HIV[-1] # note that this overrides any hiv.status specified in the arguments
           value = return.khm.data(khm.output=sim[[j]], 
                                   data.type = "population",
@@ -371,59 +394,123 @@ simplot = function(...,
 if(1==2){
   khm.full = simset[[1]]$params$khm.full # HIV simset 
   ncd.simset = simset # NCD simset
+
+  ## PLOT TYPE 1 - HIV and NCD models (HIV data types only) ##
+  data.types = c("population","hiv.incidence","hiv.prevalence")
+  facet.by = list(NULL,"age","sex")
+  for(d in data.types){
+    for(f in facet.by){
+      
+      if(is.null(f))
+        f.label="total"
+      else
+        f.label=f
+      
+      jpeg(file=paste0("plots/hiv/",d,"_",f.label,".jpeg"), width = 2500,height = 1500,res=200)
+      simplot(khm.full,ncd.simset,data.type=d,scale.population = T, facet.by = f)
+      dev.off()    
+    }
+  }
   
-  # Plot type 1: population - SEE STANDARD PLOTS LIST (WORD DOC)
-  simplot(khm.full,ncd.simset,scale.population = T)
-  simplot(khm.full,ncd.simset,scale.population = T, facet.by = "age")
-  simplot(khm.full,ncd.simset,scale.population = T, facet.by = "sex")
-  simplot(khm.full,ncd.simset,scale.population = T, facet.by="hiv.status")
-  simplot(ncd.simset,facet.by="ncd.status")
+  ## PLOT TYPE 2 - NCD MODEL (NCD data types only) ##
+  data.types = c("diab.inc","diab.prev",
+                 "hyp.inc","hyp.prev",
+                 "diab.hyp.inc","diab.hyp.prev")
+  facet.by = list(NULL,"age","sex","hiv.status")
+  for(d in data.types){
+    for(f in facet.by){
+      
+      if(is.null(f))
+        f.label="total"
+      else
+        f.label=f
+      
+      jpeg(file=paste0("plots/ncd/",d,"_",f.label,".jpeg"), width = 2500,height = 1500,res=200)
+      simplot(ncd.simset,data.type=d,scale.population = F, facet.by = f)
+      dev.off()    
+    }
+  }
+
+                 
+  ## PLOT TYPE 3 - NCD MODEL (CVD events only) ##
+  data.types = c("mi.inc","stroke.inc")
+  facet.by = list(NULL,"age","sex","ncd.status","hiv.status")
+  for(d in data.types){
+    for(f in facet.by){
+      
+      if(is.null(f))
+        f.label="total"
+      else
+        f.label=f
+      
+      jpeg(file=paste0("plots/cvd/",d,"_",f.label,".jpeg"), width = 2500,height = 1500,res=200)
+      simplot(ncd.simset,data.type=d,scale.population = F, facet.by = f)
+      dev.off()    
+    }
+  }
   
-  # Plot type 2: HIV incidence
-  simplot(khm.full, ncd.simset, data.type = "incidence", scale.population = T)
-  simplot(khm.full, ncd.simset, data.type = "incidence", scale.population = T, facet.by = "age")
-  simplot(khm.full, ncd.simset, data.type = "incidence", scale.population = T, facet.by = "sex")
-  simplot(ncd.simset, data.type = "incidence")
-  simplot(ncd.simset, data.type = "incidence", facet.by = "ncd.status")
+  # Plot type 1: population - SEE STANDARD PLOTS LIST (WORD DOC) - Commented out means it's saved in the above for loops 
+  # simplot(khm.full,ncd.simset,data.type = "population",scale.population = T)
+  # simplot(khm.full,ncd.simset,data.type = "population",scale.population = T, facet.by = "age")
+  # simplot(khm.full,ncd.simset,data.type = "population",scale.population = T, facet.by = "sex")
+  simplot(khm.full,ncd.simset,data.type = "population",scale.population = T, facet.by="hiv.status")
+  
+  # Plot type 2: HIV hiv.incidence
+  # simplot(khm.full, ncd.simset, data.type = "hiv.incidence", scale.population = T)
+  # simplot(khm.full, ncd.simset, data.type = "hiv.incidence", scale.population = T, facet.by = "age")
+  # simplot(khm.full, ncd.simset, data.type = "hiv.incidence", scale.population = T, facet.by = "sex")
+  simplot(ncd.simset, data.type = "hiv.incidence")
+  simplot(ncd.simset, data.type = "hiv.incidence", facet.by = "ncd.status")
   
   # Plot type 3: HIV prevalence
-  simplot(khm.full, ncd.simset, data.type = "prevalence", scale.population = T, facet.by = "age")
-  simplot(khm.full, ncd.simset, data.type = "prevalence", scale.population = T, facet.by = "sex")
-  simplot(khm.full, ncd.simset, data.type = "prevalence", scale.population = T, facet.by = "hiv.status")
-  simplot(ncd.simset, data.type = "prevalence")
-  simplot(ncd.simset, data.type = "prevalence", facet.by = "ncd.status")
+  # simplot(khm.full, ncd.simset, data.type = "hiv.prevalence", scale.population = T, facet.by = "age")
+  # simplot(khm.full, ncd.simset, data.type = "hiv.prevalence", scale.population = T, facet.by = "sex")
+  # simplot(khm.full, ncd.simset, data.type = "hiv.prevalence", scale.population = T, facet.by = "hiv.status")
+  simplot(ncd.simset, data.type = "hiv.prevalence", facet.by = "age")
+  simplot(ncd.simset, data.type = "hiv.prevalence", facet.by = "ncd.status")
   
-  # Plot type 4: Diabetes incidence
-  simplot(ncd.simset, data.type = "diab.inc")
-  simplot(ncd.simset, data.type = "diab.inc", facet.by = "age")
-  simplot(ncd.simset, data.type = "diab.inc", facet.by = "sex")
-  simplot(ncd.simset, data.type = "diab.inc", facet.by = "hiv.status")
+  # Plot type 4: Diabetes incidence & prevalence
+  # simplot(ncd.simset, data.type = "diab.inc")
+  # simplot(ncd.simset, data.type = "diab.inc", facet.by = "age")
+  # simplot(ncd.simset, data.type = "diab.inc", facet.by = "sex")
+  # simplot(ncd.simset, data.type = "diab.inc", facet.by = "hiv.status")
+  # simplot(ncd.simset, data.type = "diab.prev")
+  # simplot(ncd.simset, data.type = "diab.prev", facet.by = "age")
+  # simplot(ncd.simset, data.type = "diab.prev", facet.by = "sex")
+  # simplot(ncd.simset, data.type = "diab.prev", facet.by = "hiv.status")
   
-  # Plot type 5: Hypertension incidence
-  simplot(ncd.simset, data.type = "hyp.inc")
-  simplot(ncd.simset, data.type = "hyp.inc", facet.by = "age")
-  simplot(ncd.simset, data.type = "hyp.inc", facet.by = "sex")
-  simplot(ncd.simset, data.type = "hyp.inc", facet.by = "hiv.status")
+  # Plot type 5: Hypertension incidence & prevalence
+  # simplot(ncd.simset, data.type = "hyp.inc")
+  # simplot(ncd.simset, data.type = "hyp.inc", facet.by = "age")
+  # simplot(ncd.simset, data.type = "hyp.inc", facet.by = "sex")
+  # simplot(ncd.simset, data.type = "hyp.inc", facet.by = "hiv.status")
+  # simplot(ncd.simset, data.type = "hyp.prev")
+  # simplot(ncd.simset, data.type = "hyp.prev", facet.by = "age")
+  # simplot(ncd.simset, data.type = "hyp.prev", facet.by = "sex")
+  # simplot(ncd.simset, data.type = "hyp.prev", facet.by = "hiv.status")
   
-  # Plot type 6: Diabetes + Hypertension incidence 
-  simplot(ncd.simset, data.type = "diab.hyp.inc")
-  simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "age")
-  simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "sex")
-  simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "hiv.status")
-  # simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "ncd.status")
+  # Plot type 6: Diabetes + Hypertension incidence & prevalence
+  # simplot(ncd.simset, data.type = "diab.hyp.inc")
+  # simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "age")
+  # simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "sex")
+  # simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "hiv.status")
+  # simplot(ncd.simset, data.type = "diab.hyp.prev")
+  # simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "age")
+  # simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "sex")
+  # simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "hiv.status")
   
   # Plot type 7: MI and stroke incidence 
-  simplot(ncd.simset, data.type = "mi.inc")
-  simplot(ncd.simset, data.type = "mi.inc", facet.by = "age")
-  simplot(ncd.simset, data.type = "mi.inc", facet.by = "sex")
-  simplot(ncd.simset, data.type = "mi.inc", facet.by = "ncd.status")
-  simplot(ncd.simset, data.type = "mi.inc", facet.by = "hiv.status")
-  simplot(ncd.simset, data.type = "stroke.inc")
-  simplot(ncd.simset, data.type = "stroke.inc", facet.by = "age")
-  simplot(ncd.simset, data.type = "stroke.inc", facet.by = "sex")
-  simplot(ncd.simset, data.type = "stroke.inc", facet.by = "ncd.status")
-  simplot(ncd.simset, data.type = "stroke.inc", facet.by = "ncd.status", scale.population = T)
-  simplot(ncd.simset, data.type = "stroke.inc", facet.by = "hiv.status")
+  # simplot(ncd.simset, data.type = "mi.inc")
+  # simplot(ncd.simset, data.type = "mi.inc", facet.by = "age")
+  # simplot(ncd.simset, data.type = "mi.inc", facet.by = "sex")
+  # simplot(ncd.simset, data.type = "mi.inc", facet.by = "ncd.status")
+  # simplot(ncd.simset, data.type = "mi.inc", facet.by = "hiv.status")
+  # simplot(ncd.simset, data.type = "stroke.inc")
+  # simplot(ncd.simset, data.type = "stroke.inc", facet.by = "age")
+  # simplot(ncd.simset, data.type = "stroke.inc", facet.by = "sex")
+  # simplot(ncd.simset, data.type = "stroke.inc", facet.by = "ncd.status")
+  # simplot(ncd.simset, data.type = "stroke.inc", facet.by = "ncd.status", scale.population = T)
+  # simplot(ncd.simset, data.type = "stroke.inc", facet.by = "hiv.status")
   
   # Plot type X: not yet completed 
   simplot(khm.full, data.type = "engagement") # need to make this a proportion 
@@ -435,10 +522,10 @@ if(1==2){
   # gives an error because we can't show CVD incidence for HIV model (this is correct)
   simplot(khm.full, ncd.simset, data.type = "mi.inc") 
   # gives an error because we can't facet by ncd.status for HIV model (this is correct)
-  simplot(khm.full, ncd.simset, data.type = "prevalence", facet.by = "ncd.status") 
+  simplot(khm.full, ncd.simset, data.type = "hiv.prevalence", facet.by = "ncd.status") 
   # facet incidence by HIV status - shouldn't work; but actually does work for NCD model...
-  simplot(khm.full, ncd.simset, data.type = "incidence", scale.population = T, facet.by = "hiv.status")
-  simplot(ncd.simset, data.type = "incidence", scale.population = T, facet.by = "hiv.status")
+  simplot(khm.full, ncd.simset, data.type = "hiv.incidence", scale.population = T, facet.by = "hiv.status")
+  simplot(ncd.simset, data.type = "hiv.incidence", scale.population = T, facet.by = "hiv.status")
   
 }
 

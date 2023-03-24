@@ -48,10 +48,12 @@ PERSON<-R6Class("PERSON",
           self$age<-age
           self$tborn<-tborn
           self$hivState<-hivState
-          self$ncdState<-ncdState
-          self$tDiabInc<-max(tDiabInc,tDiabHypInc)
-          self$tHypInc<-max(tHypInc,tDiabHypInc)
-          self$tDiabHypInc<-tDiabHypInc
+          if(age>=15){ # making the assumption that no NCD prevalence below age 15 - adding to assumptions document
+            self$ncdState<-ncdState  
+            self$tDiabInc<-max(tDiabInc,tDiabHypInc)
+            self$tHypInc<-max(tHypInc,tDiabHypInc)
+            self$tDiabHypInc<-tDiabHypInc
+          }
           },
         greet = function() {
           cat(paste0("Hello, my id is ", self$id,", age=",self$age,", sex=",self$sex," , hivState=",self$hivState,",ncdState=",self$ncdState, ".\n"))
