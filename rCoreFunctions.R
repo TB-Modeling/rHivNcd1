@@ -45,12 +45,12 @@ create.initial.population <- function( id=0,
   vtDiabInc= c(sim.pop$ncd%in%c(NCD.DIAB))*0
   vtHypInc= c(sim.pop$ncd%in%c(NCD.HYP))*0
   vtDiabHypInc= c(sim.pop$ncd%in%c(NCD.DIAB_HYP))*0
-  
-  memberList = (mapply(PERSON$new, 
+  tborn=pop$params$TNOW
+  memberList = (mapply(PERSON$new,
+                       tborn,
                        vIds,
                        vSexes,
                        vAges,
-                       pop$params$TNOW,
                        vHivState,
                        vNcdState,
                        vtDiabInc,
@@ -60,6 +60,7 @@ create.initial.population <- function( id=0,
   memberList = unlist(memberList)
   pop$members<-memberList
   
+
   pop$greet()
   
   pop
@@ -442,7 +443,12 @@ run.one.year<-function(pop){
       vIds = c((pop$params$LAST.PERSON.ID+1): (pop$params$LAST.PERSON.ID+n.births.non.hiv))
       pop$params$LAST.PERSON.ID=pop$params$LAST.PERSON.ID+n.births.non.hiv
       vSexes = sample(c(MALE,FEMALE),n.births.non.hiv,prob = c(.5,.5),replace = T) # still 50/50 male/female
-      memberListNew = (mapply(PERSON$new, vIds,vSexes,0,pop$params$TNOW,HIV.NEG,NCD.NEG)) #'@JP: do we need to delete pop1 and open memory?
+      memberListNew = (mapply(PERSON$new, pop$params$TNOW,
+                              vIds,
+                              vSexes,
+                              0,#age
+                              HIV.NEG,
+                              NCD.NEG)) #'@JP: do we need to delete pop1 and open memory?
       pop$addMembers(unlist(memberListNew))
       # record stats:
       pop$stats$n.births.non.hiv[pop$params$YNOW]=n.births.non.hiv
@@ -458,7 +464,12 @@ run.one.year<-function(pop){
       vIds = c((pop$params$LAST.PERSON.ID+1): (pop$params$LAST.PERSON.ID+n.births.hiv))
       pop$params$LAST.PERSON.ID=pop$params$LAST.PERSON.ID+n.births.hiv
       vSexes = sample(c(MALE,FEMALE),n.births.hiv,prob = c(.5,.5),replace = T)
-      memberListNew = (mapply(PERSON$new, vIds,vSexes,0,pop$params$TNOW,HIV.UNDIAG,NCD.NEG)) #'@JP: do we need to delete pop1 and open memory?
+      memberListNew = (mapply(PERSON$new,pop$params$TNOW, 
+                              vIds,
+                              vSexes,
+                              0,#age
+                              HIV.UNDIAG,
+                              NCD.NEG)) #'@JP: do we need to delete pop1 and open memory?
       pop$addMembers(memberListNew)
       # record stats:
       pop$stats$n.births.hiv[pop$params$YNOW]=n.births.hiv
