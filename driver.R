@@ -6,15 +6,19 @@
 #  Driver.R class
 #  
 #####################################
-list.of.packages <- c("ggplot2", "R6","Rcpp")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
+# list.of.packages <- c("ggplot2", "R6","Rcpp")
+# new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+# if(length(new.packages)) install.packages(new.packages)
+
+# install.packages("ggplot2")
+# install.packages("R6")
+# install.packages("Rcpp")
 
 
 library(R6)
-library(Rcpp)
+# library(Rcpp)
 library(ggplot2)
-
+ 
 print("Sourcing Driver.R ... ")
 {
   source("globalEnvironment.R")
@@ -23,8 +27,8 @@ print("Sourcing Driver.R ... ")
   source("rHelperFunctions.R")
   source("rCoreFunctions.R")
   source("plots.R")
-  source("testing_ncd_prevalences.R")
-  source("ncdTestFunctions.R")
+  # source("testing_ncd_prevalences.R")
+  # source("ncdTestFunctions.R")
 }
 #######################################################
 # SINGLE RUN
@@ -50,8 +54,9 @@ print("Sourcing Driver.R ... ")
 #######################################################
 # multiple reps:
 lapply(c(1:5),function(rep){
+  start_time <- Sys.time()
   bDebugMode=F
-  set.seed(1)
+  # set.seed(1)
   # create pop
   pop<-create.initial.population(id = rep, n = POP.SIZE)
   # setting up person attributes
@@ -64,6 +69,11 @@ lapply(c(1:5),function(rep){
     pop<-run.one.year(pop)
   #saving population
   saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
+  #
+  end_time <- Sys.time()
+  session_time=end_time - start_time
+  txt=paste("Model ",rep," >> session time ",session_time)
+  write.table(x = txt,file = "outputs/out-sessionTime.txt",col.names = F,row.names = F,append = T)
 })
  
 #######################################################
@@ -312,4 +322,7 @@ lapply(c(1:5),function(rep){
 #' #why accessing previous agegroup?
 
 
-
+end_time <- Sys.time()
+session_time=end_time - start_time
+print(paste("Session time=",session_time))
+write.table(x = session_time,file = "outputs/out-sessionTime",col.names = F,row.names = F)

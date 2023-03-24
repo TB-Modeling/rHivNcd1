@@ -42,18 +42,16 @@ PERSON<-R6Class("PERSON",
         
         ################################
         #define public functions here:
-        initialize=function(id=NA,sex=NA,age=NA,tborn=0,hivState=NA,ncdState=NA,tDiabInc=NA,tHypInc=NA,tDiabHypInc=NA){
+        initialize=function(tborn=0,id=NA,sex=NA,age=NA,hivState=NA,ncdState=NA,tDiabInc=NA,tHypInc=NA,tDiabHypInc=NA){
+          self$tborn<-tborn
           self$id<-id
           self$sex<-sex
           self$age<-age
-          self$tborn<-tborn
           self$hivState<-hivState
-          if(age>=15){ # making the assumption that no NCD prevalence below age 15 - adding to assumptions document
-            self$ncdState<-ncdState  
+          self$ncdState<-ncdState  
             self$tDiabInc<-max(tDiabInc,tDiabHypInc)
             self$tHypInc<-max(tHypInc,tDiabHypInc)
             self$tDiabHypInc<-tDiabHypInc
-          }
           },
         greet = function() {
           cat(paste0("Hello, my id is ", self$id,", age=",self$age,", sex=",self$sex," , hivState=",self$hivState,",ncdState=",self$ncdState, ".\n"))
