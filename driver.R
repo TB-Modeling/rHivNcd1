@@ -53,23 +53,20 @@ print("Sourcing Driver.R ... ")
 
 #######################################################
 # multiple reps:
+ 
 lapply(c(1:6),function(rep){
+ 
   start_time <- Sys.time()
   bDebugMode=F
-  # set.seed(1)
-  # create pop
-  pop<-create.initial.population(id = rep, n = POP.SIZE)
-  # setting up person attributes
-  pop<-invisible(set.initial.hiv.status(pop ))
-  pop<-invisible(set.cvd.risk(pop))
-  pop$record.annual.stats()
-  pop$increaseYear() #
-  #run
+  set.seed(rep)
+  # create pop; set up hiv/ncd states; records stats and increate year
+  pop<-initialize.simulation(id = rep, n = POP.SIZE)
+  #run sims
   while(pop$params$CYNOW<= END.YEAR)
     pop<-run.one.year(pop)
   #saving population
   saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
-  #
+  # saving time
   end_time <- Sys.time()
   session_time=end_time - start_time
   txt=paste("Model ",rep," >> session time ",session_time)
@@ -322,7 +319,7 @@ lapply(c(1:6),function(rep){
 #' #why accessing previous agegroup?
 
 
-end_time <- Sys.time()
-session_time=end_time - start_time
-print(paste("Session time=",session_time))
-write.table(x = session_time,file = "outputs/out-sessionTime",col.names = F,row.names = F)
+# end_time <- Sys.time()
+# session_time=end_time - start_time
+# print(paste("Session time=",session_time))
+# write.table(x = session_time,file = "outputs/out-sessionTime",col.names = F,row.names = F)

@@ -11,7 +11,7 @@ bPrint2=F  #printing events: incidence, deaths, newborns
 
 #creates the initial population
 print("Loading function create.initial.pop.list")
-create.initial.population <- function( id=0,
+initialize.simulation <- function( id=0,
                                        n=0 # number of people if not specified as in mc
 ){
   # 1- create an empty population
@@ -60,9 +60,13 @@ create.initial.population <- function( id=0,
   memberList = unlist(memberList)
   pop$members<-memberList
   
-
   pop$greet()
-  
+  #
+  pop<-invisible(set.initial.hiv.status(pop ))
+  pop<-invisible(set.cvd.risk(pop))
+  pop$record.annual.stats()
+  pop$increaseYear() 
+  #
   pop
 }
 
