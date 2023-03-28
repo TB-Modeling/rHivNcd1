@@ -34,7 +34,8 @@ print("Sourcing Driver.R ... ")
 # SINGLE RUN ON ROCKFISH
 {
   # Create the population in year 2014; save the stats and move the clock to 2015
-  rep=as.numeric(readline())
+  args = commandArgs(trailingOnly=TRUE)
+  rep=as.numeric(args[1])
   print(paste("replication ",rep,"starting..."))
     
   start_time <- Sys.time()

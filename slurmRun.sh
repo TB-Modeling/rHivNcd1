@@ -11,11 +11,12 @@
 #SBATCH --cpus-per-task=2
 #SBATCH --nodes=1
 #SBATCH --mem-per-cpu=4GB
-#SBATCH --output=outSlurm.out
-#SBATCH --error=outSlurm.err
+#SBATCH --array=2-10
+#SBATCH --output=outSlurm_%a.out
+#SBATCH --error=outSlurm_%a.err
 #SBATCH --mail-type=end
 #SBATCH --mail-user=pkasaie@jhu.edu
-#SBATCH --array=2-10
+
 
 module load r
 Rscript driver.R $SLURM_ARRAY_TASK_ID
