@@ -7,15 +7,15 @@
 
 #SBATCH --partition=defq
 #SBATCH --job-name=hivncd-slurm
-#SBATCH --time=04:00:0
-#SBATCH --cpus-per-task=8
+#SBATCH --time=05:00:0
+#SBATCH --cpus-per-task=2
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=6
 #SBATCH --mem-per-cpu=4GB
 #SBATCH --output=outSlurm.out
 #SBATCH --error=outSlurm.err
 #SBATCH --mail-type=end
 #SBATCH --mail-user=pkasaie@jhu.edu
+#SBATCH --array=2-10
 
 module load r
-Rscript driver.R
+Rscript driver.R $SLURM_ARRAY_TASK_ID
