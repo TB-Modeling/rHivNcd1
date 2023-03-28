@@ -362,8 +362,10 @@ run.one.year<-function(pop){
     n.pop = apply(khm$population[as.character(pop$params$CYNOW-1),,,],c(2:3),sum) # extract all population, sum over hiv states
     target.non.hiv.mort = khm$non.hiv.mortality[as.character(pop$params$CYNOW),,] # pull out current year; dimensions are year, age, sex
     prob.non.hiv.mort=target.non.hiv.mort/n.pop
-    if(sum(prob.non.hiv.mort>1)>1)
+    if(sum(prob.non.hiv.mort>1)>1){
+      browser()
       stop(paste("Error: probability of prob.non.hiv.mort >1 in year ",pop$params$CYNOW))
+      }
     prob.non.hiv.mort[prob.non.hiv.mort==Inf]<-0
     khm.prob.non.hiv.mort<-prob.non.hiv.mort/ANNUAL.TIMESTEPS
     
