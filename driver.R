@@ -31,6 +31,34 @@ print("Sourcing Driver.R ... ")
   # source("ncdTestFunctions.R")
 }
 #######################################################
+# SINGLE RUN ON ROCKFISH
+{
+  # Create the population in year 2014; save the stats and move the clock to 2015
+  # args = commandArgs(trailingOnly=TRUE)
+  # rep=as.numeric(args[1])
+  # print(paste("replication ",rep,"starting..."))
+    rep=3
+  start_time <- Sys.time()
+  bDebugMode=F
+  set.seed(rep)
+  
+  pop<-initialize.simulation(id = rep, n = POP.SIZE)
+  
+  while(pop$params$CYNOW<= END.YEAR)
+    pop<-run.one.year(pop)
+  
+  #saving population
+  saveRDS(pop,file = paste0("outputs/pop",rep),compress = F)
+  
+  # saving time
+    end_time <- Sys.time()
+    session_time=end_time - start_time
+    txt=paste("Rep ",rep," >> session time ",session_time)
+    write.table(x = txt,file = paste0("outputs/out-sessionTime",rep))
+}
+
+#######################################################
+#######################################################
 # SINGLE RUN
 # {
 #   # Create the population in year 2014; save the stats and move the clock to 2015
@@ -50,31 +78,27 @@ print("Sourcing Driver.R ... ")
 #   #saving population
 #   # saveRDS(pop,file = "outputs/pop1",compress = F)
 # }
-
 #######################################################
-# multiple reps:
-lapply(c(1:5),function(rep){
-  start_time <- Sys.time()
-  bDebugMode=F
-  # set.seed(1)
-  # create pop
-  pop<-create.initial.population(id = rep, n = POP.SIZE)
-  # setting up person attributes
-  pop<-invisible(set.initial.hiv.status(pop ))
-  pop<-invisible(set.cvd.risk(pop))
-  pop$record.annual.stats()
-  pop$increaseYear() #
-  #run
-  while(pop$params$CYNOW<= END.YEAR)
-    pop<-run.one.year(pop)
-  #saving population
-  saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
-  #
-  end_time <- Sys.time()
-  session_time=end_time - start_time
-  txt=paste("Model ",rep," >> session time ",session_time)
-  write.table(x = txt,file = "outputs/out-sessionTime.txt",col.names = F,row.names = F,append = T)
-})
+
+# MULTI REPS
+# lapply(c(1:6),function(rep){
+#  
+#   start_time <- Sys.time()
+#   bDebugMode=F
+#   set.seed(rep)
+#   # create pop; set up hiv/ncd states; records stats and increate year
+#   pop<-initialize.simulation(id = rep, n = POP.SIZE)
+#   #run sims
+#   while(pop$params$CYNOW<= END.YEAR)
+#     pop<-run.one.year(pop)
+#   #saving population
+#   saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
+#   # saving time
+#   end_time <- Sys.time()
+#   session_time=end_time - start_time
+#   txt=paste("Model ",rep," >> session time ",session_time)
+#   write.table(x = txt,file = "outputs/out-sessionTime.txt",col.names = F,row.names = F,append = T)
+# })
  
 #######################################################
 # # Reading populations back into a simset object
@@ -85,28 +109,7 @@ lapply(c(1:5),function(rep){
 # })
 # simset
 # 
-# #######################################################
-# # PROFILING A SINGLE RUN
-# library(profvis)
-# profvis({
-#   {
-#     # Create the population in year 2014; save the stats and move the clock to 2015
-#     bDebugMode=T
-#     set.seed(1)
-#     pop<-create.initial.population(id = 1,n = POP.SIZE)
-#     # setting up person attributes
-#     pop<-invisible(set.initial.hiv.status(pop ))
-#     pop<-invisible(set.cvd.risk(pop))
-#     pop$record.annual.stats()
-#     pop$increaseYear()
-#     # run
-#     while(pop$params$CYNOW<= END.YEAR)
-#       pop<-run.one.year(pop)
-#     
-#     #saving population
-#     # saveRDS(pop,file = "outputs/pop1",compress = F)
-#   }
-# })
+
 # #######################################################
 # 
 # 
@@ -322,7 +325,7 @@ lapply(c(1:5),function(rep){
 #' #why accessing previous agegroup?
 
 
-end_time <- Sys.time()
-session_time=end_time - start_time
-print(paste("Session time=",session_time))
-write.table(x = session_time,file = "outputs/out-sessionTime",col.names = F,row.names = F)
+# end_time <- Sys.time()
+# session_time=end_time - start_time
+# print(paste("Session time=",session_time))
+# write.table(x = session_time,file = "outputs/out-sessionTime",col.names = F,row.names = F)
