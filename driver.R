@@ -62,21 +62,21 @@ print("Sourcing Driver.R ... ")
 # SINGLE RUN
 # {
 #   # Create the population in year 2014; save the stats and move the clock to 2015
-#   rep=1
-#   bDebugMode=T
-#   set.seed(1)
-#   pop<-create.initial.population(id = rep,n = POP.SIZE)
-#   # setting up person attributes
-#   pop<-invisible(set.initial.hiv.status(pop ))
-#   pop<-invisible(set.cvd.risk(pop))
-#   pop$record.annual.stats()
-#   pop$increaseYear()
-#   # run
-#   while(pop$params$CYNOW<= END.YEAR)
-#   pop<-run.one.year(pop)
-# 
-#   #saving population
-#   # saveRDS(pop,file = "outputs/pop1",compress = F)
+  # rep=1
+  # bDebugMode=T
+  # set.seed(1)
+  # pop<-initialize.simulation(id = rep,n = POP.SIZE)
+  # # setting up person attributes
+  # pop<-invisible(set.initial.hiv.status(pop ))
+  # pop<-invisible(set.cvd.risk(pop))
+  # pop$record.annual.stats()
+  # pop$increaseYear()
+  # # run
+  # while(pop$params$CYNOW<= END.YEAR)
+  # pop<-run.one.year(pop)
+
+  #saving population
+  # saveRDS(pop,file = "outputs/pop1",compress = F)
 # }
 #######################################################
 
@@ -103,7 +103,7 @@ print("Sourcing Driver.R ... ")
 #######################################################
 # # Reading populations back into a simset object
 # simset=list()
-# lapply(c(1:5),function(rep){
+# lapply(c(1:6),function(rep){
 #   pop<-readRDS(sprintf("outputs/pop%g",rep))
 #   simset[[sprintf("pop%g",rep)]]<<-pop
 # })
