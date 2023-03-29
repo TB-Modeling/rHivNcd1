@@ -352,52 +352,64 @@ run.one.year<-function(pop){
     khm=pop$params$khm
     n.hiv.pos = apply(khm$population[as.character(pop$params$CYNOW-1),-1,,],c(2:3),sum) # extract all but hiv.negative, sum over hiv states
     target.hiv.mort = khm$hiv.mortality[as.character(pop$params$CYNOW),,] # pull out current year; dimensions are year, age, sex
-    prob.hiv.mort=target.hiv.mort/n.hiv.pos
+    n.hiv.pos.now = apply(khm$population[as.character(pop$params$CYNOW),-1,,],c(2:3),sum)
+    delta = n.hiv.pos.now - n.hiv.pos # change in pop (aging in - aging out - deaths + hiv incidence)
+    detla = delta + target.hiv.mort
+    
+    prob.hiv.mort=target.hiv.mort/(n.hiv.pos + delta) 
     if(sum(prob.hiv.mort>1)>1)
       stop(paste("Error: probability of prob.hiv.mort >1 in year ",pop$params$CYNOW))
     prob.hiv.mort[prob.hiv.mort==Inf]<-0
-    khm.prob.hiv.mort<-prob.hiv.mort/ANNUAL.TIMESTEPS
+    khm.prob.hiv.mort=(1-(1-prob.hiv.mort)^(1/12))
     
     ##Probability of non.HIV mortality (estimated via # events/ elig pop) --------
     n.pop = apply(khm$population[as.character(pop$params$CYNOW-1),,,],c(2:3),sum) # extract all population, sum over hiv states
     target.non.hiv.mort = khm$non.hiv.mortality[as.character(pop$params$CYNOW),,] # pull out current year; dimensions are year, age, sex
-    prob.non.hiv.mort=target.non.hiv.mort/n.pop
+    n.pop.now = apply(khm$population[as.character(pop$params$CYNOW),,,],c(2:3),sum)
+    delta = n.pop.now - n.pop # change in pop (aging in - aging out - deaths)
+    delta = delta + target.non.hiv.mort # add back in mortality 
+    
+    prob.non.hiv.mort=target.non.hiv.mort/(n.pop + delta) # denominator is now population as well as aging in - aging out 
     if(sum(prob.non.hiv.mort>1)>1){
       browser()
       stop(paste("Error: probability of prob.non.hiv.mort >1 in year ",pop$params$CYNOW))
       }
     prob.non.hiv.mort[prob.non.hiv.mort==Inf]<-0
-    khm.prob.non.hiv.mort<-prob.non.hiv.mort/ANNUAL.TIMESTEPS
+    khm.prob.non.hiv.mort=(1-(1-prob.non.hiv.mort)^(1/12))
     
     ##Probability of incidence (estimated via # events/ elig pop) --------
     n.hiv.neg = khm$population[as.character(pop$params$CYNOW-1),"HIV.NEG",,]
     target.inc = khm$incidence[as.character(pop$params$CYNOW),,] # pull out current year; dimensions are year, age, sex
-    prob.inc=target.inc/n.hiv.neg
+    n.hiv.neg.now = khm$population[as.character(pop$params$CYNOW),"HIV.NEG",,]
+    delta = n.hiv.neg.now - n.hiv.neg # change in hiv negative population (aging in - aging out - deaths - hiv incidence)
+    delta = delta + target.inc
+    
+    prob.inc=target.inc/(n.hiv.neg + delta)
     if(sum(prob.inc>1)>1)
       stop(paste("Error: probability of prob.inc >1 in year ",pop$params$CYNOW))
     prob.inc[prob.inc==Inf]<-0
-    khm.prob.hiv.inc<-prob.inc/ANNUAL.TIMESTEPS
+    khm.prob.hiv.inc=(1-(1-prob.inc)^(1/12))
     
     ##Probability of engagement (direct input to HIV model) --------
     prob.eng=khm$target.parameters$prob.eng[as.character(pop$params$CYNOW),,]
     if(sum(prob.eng>1)>1)     
       stop(paste("Error: probability of engagement >1 in year ",pop$params$CYNOW))
     prob.eng[prob.eng==Inf]<-0
-    khm.prob.hiv.eng<-prob.eng/ANNUAL.TIMESTEPS
+    khm.prob.hiv.eng=(1-(1-prob.eng)^(1/12))
     
     ##Probability of disengagement (direct input to HIV model) --------
     prob.diseng=khm$target.parameters$prob.diseng[as.character(pop$params$CYNOW),,]
     if(sum(prob.diseng>1)>1)     
       stop(paste("Error: probability of disengagement >1 in year ",pop$params$CYNOW))
     prob.diseng[prob.diseng==Inf]<-0
-    khm.prob.hiv.diseng<-prob.diseng/ANNUAL.TIMESTEPS
+    khm.prob.hiv.diseng=(1-(1-prob.diseng)^(1/12))
     
     ##Probability of diagnosis (direct input to HIV model) --------
     prob.diag = khm$target.parameters$prob.diag[as.character(pop$params$CYNOW),,]
     if(sum(prob.diag>1)>1)     
       stop(paste("Error: probability of prob.diag >1 in year ",pop$params$CYNOW))
     prob.diag[prob.diag==Inf]<-0
-    khm.prob.hiv.diag<-prob.diag/ANNUAL.TIMESTEPS
+    khm.prob.hiv.diag=(1-(1-prob.diag)^(1/12))
     
   }
   
