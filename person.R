@@ -109,20 +109,20 @@ PERSON<-R6Class("PERSON",
        ### return CVD mortality
        return.cvd.mortality = function(params){
          p.cvd.mortality = 0
-         
-         # First, evaluate if they have had at least one event 
-         if(self$nMi + self$nStroke > 0){ 
-           # Next, evaluate which event (stroke vs. MI) is more recent 
+
+         # First, evaluate if they have had at least one event
+         if(self$nMi + self$nStroke > 0){
+           # Next, evaluate which event (stroke vs. MI) is more recent
            ## STROKE MORE RECENT ##
-           if(self$tStrokeInc >= self$tMiInc){  
+           if(self$tStrokeInc >= self$tMiInc){
              p.months.since.stroke=params$TNOW-self$tStrokeInc+1
-             
-             # Next, evaluate if this is a first or recurrent event 
-             if(self$nMi + self$nStroke > 1) ## STROKE AS RECURRENT EVENT 
-               p.cvd.mortality=params$rec.stroke.monthly.mortality[min(p.months.since.stroke,60)] 
+
+             # Next, evaluate if this is a first or recurrent event
+             if(self$nMi + self$nStroke > 1) ## STROKE AS RECURRENT EVENT
+               p.cvd.mortality=params$rec.stroke.monthly.mortality[min(p.months.since.stroke,60)]
                else ## STROKE AS FIRST EVENT ##
                p.cvd.mortality=params$first.stroke.monthly.mortality[min(p.months.since.stroke,60)]
-              } else { 
+              } else {
              ## MI MORE RECENT ##
              p.months.since.mi=params$TNOW - self$tMiInc+1
              if(self$nMi + self$nStroke > 1)  ## MI AS RECURRENT EVENT ##
@@ -133,6 +133,7 @@ PERSON<-R6Class("PERSON",
          } # (If no events, don't need to return anything since we already set p.cvd.mortality to 0)
          p.cvd.mortality
        }
+ 
        
         #' @JP: we need to check this
         # #run a function when the object is garbage collected
