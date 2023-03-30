@@ -167,24 +167,17 @@ model.cvd.events<-function(pop){
   pop
 }
 
-# models the CVD deaths
-print("Loading function model.cvd.deaths")
-model.cvd.deaths = function(pop){
-  invisible(lapply(pop$members,function(p){
-    if(runif(1) < p$return.cvd.mortality(pop$params))
-      p$bMarkedDead.cvd=T
-  }))
-  pop
-}
-
 # removes the HIV & CVD deaths
 print("Loading function remove.hiv.cvd.deaths")
-remove.hiv.cvd.deaths<-function(pop,
+model.hiv.cvd.deaths<-function(pop,
                                 prob.hiv.mort,
                                 prob.non.hiv.mort){
   
-  #evaluate prob of hiv and non.hiv mortality for everyone who is not already marked dead
   invisible(lapply(pop$members,function(p){
+    #model CVD death
+    if(runif(1) < p$return.cvd.mortality(pop$params))
+      p$bMarkedDead.cvd=T
+    
     if (p$bMarkedDead.cvd==FALSE){
       # HIV MORTALITY
       if(p$hivState!=HIV.NEG){ # all HIV positive
@@ -430,9 +423,8 @@ run.one.year<-function(pop){
                                khm.prob.hiv.diag)
     # filter.stateSizes.by.field(pop$return.state.size.distribution(), years = "2015",keep.dimensions = c("year","hiv.status") )
     
-    # 3- modeling HIV and CVD deaths
-    pop<-model.cvd.deaths(pop)
-    pop<-remove.hiv.cvd.deaths( pop,
+    # 3- modeling & removing HIV and CVD deaths
+    pop<-model.hiv.cvd.deaths( pop,
                                 khm.prob.hiv.mort,
                                 khm.prob.non.hiv.mort)
     
