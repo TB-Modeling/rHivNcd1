@@ -7,16 +7,16 @@
 
 #SBATCH --partition=defq
 #SBATCH --job-name=hivncd-slurm
-#SBATCH --time=05:00:0
-#SBATCH --cpus-per-task=2
+#SBATCH --time=01:00:00
+#SBATCH --cpus-per-task=1
 #SBATCH --nodes=1
-#SBATCH --mem-per-cpu=4GB
-#SBATCH --array=1-10
-#SBATCH --output=outputs/outSlurm_%a.out
-#SBATCH --error=outputs/outSlurm_%a.err
+#SBATCH --ntasks-per-node=1 
+#SBATCH --output=outSlurm.out
+#SBATCH --error=outSlurm.err
 #SBATCH --mail-type=end
-#SBATCH --mail-user=pkasaie@jhu.edu
+#SBATCH --mail-user=pkasaie@jh.edu
+#SBATCH –array=1-10
 
-
+rm /home/pkasaie/source/hivncd/rHivNcd/outputs/*
 module load r
-Rscript driver.R $SLURM_ARRAY_TASK_ID
+Rscript driver.R

@@ -13,8 +13,9 @@
 library(R6)
 # library(Rcpp)
 library(ggplot2)
-library(data.table)
+# library(data.table)
 #######################################################
+#function to return elapse run time for the simulation
 hms_span <- function(start, end) {
   dsec <- as.numeric(difftime(end, start, unit = "secs"))
   hours <- floor(dsec / 3600)
@@ -27,16 +28,16 @@ hms_span <- function(start, end) {
 }
 
 
-
 #######################################################
 # # SINGLE RUN ON ROCKFISH
 {
   # Create the population in year 2014; save the stats and move the clock to 2015
   args = commandArgs(trailingOnly=TRUE)
   rep=as.numeric(args[1])
-  print(paste("replication ",rep,"starting..."))
+  # we need to set the seed first, then sample KHM models
   set.seed(rep)
-  
+  print(paste("replication ",rep,"starting..."))
+#
   print("Sourcing dependencies")
   {
     source("globalEnvironment.R")
@@ -46,15 +47,16 @@ hms_span <- function(start, end) {
     source("rCoreFunctions.R")
     source("plots.R")
   }
+  ####
   start_time <- Sys.time()
-  #
   pop<-initialize.simulation(id = rep, n = POP.SIZE)
 
   while(pop$params$CYNOW<= END.YEAR)
     pop<-run.one.year(pop)
   
   #saving population
-  saveRDS(pop,file = paste0("outputs/pop",rep),compress = F)
+  saveRDS(list(stats=pop$stats,
+               params=pop$params),file = paste0("outputs/popList-c",rep),compress = T)
   
   # saving time
   end_time <- Sys.time()
@@ -62,8 +64,6 @@ hms_span <- function(start, end) {
   write.table(session_time,file = paste0("outputs/out-sessionTime",rep),col.names = F,row.names = F)
 }
 
-
-hms_span(start_time,end_time)
 #######################################################
 #######################################################
 # SINGLE RUN
