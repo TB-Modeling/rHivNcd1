@@ -9,12 +9,12 @@ print("Sourcing GlobalEnvironment.R ... ")
 cat("Setting up global parameters .... \n")
 ANNUAL.TIMESTEPS=12 #how many timepsteps in a year?
 INITIAL.YEAR=2014
-END.YEAR=2016
+END.YEAR=2030
 #
 AGE.INTERVAL=5
 MIN.AGE=0
 MAX.AGE=85
-POP.SIZE=10000
+POP.SIZE=500000
 #
 FEMALE=1
 MALE=2
@@ -67,7 +67,9 @@ generate.new.modelParameter<-function(){
   load("data/hiv_simset.RData") #multiple runs from the HIV model
   MP$khm.full=khm # leaving full simset in here for plotting purposes
   class(MP$khm.full) = "khm_simulation_output"
-  khm = khm[[sample(1:length(khm),1)]]# randomly sample one hiv sim from the length of n.hiv.sims
+  x=sample(1:length(khm),1)
+  print(paste("KHM model ",x," was sampled"))
+  khm = khm[[x]]# randomly sample one hiv sim from the length of n.hiv.sims
   khm.hivPrev2015 = khm$population["2015",,,]
   MP$khm=khm
   MP$khm.hivPrev2015=khm.hivPrev2015

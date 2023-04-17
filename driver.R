@@ -10,40 +10,46 @@
 # new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 # if(length(new.packages)) install.packages(new.packages)
 
-# install.packages("ggplot2")
-# install.packages("R6")
-# install.packages("Rcpp")
-
-
 library(R6)
 # library(Rcpp)
 library(ggplot2)
- 
-print("Sourcing Driver.R ... ")
-{
-  source("globalEnvironment.R")
-  source("person.R")
-  source("population.R")
-  source("rHelperFunctions.R")
-  source("rCoreFunctions.R")
-  source("plots.R")
-  # source("testing_ncd_prevalences.R")
-  # source("ncdTestFunctions.R")
-}
+library(data.table)
 #######################################################
-# SINGLE RUN ON ROCKFISH
+hms_span <- function(start, end) {
+  dsec <- as.numeric(difftime(end, start, unit = "secs"))
+  hours <- floor(dsec / 3600)
+  minutes <- floor((dsec - 3600 * hours) / 60)
+  seconds <- dsec - 3600*hours - 60*minutes
+  paste0(
+    sapply(c(hours, minutes, seconds), function(x) {
+      formatC(x, width = 2, format = "d", flag = "0")
+    }), collapse = ":")
+}
+
+
+
+#######################################################
+# # SINGLE RUN ON ROCKFISH
 {
   # Create the population in year 2014; save the stats and move the clock to 2015
-  # args = commandArgs(trailingOnly=TRUE)
-  # rep=as.numeric(args[1])
-  # print(paste("replication ",rep,"starting..."))
-    rep=3
-  start_time <- Sys.time()
-  bDebugMode=F
+  args = commandArgs(trailingOnly=TRUE)
+  rep=as.numeric(args[1])
+  print(paste("replication ",rep,"starting..."))
   set.seed(rep)
   
+  print("Sourcing dependencies")
+  {
+    source("globalEnvironment.R")
+    source("person.R")
+    source("population.R")
+    source("rHelperFunctions.R")
+    source("rCoreFunctions.R")
+    source("plots.R")
+  }
+  start_time <- Sys.time()
+  #
   pop<-initialize.simulation(id = rep, n = POP.SIZE)
-  
+
   while(pop$params$CYNOW<= END.YEAR)
     pop<-run.one.year(pop)
   
@@ -51,32 +57,33 @@ print("Sourcing Driver.R ... ")
   saveRDS(pop,file = paste0("outputs/pop",rep),compress = F)
   
   # saving time
-    end_time <- Sys.time()
-    session_time=end_time - start_time
-    txt=paste("Rep ",rep," >> session time ",session_time)
-    write.table(x = txt,file = paste0("outputs/out-sessionTime",rep))
+  end_time <- Sys.time()
+  session_time=hms_span(start_time,end_time)
+  write.table(session_time,file = paste0("outputs/out-sessionTime",rep),col.names = F,row.names = F)
 }
 
+
+hms_span(start_time,end_time)
 #######################################################
 #######################################################
 # SINGLE RUN
 # {
 #   # Create the population in year 2014; save the stats and move the clock to 2015
-  # rep=1
-  # bDebugMode=T
-  # set.seed(1)
-  # pop<-initialize.simulation(id = rep,n = POP.SIZE)
-  # # setting up person attributes
-  # pop<-invisible(set.initial.hiv.status(pop ))
-  # pop<-invisible(set.cvd.risk(pop))
-  # pop$record.annual.stats()
-  # pop$increaseYear()
-  # # run
-  # while(pop$params$CYNOW<= END.YEAR)
-  # pop<-run.one.year(pop)
+# rep=1
+# bDebugMode=T
+# set.seed(1)
+# pop<-initialize.simulation(id = rep,n = POP.SIZE)
+# # setting up person attributes
+# pop<-invisible(set.initial.hiv.status(pop ))
+# pop<-invisible(set.cvd.risk(pop))
+# pop$record.annual.stats()
+# pop$increaseYear()
+# # run
+# while(pop$params$CYNOW<= END.YEAR)
+# pop<-run.one.year(pop)
 
-  #saving population
-  # saveRDS(pop,file = "outputs/pop1",compress = F)
+#saving population
+# saveRDS(pop,file = "outputs/pop1",compress = F)
 # }
 #######################################################
 
@@ -99,7 +106,7 @@ print("Sourcing Driver.R ... ")
 #   txt=paste("Model ",rep," >> session time ",session_time)
 #   write.table(x = txt,file = "outputs/out-sessionTime.txt",col.names = F,row.names = F,append = T)
 # })
- 
+
 #######################################################
 # # Reading populations back into a simset object
 # simset=list()
