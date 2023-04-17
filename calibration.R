@@ -1,14 +1,15 @@
 # # Reading populations back into a simset object
 
 #10 pops with a 500K persons
-getwd()
-setwd("Rockfish//")
+r_path="~/OneDrive - Johns Hopkins/HIV NCD modeling/MELISSA/Model/rHivNcd/"
+setwd(r_path)
+setwd("outputs/")
 
-simset=list()
-lapply(c(1:10),function(rep){
-  rep=1
-  pop<-readRDS(file = "pop1")
-  pop<-readRDS(file = sprintf("pop%g",rep))
-  simset[[sprintf("pop%g",rep)]]<<-pop
-})
-simset
+ncd.simset=list()
+invisible(lapply(c(1:10),function(rep){
+  pop<-readRDS(file = sprintf("popList-c%g",rep))
+  ncd.simset[[sprintf("pop%g",rep)]]<<-pop
+}))
+print(paste0("ncd.simset read with ",length(ncd.simset)," members"))
+
+setwd(r_path)

@@ -1,6 +1,5 @@
 # output folder
 outputs/
-plots/
 
 # History files
 .Rhistory
