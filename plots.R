@@ -105,7 +105,7 @@ return.khm.data = function(khm.output, # object from khm model including all sta
 }
 
 
-simplot = function(...,
+simplot = function(..., #'@MS: what are the allowable inputs here?
                    years = as.character(2015:2030),
                    data.type = c("population"),
                    scale.population = F,
@@ -134,18 +134,23 @@ simplot = function(...,
   df.sim = NULL
   
   for(i in 1:length(sims)){
-    sim = sims[[i]]
+    sim = sims[i]
     
     ##----------------------##
     ##----- NCD OUTPUT -----##
     ##----------------------##
   
     # if this is a single simulation, need to make it a list with one element
-    if("R6" %in% class(sim)){
-      sim = list(sim)   
-    }
+    # if("R6" %in% class(sim)){ #'@MS: we have removed the population from simset so this will need to change
+    #   sim = list(sim)   
+    # }
+    # if(length(sim[[1]])==2){ 
+    #   sim = list(sim)
+    # }
     
-    if("R6" %in% class(sim[[1]])){
+    # if("R6" %in% class(sim[[1]])){
+    if(names(sim)=="ncd.simset"){
+    sim=sims[[i]]
       for(j in 1:length(sim)){
       
         ncd.data.type.x = ncd.data.types[[data.type]]
@@ -392,8 +397,9 @@ simplot = function(...,
 
 
 if(1==2){
-  khm.full = simset[[1]]$params$khm.full # HIV simset 
-  ncd.simset = simset # NCD simset
+  # ncd.simset  # NCD simset
+  khm.simset = ncd.simset[[1]]$params$khm.full # HIV simset 
+
 
   ## PLOT TYPE 1 - HIV and NCD models (HIV data types only) ##
   data.types = c("population","hiv.incidence","hiv.prevalence")
@@ -407,7 +413,8 @@ if(1==2){
         f.label=f
       
       jpeg(file=paste0("plots/hiv/",d,"_",f.label,".jpeg"), width = 2500,height = 1500,res=200)
-      simplot(khm.full,ncd.simset,data.type=d,scale.population = T, facet.by = f)
+      simplot(list(ncd.simset=ncd.simset,
+                   khm.simset=khm.simset),data.type=d,scale.population = T, facet.by = f)
       dev.off()    
     }
   }
