@@ -26,7 +26,6 @@ POPULATION<-R6Class("POPULATION",
                             "It has ",length(self$params), " parameters.", 
                             "Sum of all stats is ", sum(unlist(self$stats)),"\n")
                       },
-                      
                       increaseYear=function(){
                         self$params$YNOW<-self$params$YNOW+1
                         self$params$CYNOW<-self$params$CYNOW+1
@@ -34,11 +33,9 @@ POPULATION<-R6Class("POPULATION",
                       increaseMonth=function(){
                         self$params$TNOW<-self$params$TNOW+1
                       },
-                      
                       addMembers=function(memberListNew=list()){
                         self$members<-c(self$members,memberListNew)
                       },
-                      
                       modelAging=function(){
                         invisible(lapply(self$members,function(p) {p$incAge}))
                       },
@@ -47,6 +44,7 @@ POPULATION<-R6Class("POPULATION",
                         self$members <- self$members[!vdead] #remove dead people
                         return(sum(vdead))
                       },
+                      ###
                       return.state.size.distribution=function(){
                         n=length(self$members)
                         state.sizes<-array(0,
@@ -62,7 +60,7 @@ POPULATION<-R6Class("POPULATION",
                                                                         p$ncdState,1] +1}))
                         state.sizes
                       },
-                      
+                      ###
                       record.annual.stats=function(){
                         ynow=self$params$YNOW
                         self$stats$pop.size[ynow] <-length(self$members) #population size
@@ -109,7 +107,48 @@ POPULATION<-R6Class("POPULATION",
                       record.stroke.inc=function(age,sex,hiv,ncd){
                         self$stats$n.stroke.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
                           self$stats$n.stroke.inc[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      },
+                      
+                      ############### INTERVENTION ##################
+                      # record HIV new diagnosis and treatment initiation through intervention
+                      record.hiv.diag.int=function(age,sex,hiv,ncd){
+                        self$stats$n.hiv.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.hiv.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      },
+                      record.hiv.trt.int=function(age,sex,hiv,ncd){
+                        self$stats$n.hiv.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.hiv.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      },
+                      
+                      
+                      #record NCD diagnosis through intevention
+                      record.diab.diag.int=function(age,sex,hiv,ncd){
+                        self$stats$n.diab.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.diab.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      },
+                      record.hyp.diag.int=function(age,sex,hiv,ncd){
+                        self$stats$n.hyp.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.hyp.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      },
+                      record.diab.hyp.diag.int=function(age,sex,hiv,ncd){
+                        self$stats$n.diab.hyp.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.diab.hyp.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      },
+                      
+                      #record NCD treatment initiation through intervention
+                      record.diab.trt.int=function(age,sex,hiv,ncd){
+                        self$stats$n.diab.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.diab.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      },
+                      record.hyp.trt.int=function(age,sex,hiv,ncd){
+                        self$stats$n.hyp.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.hyp.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      },
+                      record.diab.hyp.trt.int=function(age,sex,hiv,ncd){
+                        self$stats$n.diab.hyp.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.diab.hyp.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       }
+                      
                     )
                     
 )

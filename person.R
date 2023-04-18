@@ -16,29 +16,35 @@ PERSON<-R6Class("PERSON",
         tborn=NULL,
         age=NULL,
         sex=NULL,
-        #
+        # hiv state & times
         hivState=HIV.NEG,
         tHivInc=-1,
         tHivDiag=-1,
         tHivEng=-1,
         tHivUneng=-1,
-        #
+        # ncd state & times
         ncdState=NCD.NEG, 
         tDiabInc=-1,
         tHypInc=-1,
         tDiabHypInc=-1,
-        #
-        bMarkedDead.hiv=F,
-        bMarkedDead.non.hiv=F,
-        bMarkedDead.cvd=F,
-        bMarkedDead.ageout=F,
-        #
-        monthlyCvdRisk=NULL,
         
+        # ncd treatment times
+        tDiabTrt=-1,
+        tHypTrt=-1,
+        tDiabHypTrt=-1,
+        
+        # cvd events and times
+        monthlyCvdRisk=NULL,
         nMi=0,
         nStroke=0,
         tMiInc=-1,
         tStrokeInc=-1,
+        
+        # marked for death?
+        bMarkedDead.hiv=F,
+        bMarkedDead.non.hiv=F,
+        bMarkedDead.cvd=F,
+        bMarkedDead.ageout=F,
         
         ################################
         #define public functions here:
@@ -87,6 +93,7 @@ PERSON<-R6Class("PERSON",
             self$ncdState=NCD.DIAB_HYP
             self$tDiabHypInc=tnow
           },
+       
        ### CVD events
        model.mi.event=function(tnow){
          self$nMi=self$nMi+1
@@ -132,17 +139,24 @@ PERSON<-R6Class("PERSON",
            }
          } # (If no events, don't need to return anything since we already set p.cvd.mortality to 0)
          p.cvd.mortality
-       }
- 
-       
-        #' @JP: we need to check this
-        # #run a function when the object is garbage collected
-        # finalize = function() {
-        #   print("Finalizer has been called!")
-        # }
+       },
       
-        ),
+      ### INTERVENTION ###
+      # start ncd treatment
+      start.diab.trt=function(tnow){
+        self$ncdState=NCD.DIAB.TRT
+        self$tDiabTrt=tnow
+      },
+      start.hyp.trt=function(tnow){
+        self$ncdState=NCD.HYP.TRT
+        self$tHypTrt=tnow
+      },
+      start.diab.hyp.trt=function(tnow){
+        self$ncdState=NCD.DIAB_HYP.TRT
+        self$tDiabHypTrt=tnow
+      }
       
+      ),
       #Active fields are particularly useful in conjunction with private fields, 
       # because they make it possible to implement components that look like fields 
       # from the outside but provide additional checks.
