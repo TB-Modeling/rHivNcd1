@@ -6,10 +6,13 @@ setwd(r_path)
 setwd("outputs/")
 
 ncd.simset=list()
-invisible(lapply(c(1:10),function(rep){
+invisible(lapply(c(11:20),function(rep){
   pop<-readRDS(file = sprintf("popList-c%g",rep))
   ncd.simset[[sprintf("pop%g",rep)]]<<-pop
 }))
 print(paste0("ncd.simset read with ",length(ncd.simset)," members"))
+class(ncd.simset)="ncd_simulation_output"
 
 setwd(r_path)
+
+
