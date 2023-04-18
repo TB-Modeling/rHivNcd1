@@ -12,7 +12,7 @@ bPrint2=F  #printing events: incidence, deaths, newborns
 #creates the initial population
 print("Loading function create.initial.pop.list")
 initialize.simulation <- function( id=0,
-                                       n=0 # number of people if not specified as in mc
+                                   n=0 # number of people if not specified as in mc
 ){
   # 1- create an empty population
   pop<-POPULATION$new(id = id,
@@ -170,8 +170,8 @@ model.cvd.events<-function(pop){
 # removes the HIV & CVD deaths
 print("Loading function remove.hiv.cvd.deaths")
 model.hiv.cvd.deaths<-function(pop,
-                                prob.hiv.mort,
-                                prob.non.hiv.mort){
+                               prob.hiv.mort,
+                               prob.non.hiv.mort){
   
   invisible(lapply(pop$members,function(p){
     #model CVD death
@@ -298,7 +298,7 @@ update.ncd.states<-function(pop){
       if(runif(1)<trans.prob.diab[p$agegroup,p$sex]){
         pop$record.diab.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
         p$model.diab.inc(pop$params$TNOW)
-        }}}))
+      }}}))
   
   # HYP #############################################################################
   current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
@@ -333,6 +333,9 @@ update.ncd.states<-function(pop){
   pop
 }
 
+
+
+
 # model one simulated year (from Jan 1st to Dec 31st)
 print("Loading function model.annual.dynamics")
 run.one.year<-function(pop){ 
@@ -366,7 +369,7 @@ run.one.year<-function(pop){
     if(sum(prob.non.hiv.mort>1)>1){
       browser()
       stop(paste("Error: probability of prob.non.hiv.mort >1 in year ",pop$params$CYNOW))
-      }
+    }
     prob.non.hiv.mort[prob.non.hiv.mort==Inf]<-0
     khm.prob.non.hiv.mort=(1-(1-prob.non.hiv.mort)^(1/12))
     
@@ -425,8 +428,8 @@ run.one.year<-function(pop){
     
     # 3- modeling & removing HIV and CVD deaths
     pop<-model.hiv.cvd.deaths( pop,
-                                khm.prob.hiv.mort,
-                                khm.prob.non.hiv.mort)
+                               khm.prob.hiv.mort,
+                               khm.prob.non.hiv.mort)
     
     pop$increaseMonth()
     
@@ -503,7 +506,6 @@ run.one.year<-function(pop){
   
   ##############################################
   # END OF YEAR----
-  if (bPrint1) cat("Final pop size is ",length(pop$members),"\n")
   if (bPrint1) cat("End of year: ",pop$params$CYNOW," --------------------------- \n")
   
   # Record annual statatistics --------
@@ -520,4 +522,61 @@ run.one.year<-function(pop){
 
 
 
-
+# covering a certain percentage of the population or those that meet certain criteria,
+# screening for NCDs with 100% sensitivity/specificity and starting people on treatment with prob "pNcdTrtInitiation"
+# pNcdTrtInitiation represents a combination of factors related to acceptability, uptake, and adherence, 
+# represenitng the likelihood of starting and adhereing to ncd treatment
+# we are not modeling drop outs
+model.intervention<-function(pop){
+  pCoverage=1
+  pNcdTrtInitiation=1
+  pHivTrtInitiation=1
+  
+  #estiamte the number of people that will be screened
+  nToScreen= round(pCoverage * length(pop$members))
+  #choose a random set from the community
+  popIds=sample(size = nToScreen,x = length(pop$members),replace = F )
+  #loop
+  invisible(lapply(popIds,function(x){
+    p=pop$members[[x]]
+    # print(x)
+    tnow=pop$params$TNOW
+    # NCD screening and treatment
+    if(p$ncdState ==2){
+      pop$record.diab.diag.int(p$agegroup,p$sex,p$hivState,p$ncdState)
+      if(runif(1) < pNcdTrtInitiation){
+        pop$record.diab.trt.int(p$agegroup,p$sex,p$hivState,p$ncdState)
+        p$start.diab.trt(tnow)
+      }}
+    if(p$ncdState ==3){
+      pop$record.hyp.diag.int(p$agegroup,p$sex,p$hivState,p$ncdState)
+      if(runif(1) < pNcdTrtInitiation){
+        pop$record.hyp.trt.int(p$agegroup,p$sex,p$hivState,p$ncdState)
+        p$start.hyp.trt(tnow)
+      }}
+    if(p$ncdState ==4){
+      pop$record.diab.hyp.diag.int(p$agegroup,p$sex,p$hivState,p$ncdState)
+      if(runif(1) < pNcdTrtInitiation){
+        pop$record.diab.hyp.trt.int(p$agegroup,p$sex,p$hivState,p$ncdState)
+        p$start.diab.hyp.trt(tnow)
+      }}
+    
+    # HIV screening and engagement
+    if (p$hivState ==2){ #undiagnosed
+       pop$record.hiv.diag.int(p$agegroup,p$sex,p$hivState,p$ncdState) # record new diagnosis
+      # engagement?
+      if(runif(1) < pHivTrtInitiation){
+        pop$record.hiv.trt.int(p$agegroup,p$sex,p$hivState,p$ncdState)
+        p$model.hiv.eng(tnow)
+      } else {
+        p$model.hiv.uneng(tnow) 
+      }}
+    if (p$hivState ==3){ #unengaged
+      if(runif(1) < pHivTrtInitiation){
+        pop$record.hiv.trt.int(p$agegroup,p$sex,p$hivState,p$ncdState)
+        p$model.hiv.eng(tnow)
+      }}
+    
+  }))
+  pop
+}

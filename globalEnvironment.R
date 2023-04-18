@@ -8,13 +8,15 @@ print("Sourcing GlobalEnvironment.R ... ")
 # GLOBAL PARAMETERS ARE CONSTANT. THEY ARE VISIBLE TO ALL CLASSES AND FUNCTIONS AND DONT CHANGE
 cat("Setting up global parameters .... \n")
 ANNUAL.TIMESTEPS=12 #how many timepsteps in a year?
-INITIAL.YEAR=2014
-END.YEAR=2030
+INITIAL.YEAR=2014 #simulation starts
+INT.START.YEAR=2025 #intervention starts
+INT.END.YEAR=2030 #intervention ends
+END.YEAR=2040 #simulation ends
 #
 AGE.INTERVAL=5
 MIN.AGE=0
 MAX.AGE=85
-POP.SIZE=1000
+POP.SIZE=100
 #
 FEMALE=1
 MALE=2
@@ -27,7 +29,10 @@ HIV.ENG=4   #on trt & suppressed
 NCD.NEG=1 #no diabetes or hypertension
 NCD.DIAB=2 #diabetic
 NCD.HYP=3 #hypertensive
-NCD.DIAB_HYP=4 #both
+NCD.DIAB_HYP=4 #
+NCD.DIAB.TRT=5 #diabetic on treatment
+NCD.HYP.TRT=6 #hypertensive on treatment
+NCD.DIAB_HYP.TRT=7 #diab&hyp on treatment
 #
 DEATH.NATURAL=1
 DEATH.HIV=2
@@ -39,18 +44,18 @@ NCDTRT.DIAB=2
 NCDTRT.HYP=3
 NCDTRT.DIABHYP=4
 
-DIM.SEX=2
-DIM.AGE=17
-DIM.HIV=4
-DIM.NCD=4
-DIM.YEAR=END.YEAR-INITIAL.YEAR+1
-
 DIM.NAMES.SEX=c("FEMALE","MALE")
 DIM.NAMES.AGE=c("0-4","5-9","10-14","15-19", "20-24","25-29","30-34","35-39","40-44","45-49","50-54","55-59",
                 "60-64","65-69","70-74","75-79","80-85")
 DIM.NAMES.HIV=c("HIV.NEG","HIV.UNDIAG","HIV.UNENG", "HIV.ENG")
-DIM.NAMES.NCD=c("NCD.NEG","NCD.DIAB","NCD.HYP","NCD.DIAB_HYP")
+DIM.NAMES.NCD=c("NCD.NEG","NCD.DIAB","NCD.HYP","NCD.DIAB_HYP","NCD.DIAB.TRT","NCD.HYP.TRT","NCD.DIAB_HYP.TRT")
 DIM.NAMES.YEAR=c(INITIAL.YEAR:END.YEAR)
+
+DIM.SEX=length(DIM.NAMES.SEX)
+DIM.AGE=length(DIM.NAMES.AGE)
+DIM.HIV=length(DIM.NAMES.HIV)
+DIM.NCD=length(DIM.NAMES.NCD)
+DIM.YEAR=length(DIM.NAMES.YEAR)
 ################################################################################################################
 # MODEL PARAMETERS (MP) HOUSES ALL PARAMETERS THAT MAY BE CHANGED IN SENSITIVITY ANALYSIS. THEY'RE CREATED ONCE FOR EACH POPULATION
 cat("loading function generate.new.modelParameter ... \n")
@@ -73,7 +78,16 @@ generate.new.modelParameter<-function(){
   khm.hivPrev2015 = khm$population["2015",,,]
   MP$khm=khm
   MP$khm.hivPrev2015=khm.hivPrev2015
+  #
+  # Making sure the KHM timeline agrees with the NCD model:
+  if(!as.numeric(unlist(dimnames(khm$incidence)[1])[[1]])==INITIAL.YEAR)
+    stop("Error: KHM starting year is different from NCD model")
   
+  n=length(unlist(dimnames(khm$incidence)[1]))
+  if(as.numeric(unlist(dimnames(khm$incidence)[1])[[n]])< END.YEAR)
+    stop(paste0("Error: KHM END year (",as.numeric(unlist(dimnames(khm$incidence)[1])[[n]]),") is smaller than NCD model (",END.YEAR,")"))
+  
+    
   
   #2- load STEP dataset to generate the initial population by age, sex and ncd state
   step.dataset = read.csv("data/stepSimPop2015.csv")
@@ -138,7 +152,7 @@ generate.new.modelParameter<-function(){
   MP$rec.mi.monthly.mortality= mi.monthly.mortality * recur.mi.mortality.multiplier
   
   
-
+  
   
   
   
@@ -157,7 +171,7 @@ generate.new.stat<-function(){
   v1temp=rep(0,DIM.N,
              dim=DIM.N,
              dimnames = list(year=DIM.NAMES.N))
- 
+  
   
   #5D
   v5temp=array(rep(0,DIM.AGE*DIM.SEX*DIM.HIV*DIM.NCD*DIM.N),  
@@ -187,18 +201,40 @@ generate.new.stat<-function(){
     #'@PK - below 4D arrays inherently have to be 4D (i.e., don't have an HIV dimension for HIV transitions; same for NCD)
     
     #5D arrays [age, sex, hiv, ncd, year]
+    # counting events modeled (incidence, getting diagnosed, etc)
     n.hiv.inc=v5temp, 
     n.hiv.diag=v5temp, 
     n.hiv.eng=v5temp, 
     n.hiv.uneng=v5temp, 
     
+    # ncd incidence
     n.diab.hyp.inc=v5temp,
     n.diab.inc=v5temp,
     n.hyp.inc=v5temp,
+    
+    #cvd incidence
     n.mi.inc=v5temp,
     n.stroke.inc=v5temp,
     
-        n.state.sizes=v5temp
+    ########### intervention stats ##########
+    # hiv additional diagnosis
+    n.hiv.diag.int=v5temp,
+    # hiv additional treatment
+    n.hiv.trt.int=v5temp,
+    
+    # ncd new diagnosis
+    n.diab.diag.int=v5temp,
+    n.hyp.diag.int=v5temp,
+    n.diab.hyp.diag.int=v5temp,
+    
+    # ncd treatment initiation
+    n.diab.trt.int=v5temp,
+    n.hyp..trt.int=v5temp,
+    n.diab.hyp..trt.int=v5temp,
+    
+    
+    ## STATE SIZES ##
+    n.state.sizes=v5temp
   )
   return(stats)
 }
