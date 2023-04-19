@@ -522,7 +522,7 @@ if(1==2){
   # Plot type X: not yet completed 
   simplot(khm.simset, data.type = "engagement") # need to make this a proportion 
   simplot(khm.simset, data.type = "suppression") # need to make this a proportion 
-  simplot(khm.simset, data.type = "hiv.mortality") 
+  simplot(khm.simset, data.type = "hiv.mortality", facet.by = "age") 
   
   
   # Testing that error messages work correctly
