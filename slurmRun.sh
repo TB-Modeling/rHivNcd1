@@ -12,8 +12,8 @@
 #SBATCH --nodes=1
 #SBATCH --mem-per-cpu=4GB
 #SBATCH --array=1-10
-#SBATCH --output=outputs/new/outSlurm_%a.out
-#SBATCH --error=outputs/new/outSlurm_%a.err
+#SBATCH --output=outputs/outSlurm_%a.out
+#SBATCH --error=outputs/outSlurm_%a.err
 #SBATCH --mail-type=end
 #SBATCH --mail-user=pkasaie@jhu.edu
 

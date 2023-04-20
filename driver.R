@@ -30,78 +30,78 @@ hms_span <- function(start, end) {
 
 #######################################################
 # # SINGLE RUN ON ROCKFISH
-# {
-#   # Create the population in year 2014; save the stats and move the clock to 2015
-#   # args = commandArgs(trailingOnly=TRUE)
-#   # rep=as.numeric(args[1])
-#   # we need to set the seed first, then sample KHM models
-#   set.seed(rep)
-#   print(paste("replication ",rep,"starting..."))
-#   #
-#   print("Sourcing dependencies")
-#   {
-#     source("globalEnvironment.R")
-#     source("person.R")
-#     source("population.R")
-#     source("rHelperFunctions.R")
-#     source("rCoreFunctions.R")
-#     source("plots.R")
-#   }
-#   ####
-#   start_time <- Sys.time()
-#   pop<-initialize.simulation(id = rep, n = POP.SIZE)
-#   
-#   while(pop$params$CYNOW<= END.YEAR)
-#     pop<-run.one.year(pop)
-#   
-#   #saving population
-#   saveRDS(list(stats=pop$stats,
-#                params=pop$params),file = paste0("outputs/popList-c",rep),compress = T)
-#   
-#   # saving time
-#   end_time <- Sys.time()
-#   session_time=hms_span(start_time,end_time)
-#   write.table(session_time,file = paste0("outputs/out-sessionTime",rep),col.names = F,row.names = F)
-# }
+{
+  # Create the population in year 2014; save the stats and move the clock to 2015
+  args = commandArgs(trailingOnly=TRUE)
+  rep=as.numeric(args[1])
+  # we need to set the seed first, then sample KHM models
+  set.seed(rep)
+  print(paste("replication ",rep,"starting..."))
+  #
+  print("Sourcing dependencies")
+  {
+    source("globalEnvironment.R")
+    source("person.R")
+    source("population.R")
+    source("rHelperFunctions.R")
+    source("rCoreFunctions.R")
+    source("plots.R")
+  }
+  ####
+  start_time <- Sys.time()
+  pop<-initialize.simulation(id = rep, n = POP.SIZE)
+
+  while(pop$params$CYNOW<= END.YEAR)
+    pop<-run.one.year(pop)
+
+  #saving population
+  saveRDS(list(stats=pop$stats,
+               params=pop$params),file = paste0("outputs/popList-c",rep),compress = T)
+
+  # saving time
+  end_time <- Sys.time()
+  session_time=hms_span(start_time,end_time)
+  write.table(session_time,file = paste0("outputs/out-sessionTime",rep),col.names = F,row.names = F)
+}
 
 #######################################################
 #######################################################
 # SINGLE RUN WITH INTERVENTION
-{
-  source("globalEnvironment.R")
-  source("person.R")
-  source("population.R")
-  source("rHelperFunctions.R")
-  source("rCoreFunctions.R")
-  source("plots.R")
-  # Create the population in year 2014; save the stats and move the clock to 2015
-  rep=1
-  bDebugMode=F
-  set.seed(1)
-  pop<-initialize.simulation(id = rep,n = POP.SIZE)
-  # setting up person attributes
-  pop<-invisible(set.initial.hiv.status(pop ))
-  pop<-invisible(set.cvd.risk(pop))
-  pop$record.annual.stats()
-  pop$increaseYear()
-  
-  # pre-intervention
-  while(pop$params$CYNOW< INT.START.YEAR)
-    pop<-run.one.year(pop)
-  
-  # model intervention
-  while(pop$params$CYNOW<= INT.END.YEAR){
-    pop<-model.intervention(pop)
-    pop<-run.one.year(pop)
-    }
-  # post-intervention
-  while(pop$params$CYNOW<= END.YEAR)
-    pop<-run.one.year(pop)
-  
-  #saving population
-  # saveRDS(pop,file = "outputs/pop1",compress = F)
-}
-#######################################################
+# {
+#   source("globalEnvironment.R")
+#   source("person.R")
+#   source("population.R")
+#   source("rHelperFunctions.R")
+#   source("rCoreFunctions.R")
+#   source("plots.R")
+#   # Create the population in year 2014; save the stats and move the clock to 2015
+#   rep=1
+#   bDebugMode=F
+#   set.seed(1)
+#   pop<-initialize.simulation(id = rep,n = POP.SIZE)
+#   # setting up person attributes
+#   pop<-invisible(set.initial.hiv.status(pop ))
+#   pop<-invisible(set.cvd.risk(pop))
+#   pop$record.annual.stats()
+#   pop$increaseYear()
+#   
+#   # pre-intervention
+#   while(pop$params$CYNOW< INT.START.YEAR)
+#     pop<-run.one.year(pop)
+#   
+#   # model intervention
+#   while(pop$params$CYNOW<= INT.END.YEAR){
+#     pop<-model.intervention(pop)
+#     pop<-run.one.year(pop)
+#     }
+#   # post-intervention
+#   while(pop$params$CYNOW<= END.YEAR)
+#     pop<-run.one.year(pop)
+#   
+#   #saving population
+#   # saveRDS(pop,file = "outputs/pop1",compress = F)
+# }
+# #######################################################
 
 # MULTI REPS
 # lapply(c(1:6),function(rep){
