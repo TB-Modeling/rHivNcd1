@@ -4,7 +4,7 @@
 step.dataset$agegroup[step.dataset$agegroup<1]<-1
 step.dataset$agegroup[step.dataset$agegroup>DIM.AGE]<-DIM.AGE
 #add ncd state
-step.dataset$ncdstate=step.dataset$hypertension+2*step.dataset$diabetes+1
+step.dataset$ncdstate=step.dataset$diabetes+2*step.dataset$hypertension+1
 #loop through and count the state sizes
 ncd.state.sizes<-array(0,
                        dim=c(DIM.AGE,DIM.SEX,DIM.NCD),
