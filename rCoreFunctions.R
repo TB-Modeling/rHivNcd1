@@ -63,7 +63,7 @@ initialize.simulation <- function( id=0,
   pop$greet()
   #
   pop<-invisible(set.initial.hiv.status(pop ))
-  pop<-invisible(update.ncd.states(pop)) #'@MS: adding this here to test
+  # pop<-invisible(update.ncd.states(pop)) #'@MS: adding this here to test
   pop<-invisible(set.cvd.risk(pop))
   pop$record.annual.stats()
   pop$increaseYear() 
@@ -249,6 +249,7 @@ update.ncd.states<-function(pop){
   # DIFFERENCE in prevalence of NCDs
   diff.props =  pop$params$target.ncd.props-current.ncd.props
   
+ 
   # ADDITIONAL Transitions required to reach the target proportions in our current population:
   trans.freq=diff.props
   invisible(lapply(1:DIM.AGE, function(ag){
