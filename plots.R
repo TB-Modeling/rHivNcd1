@@ -10,7 +10,7 @@ print("Sourcing Plot.R ... ")
 # Function to extract data from HIV model (khm) output object - either a simset or a single sim (for now, if it's a simset, take only one sim)
 # Specify the khm.output object, what ages/sexes/hiv statuses/years to include, and then what dimensions to report by 
 return.khm.data = function(khm.output, # object from khm model including all state sizes for all years
-                           data.type,
+                           data.type,  
                            ages = DIM.NAMES.AGE, # ages to return
                            sexes = DIM.NAMES.SEX, # sexes to return 
                            hiv.status = DIM.NAMES.HIV, # hiv status to return
@@ -107,8 +107,11 @@ return.khm.data = function(khm.output, # object from khm model including all sta
 
 simplot = function(..., # can pass any combination of single simulations or full simsets from the HIV or NCD model 
                    years = as.character(2015:2030),
-                   data.type = c("population"),
+                   data.type = c("population"), 
+                   # population, hiv.incidence, hiv.prevalence, hyp.inc, diab.inc, diab.hyp.inc, hyp.prev, diab.prev, diab.hyp.prev, mi.inc, stroke.inc
                    scale.population = F,
+                   view.as.rate = F,
+                   per.X.population = 10000,
                    facet.by = NULL,
                    split.by = NULL,
                    ages = DIM.NAMES.AGE, 
@@ -131,6 +134,9 @@ simplot = function(..., # can pass any combination of single simulations or full
                         "diab.hyp.prev" = "n.state.sizes",
                         "mi.inc" = "n.mi.inc",
                         "stroke.inc" = "n.stroke.inc")
+  
+  if(scale.population & view.as.rate)
+    stop("can't choose both scale.population (scaled to 2015 value) and view.as.rate (per X pop) - must select one")
   
   df.sim = NULL
   
@@ -187,7 +193,7 @@ simplot = function(..., # can pass any combination of single simulations or full
                                            sexes = sexes,
                                            hiv.status = hiv.status,
                                            ncd.status = ncd.status,
-                                           # note that this overrides any hiv.status specified in the arguments
+                                           # note that this overrides any ncd.status specified in the arguments
                                            keep.dimensions = keep.dimensions)
         } else  
           stop("Haven't set up to pull this data type from ncd model")
@@ -247,6 +253,20 @@ simplot = function(..., # can pass any combination of single simulations or full
               dimnames(value) = dim.names
             } else stop("Need to add these dimensions")
           }
+        }
+        
+        if(view.as.rate){
+          population = filter.5D.stats.by.field(sim[[j]]$stats$n.state.sizes, 
+                                                years = years,
+                                                ages = ages, 
+                                                sexes = sexes,
+                                                hiv.status = hiv.status,
+                                                ncd.status = DIM.NAMES.NCD,
+                                                keep.dimensions = keep.dimensions)
+          
+          value = value/population
+          value = value*per.X.population # set in arguments (right now set to 10,000)
+          
         }
         
         # set up a dataframe with columns: year, value, sim id, data.type 
@@ -347,6 +367,19 @@ simplot = function(..., # can pass any combination of single simulations or full
           }
         }
         
+        if(view.as.rate){
+          population = return.khm.data(khm.output=sim[[j]], 
+                                       data.type = "population",
+                                       ages = ages, 
+                                       sexes = sexes,
+                                       hiv.status = hiv.status,
+                                       years=years, 
+                                       keep.dimensions = keep.dimensions)
+          
+          value = value/population
+          value = value*per.X.population # set in arguments (right now set to 10,000)
+          
+        }
         
         # set up a dataframe with columns: year, value, sim id, data.type 
         one.df = reshape2::melt(value) 
@@ -369,20 +402,30 @@ simplot = function(..., # can pass any combination of single simulations or full
     df.sim$group.id = paste0(df.sim$group.id,", ",s,"=",df.sim[,s])
   }
   
-  # setting up facet.by
+  # sub title 
+  sub.title.label = NULL
+  if(scale.population)
+    sub.title.label = "scaled to 2015 value"  
+  if(view.as.rate)
+    sub.title.label = paste0("per ",per.X.population," population")
   
+  # setting up facet.by
   if(length(facet.by)>0){
     facet_string = paste0("~",paste0(facet.by,collapse = '+'))
     facet_formula = as.formula(facet_string)
     plot = ggplot() + 
       geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id)) +
       facet_wrap(facet_formula, scales = "free_y") + 
-      labs(title = paste0(data.type))+
+      labs(title = paste0(data.type),
+           subtitle = paste0(sub.title.label)
+           )+
       ylim(0,NA)
   } else{
     plot = ggplot() + 
       geom_line(data = df.sim, aes(x = year, y = value, color = sim.id, group = group.id)) +
-      labs(title = paste0(data.type))+
+      labs(title = paste0(data.type),
+           subtitle = paste0(sub.title.label)
+      )+
       ylim(0,NA)
   }
   
@@ -456,11 +499,14 @@ if(1==2){
 
 if(1==2){
   
+  ncd.simset = simset
+  khm.simset = ncd.simset[[1]]$params$khm.full # HIV simset 
+  
   # Plot type 1: population - SEE STANDARD PLOTS LIST (WORD DOC) - Commented out means it's saved in the above for loops 
   # simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T)
   # simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "age")
   # simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "sex")
-  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by="hiv.status")
+  simplot(ncd.simset,data.type = "population",scale.population = F, facet.by="age")
   
   # Plot type 2: HIV hiv.incidence
   # simplot(khm.simset, ncd.simset, data.type = "hiv.incidence", scale.population = T)
