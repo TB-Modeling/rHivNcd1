@@ -64,7 +64,6 @@ initialize.simulation <- function( id=0,
   pop$greet()
   #
   pop<-invisible(set.initial.hiv.status(pop ))
-  # pop<-invisible(update.ncd.states(pop)) #'@MS: adding this here to test
   pop<-invisible(set.cvd.risk(pop))
   pop$record.annual.stats()
   pop$increaseYear() 

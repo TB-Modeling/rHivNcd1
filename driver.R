@@ -36,7 +36,7 @@ print("Sourcing dependencies")
   source("rCoreFunctions.R")
   source("plots.R")
 }
-#######################################################
+# #######################################################
 # # SINGLE RUN ON ROCKFISH
 # {
   # Create the population in year 2014; save the stats and move the clock to 2015
@@ -72,21 +72,19 @@ print("Sourcing dependencies")
 #   bDebugMode=F
 #   set.seed(1)
 #   pop<-initialize.simulation(id = rep,n = POP.SIZE)
-#   
-#   filter.5D.stats.by.field(pop$stats$n.state.sizes,ncd.status = ,years = as.character("2014"),keep.dimensions = c("year","age","sex"))
-#   filter.5D.stats.by.field(pop$stats$n.state.sizes,years = as.character("2014"),keep.dimensions = c("year","age","sex"))
-#   
+# 
+# 
 #   # pre-intervention
 #   # while(pop$params$CYNOW< INT.START.YEAR)
 #   #   pop<-run.one.year(pop)
-#   # 
+#   #
 #   # # model intervention
 #   # while(pop$params$CYNOW<= INT.END.YEAR){
 #   #   pop<-model.intervention(pop)
 #   #   pop<-run.one.year(pop)
 #   #   }
 #   # post-intervention
-#   while(pop$params$CYNOW<= 2020)
+#   while(pop$params$CYNOW<= 2030)
 #     pop<-run.one.year(pop)
 # 
 #   filter.5D.stats.by.field(pop$stats$n.diab.inc,keep.dimensions = c("year"))
@@ -95,35 +93,63 @@ print("Sourcing dependencies")
 # }
 # #######################################################
 
-# MULTI REPS
-lapply(c(1:6),function(rep){
-
-  start_time <- Sys.time()
-  bDebugMode=F
-  set.seed(rep)
-  # create pop; set up hiv/ncd states; records stats and increate year
-  pop<-initialize.simulation(id = rep, n = POP.SIZE)
-  #run sims
-  while(pop$params$CYNOW<= END.YEAR)
-    pop<-run.one.year(pop)
-  #saving population
-  saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
-  # saving time
-  end_time <- Sys.time()
-  session_time=end_time - start_time
-  txt=paste("Model ",rep," >> session time ",session_time)
-  write.table(x = txt,file = "outputs/out-sessionTime.txt",col.names = F,row.names = F,append = T)
-})
-
-#######################################################
-# # Reading populations back into a simset object
-simset=list()
-lapply(c(1:6),function(rep){
-  pop<-readRDS(sprintf("outputs/pop%g",rep))
-  simset[[sprintf("pop%g",rep)]]<<-pop
-})
+# # MULTI REPS
+# lapply(c(1:2),function(rep){
+#   
+#   start_time <- Sys.time()
+#   bDebugMode=F
+#   set.seed(rep)
+#   # create pop; set up hiv/ncd states; records stats and increate year
+#   pop<-initialize.simulation(id = rep, n = POP.SIZE)
+#   #run sims
+#   while(pop$params$CYNOW<= 2020)
+#     pop<-run.one.year(pop)
+#   #saving population
+#   saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
+#   # saving time
+#   end_time <- Sys.time()
+#   session_time=end_time - start_time
+#   txt=paste("Model ",rep," >> session time ",session_time)
+#   write.table(x = txt,file = "outputs/out-sessionTime.txt",col.names = F,row.names = F,append = T)
+# })
+# 
+# #######################################################
+# # # Reading populations back into a simset object
+# simset=list()
+# lapply(c(1:2),function(rep){
+#   pop<-readRDS(sprintf("outputs/pop%g",rep))
+#   simset[[sprintf("pop%g",rep)]]<<-pop
+# })
 # simset
 # 
+# #check age distribution
+# {
+#   ncd.simset = simset
+#   khm.simset = ncd.simset[[1]]$params$khm.full # HIV simset 
+#   # simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T)
+#   simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "age")
+#   # simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "sex")
+#   # simplot(ncd.simset,data.type = "population",scale.population = F, facet.by="age")
+# }
+# #check NCD prevalence in 2015
+# {
+#   pop=simset$pop1
+#   ncd.states2015 = filter.5D.stats.by.field(pop$stats$n.state.sizes,
+#                                             years = as.character(2014),
+#                                             keep.dimensions = c('age','sex','ncd.status','year'))
+#   ncd.states2015=ncd.states2015[,,,1] #to remove year dimension
+#   ncd.props2015<-return.prop.sex.age(vFreq = ncd.states2015)
+#   
+#   par(mfrow=c(2,2))
+#   plot(pop$params$target.ncd.props[,"MALE","NCD.DIAB"],type="l",ylab="",main="diab.prev male",xlab="agegroups")
+#   lines(ncd.props2015[,"MALE","NCD.DIAB"],col="red")
+#   plot(pop$params$target.ncd.props[,"FEMALE","NCD.DIAB"],type="l",ylab="",main="diab.prev female",xlab="agegroups")
+#   lines(ncd.props2015[,"FEMALE","NCD.DIAB"],col="red")
+#   plot(pop$params$target.ncd.props[,"MALE","NCD.HYP"],ylim=c(0, 0.6), type="l",ylab="",main="hyp.prev male",xlab="agegroups")
+#   lines(ncd.props2015[,"MALE","NCD.HYP"],col="red")
+#   plot(pop$params$target.ncd.props[,"FEMALE","NCD.HYP"],ylim=c(0, 0.6), type="l",ylab="",main="hyp.prev female",xlab="agegroups")
+#   lines(ncd.props2015[,"FEMALE","NCD.HYP"],col="red")
+# }
 
 # #######################################################
 # 
