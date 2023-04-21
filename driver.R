@@ -104,32 +104,32 @@ hms_span <- function(start, end) {
 #######################################################
 
 # MULTI REPS
-# lapply(c(1:6),function(rep){
-#  
-#   start_time <- Sys.time()
-#   bDebugMode=F
-#   set.seed(rep)
-#   # create pop; set up hiv/ncd states; records stats and increate year
-#   pop<-initialize.simulation(id = rep, n = POP.SIZE)
-#   #run sims
-#   while(pop$params$CYNOW<= END.YEAR)
-#     pop<-run.one.year(pop)
-#   #saving population
-#   saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
-#   # saving time
-#   end_time <- Sys.time()
-#   session_time=end_time - start_time
-#   txt=paste("Model ",rep," >> session time ",session_time)
-#   write.table(x = txt,file = "outputs/out-sessionTime.txt",col.names = F,row.names = F,append = T)
-# })
+lapply(c(1:6),function(rep){
+
+  start_time <- Sys.time()
+  bDebugMode=F
+  set.seed(rep)
+  # create pop; set up hiv/ncd states; records stats and increate year
+  pop<-initialize.simulation(id = rep, n = POP.SIZE)
+  #run sims
+  while(pop$params$CYNOW<= END.YEAR)
+    pop<-run.one.year(pop)
+  #saving population
+  saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
+  # saving time
+  end_time <- Sys.time()
+  session_time=end_time - start_time
+  txt=paste("Model ",rep," >> session time ",session_time)
+  write.table(x = txt,file = "outputs/out-sessionTime.txt",col.names = F,row.names = F,append = T)
+})
 
 #######################################################
 # # Reading populations back into a simset object
-# simset=list()
-# lapply(c(1:6),function(rep){
-#   pop<-readRDS(sprintf("outputs/pop%g",rep))
-#   simset[[sprintf("pop%g",rep)]]<<-pop
-# })
+simset=list()
+lapply(c(1:6),function(rep){
+  pop<-readRDS(sprintf("outputs/pop%g",rep))
+  simset[[sprintf("pop%g",rep)]]<<-pop
+})
 # simset
 # 
 

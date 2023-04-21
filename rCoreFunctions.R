@@ -26,7 +26,8 @@ initialize.simulation <- function( id=0,
   if (n>nrow(sim.pop)) stop ("Requested size of initial population is greater than simpop data in 2015")
   sim.pop=sim.pop[1:n,]
   #set up attributes for each row
-  sim.pop$age[sim.pop$age==0] = 0.5 #we need this so that the first agegroups is set to 1
+  sim.pop = sim.pop[sim.pop$age!=0,]
+  # sim.pop$age[sim.pop$age==0] = 0.5 #we need this so that the first agegroups is set to 1
   sim.pop$age[sim.pop$age>85] = 85 
   sim.pop$sex[sim.pop$sex=="MALE"] = MALE 
   sim.pop$sex[sim.pop$sex=="FEMALE"] = FEMALE
