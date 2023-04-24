@@ -142,7 +142,7 @@ lapply(c(1:2),function(rep){
 
   # comparing deaths ???
   simplot(khm.simset,ncd.simset,data.type = "hiv.mortality",scale.population =T)
-  simplot(khm.simset,data.type = "hiv.mortality",scale.population = F,facet.by = "age")
+  simplot(khm.simset,ncd.simset,data.type = "hiv.mortality",scale.population = T,facet.by = "age")
   #'@MS
   # simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = "age")
   # simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = c("sex","age"))
