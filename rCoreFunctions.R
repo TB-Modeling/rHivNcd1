@@ -249,6 +249,7 @@ update.ncd.states<-function(pop){
   # DIFFERENCE in prevalence of NCDs
   diff.props =  pop$params$target.ncd.props-current.ncd.props
   
+ 
   # ADDITIONAL Transitions required to reach the target proportions in our current population:
   trans.freq=diff.props
   invisible(lapply(1:DIM.AGE, function(ag){

@@ -27,46 +27,7 @@ hms_span <- function(start, end) {
     }), collapse = ":")
 }
 
-
-#######################################################
-# # SINGLE RUN ON ROCKFISH
-# {
-#   # Create the population in year 2014; save the stats and move the clock to 2015
-#   # args = commandArgs(trailingOnly=TRUE)
-#   # rep=as.numeric(args[1])
-#   # we need to set the seed first, then sample KHM models
-#   set.seed(rep)
-#   print(paste("replication ",rep,"starting..."))
-#   #
-#   print("Sourcing dependencies")
-#   {
-#     source("globalEnvironment.R")
-#     source("person.R")
-#     source("population.R")
-#     source("rHelperFunctions.R")
-#     source("rCoreFunctions.R")
-#     source("plots.R")
-#   }
-#   ####
-#   start_time <- Sys.time()
-#   pop<-initialize.simulation(id = rep, n = POP.SIZE)
-#   
-#   while(pop$params$CYNOW<= END.YEAR)
-#     pop<-run.one.year(pop)
-#   
-#   #saving population
-#   saveRDS(list(stats=pop$stats,
-#                params=pop$params),file = paste0("outputs/popList-c",rep),compress = T)
-#   
-#   # saving time
-#   end_time <- Sys.time()
-#   session_time=hms_span(start_time,end_time)
-#   write.table(session_time,file = paste0("outputs/out-sessionTime",rep),col.names = F,row.names = F)
-# }
-
-#######################################################
-#######################################################
-# SINGLE RUN WITH INTERVENTION
+print("Sourcing dependencies")
 {
   source("globalEnvironment.R")
   source("person.R")
@@ -74,45 +35,74 @@ hms_span <- function(start, end) {
   source("rHelperFunctions.R")
   source("rCoreFunctions.R")
   source("plots.R")
-  # Create the population in year 2014; save the stats and move the clock to 2015
-  rep=1
-  bDebugMode=F
-  set.seed(1)
-  pop<-initialize.simulation(id = rep,n = POP.SIZE)
-  # setting up person attributes
-  pop<-invisible(set.initial.hiv.status(pop ))
-  pop<-invisible(set.cvd.risk(pop))
-  pop$record.annual.stats()
-  pop$increaseYear()
-  
-  # pre-intervention
-  while(pop$params$CYNOW< INT.START.YEAR)
-    pop<-run.one.year(pop)
-  
-  # model intervention
-  while(pop$params$CYNOW<= INT.END.YEAR){
-    pop<-model.intervention(pop)
-    pop<-run.one.year(pop)
-    }
-  # post-intervention
-  while(pop$params$CYNOW<= END.YEAR)
-    pop<-run.one.year(pop)
-  
-  #saving population
-  # saveRDS(pop,file = "outputs/pop1",compress = F)
 }
+# #######################################################
+# # SINGLE RUN ON ROCKFISH
+# # {
+#   # Create the population in year 2014; save the stats and move the clock to 2015
+#   args = commandArgs(trailingOnly=TRUE)
+#   rep=as.numeric(args[1])
+#   # we need to set the seed first, then sample KHM models
+#   set.seed(rep)
+#   print(paste("replication ",rep,"starting..."))
+# 
+#   ####
+#   start_time <- Sys.time()
+#   pop<-initialize.simulation(id = rep, n = POP.SIZE)
+# 
+#   while(pop$params$CYNOW<= END.YEAR)
+#     pop<-run.one.year(pop)
+# 
+#   #saving population
+#   saveRDS(list(stats=pop$stats,
+#                params=pop$params),file = paste0("outputs/popList-c",rep),compress = T)
+# 
+#   # saving time
+#   end_time <- Sys.time()
+#   session_time=hms_span(start_time,end_time)
+#   write.table(session_time,file = paste0("outputs/out-sessionTime",rep),col.names = F,row.names = F)
+# # }
+
 #######################################################
+#######################################################
+# SINGLE RUN WITH INTERVENTION
+# {
+#   # Create the population in year 2014; save the stats and move the clock to 2015
+#   rep=1
+#   bDebugMode=F
+#   set.seed(1)
+#   pop<-initialize.simulation(id = rep,n = POP.SIZE)
+# 
+# 
+#   # pre-intervention
+#   # while(pop$params$CYNOW< INT.START.YEAR)
+#   #   pop<-run.one.year(pop)
+#   #
+#   # # model intervention
+#   # while(pop$params$CYNOW<= INT.END.YEAR){
+#   #   pop<-model.intervention(pop)
+#   #   pop<-run.one.year(pop)
+#   #   }
+#   # post-intervention
+#   while(pop$params$CYNOW<= 2030)
+#     pop<-run.one.year(pop)
+# 
+#   filter.5D.stats.by.field(pop$stats$n.diab.inc,keep.dimensions = c("year"))
+#   #saving population
+#   # saveRDS(pop,file = "outputs/pop1",compress = F)
+# }
+# #######################################################
 
 # MULTI REPS
-lapply(c(1:6),function(rep){
+lapply(c(3:10),function(rep){
 
   start_time <- Sys.time()
   bDebugMode=F
   set.seed(rep)
-  # create pop; set up hiv/ncd states; records stats and increate year
+  # create pop at the end of 2014; set up hiv/ncd states; records stats and increament the year to 2015
   pop<-initialize.simulation(id = rep, n = POP.SIZE)
   #run sims
-  while(pop$params$CYNOW<= END.YEAR)
+  while(pop$params$CYNOW<= 2030)
     pop<-run.one.year(pop)
   #saving population
   saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
@@ -122,16 +112,63 @@ lapply(c(1:6),function(rep){
   txt=paste("Model ",rep," >> session time ",session_time)
   write.table(x = txt,file = "outputs/out-sessionTime.txt",col.names = F,row.names = F,append = T)
 })
-
-#######################################################
-# # Reading populations back into a simset object
-simset=list()
-lapply(c(1:6),function(rep){
+# 
+# #######################################################
+{
+  print("Sourcing dependencies")
+  source("globalEnvironment.R")
+  source("person.R")
+  source("population.R")
+  source("rHelperFunctions.R")
+  source("rCoreFunctions.R")
+  source("plots.R")
+}
+# # # Reading populations back into a simset object
+{
+  simset=list()
+lapply(c(1:10),function(rep){
   pop<-readRDS(sprintf("outputs/pop%g",rep))
   simset[[sprintf("pop%g",rep)]]<<-pop
 })
-# simset
+print(paste0(length(simset)," ncd populationd data is read"))
+ncd.simset = simset
+khm.simset = ncd.simset[[1]]$params$khm.full # HIV simset
+print(paste0(length(khm.simset)," khm populationd data is read"))
+}
+{
+  #comparing ncd and khm population sizes
+  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T)
+  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "age")
+  # simplot(ncd.simset,data.type = "population",facet.by = "age")
+  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "sex")
+  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "hiv.status")
+  
+# comparing deaths ???
+    simplot(khm.simset,data.type = "hiv.mortality",scale.population = F)
+  simplot(khm.simset,data.type = "hiv.mortality",scale.population = F,facet.by = "age")
+  #'@MS
+  simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = "age")
+}
+
+# #check NCD prevalence in 2015
+# {
+#   pop=simset$pop1
+#   ncd.states2015 = filter.5D.stats.by.field(pop$stats$n.state.sizes,
+#                                             years = as.character(2014),
+#                                             keep.dimensions = c('age','sex','ncd.status','year'))
+#   ncd.states2015=ncd.states2015[,,,1] #to remove year dimension
+#   ncd.props2015<-return.prop.sex.age(vFreq = ncd.states2015)
 # 
+#   par(mfrow=c(2,2))
+#   plot(pop$params$target.ncd.props[,"MALE","NCD.DIAB"],type="l",ylab="",main="diab.prev male",xlab="agegroups")
+#   lines(ncd.props2015[,"MALE","NCD.DIAB"],col="red")
+#   plot(pop$params$target.ncd.props[,"FEMALE","NCD.DIAB"],type="l",ylab="",main="diab.prev female",xlab="agegroups")
+#   lines(ncd.props2015[,"FEMALE","NCD.DIAB"],col="red")
+#   plot(pop$params$target.ncd.props[,"MALE","NCD.HYP"],ylim=c(0, 0.6), type="l",ylab="",main="hyp.prev male",xlab="agegroups")
+#   lines(ncd.props2015[,"MALE","NCD.HYP"],col="red")
+#   plot(pop$params$target.ncd.props[,"FEMALE","NCD.HYP"],ylim=c(0, 0.6), type="l",ylab="",main="hyp.prev female",xlab="agegroups")
+#   lines(ncd.props2015[,"FEMALE","NCD.HYP"],col="red")
+# }
 
 # #######################################################
 # 

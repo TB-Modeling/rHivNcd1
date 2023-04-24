@@ -9,14 +9,14 @@ print("Sourcing GlobalEnvironment.R ... ")
 cat("Setting up global parameters .... \n")
 ANNUAL.TIMESTEPS=12 #how many timepsteps in a year?
 INITIAL.YEAR=2014 #simulation starts
-INT.START.YEAR=2025 #intervention starts
-INT.END.YEAR=2030 #intervention ends
-END.YEAR=2040 #simulation ends
+# INT.START.YEAR=2025 #intervention starts
+# INT.END.YEAR=2030 #intervention ends
+END.YEAR=2030 #simulation ends
 #
 AGE.INTERVAL=5
 MIN.AGE=0
 MAX.AGE=85
-POP.SIZE=100
+POP.SIZE=10000
 #
 FEMALE=1
 MALE=2
