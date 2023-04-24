@@ -147,6 +147,24 @@ POPULATION<-R6Class("POPULATION",
                       record.diab.hyp.trt.int=function(age,sex,hiv,ncd){
                         self$stats$n.diab.hyp.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
                           self$stats$n.diab.hyp.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      },
+                      
+                      #record deaths
+                                            record.deaths.hiv=function(age,sex,hiv,ncd){
+                        self$stats$n.deaths.hiv[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.deaths.hiv[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      },
+                      record.deaths.cvd=function(age,sex,hiv,ncd){
+                        self$stats$n.deaths.cvd[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.deaths.cvd[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      },
+                      record.deaths.ageout=function(age,sex,hiv,ncd){
+                        self$stats$n.deaths.ageout[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.deaths.ageout[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      },
+                      record.deaths.non.hiv=function(age,sex,hiv,ncd){
+                        self$stats$n.deaths.non.hiv[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.deaths.non.hiv[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       }
                       
                     )

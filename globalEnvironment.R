@@ -15,8 +15,8 @@ END.YEAR=2030 #simulation ends
 #
 AGE.INTERVAL=5
 MIN.AGE=0
-MAX.AGE=85
-POP.SIZE=10000
+MAX.AGE=85*12
+POP.SIZE=1000
 #
 FEMALE=1
 MALE=2
@@ -74,6 +74,7 @@ generate.new.modelParameter<-function(){
   class(MP$khm.full) = "khm_simulation_output"
   x=sample(1:length(khm),1)
   print(paste("KHM model ",x," was sampled"))
+  MP$khm.id=x #khm id that was sampled for this run
   khm = khm[[x]]# randomly sample one hiv sim from the length of n.hiv.sims
   khm.hivPrev2015 = khm$population["2015",,,]
   MP$khm=khm
@@ -193,10 +194,7 @@ generate.new.stat<-function(){
     n.births=v1temp,
     n.births.non.hiv=v1temp,
     n.births.hiv=v1temp,
-    n.deaths.hiv=v1temp,
-    n.deaths.cvd=v1temp,
-    n.deaths.ageout=v1temp,
-    n.deaths.non.hiv=v1temp,
+  
     
     #'@PK - below 4D arrays inherently have to be 4D (i.e., don't have an HIV dimension for HIV transitions; same for NCD)
     
@@ -234,7 +232,12 @@ generate.new.stat<-function(){
     
     
     ## STATE SIZES ##
-    n.state.sizes=v5temp
+    n.state.sizes=v5temp,
+    
+    n.deaths.hiv=v5temp,
+    n.deaths.cvd=v5temp,
+    n.deaths.ageout=v5temp,
+    n.deaths.non.hiv=v5temp
   )
   return(stats)
 }

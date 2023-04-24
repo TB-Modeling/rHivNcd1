@@ -14,7 +14,7 @@ PERSON<-R6Class("PERSON",
       public=list(
         id=NULL,
         tborn=NULL,
-        age=NULL,
+        age=NULL, #monthly value
         sex=NULL,
         # hiv state & times
         hivState=HIV.NEG,
@@ -161,8 +161,9 @@ PERSON<-R6Class("PERSON",
       # because they make it possible to implement components that look like fields 
       # from the outside but provide additional checks.
       active=list(
-        agegroup=function(){ min(max(ceiling((self$age+1)/AGE.INTERVAL),1),DIM.AGE)}, #we limit the last agegroups to not drop below 1 nor exceed 17
-        incAge=function(){ 
+        annualAge=function(){floor(age/12)},
+        agegroup=function(){ min(max(ceiling(( floor(self$age/12) +1)/AGE.INTERVAL),1),DIM.AGE)}, #we limit the last agegroups to not drop below 1 nor exceed 17
+        incAge=function(){ #monthly age
           self$age<-self$age+1
           invisible(self)
           }
