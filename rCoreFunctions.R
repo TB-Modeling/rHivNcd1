@@ -26,9 +26,13 @@ initialize.simulation <- function( id=0,
   if (n>nrow(sim.pop)) stop ("Requested size of initial population is greater than simpop data in 2015")
   sim.pop=sim.pop[1:n,]
   #set up attributes for each row
-  sim.pop = sim.pop[sim.pop$age!=0,]
+  # sim.pop = sim.pop[sim.pop$age!=0,]
   # sim.pop$age[sim.pop$age==0] = 0.5 #we need this so that the first agegroups is set to 1
-  sim.pop$age[sim.pop$age>85] = 85 
+
+  #monthly age values
+  sim.pop$age=sim.pop$age * 12 +sample((0:11),size = n,replace = T)
+  sim.pop$age[sim.pop$age>MAX.AGE] = MAX.AGE
+  
   sim.pop$sex[sim.pop$sex=="MALE"] = MALE 
   sim.pop$sex[sim.pop$sex=="FEMALE"] = FEMALE
   sim.pop$ncd[sim.pop$hypertension==0 & sim.pop$diabetes==0] = NCD.NEG #1, neither 
@@ -191,7 +195,8 @@ model.hiv.cvd.deaths<-function(pop,
     }}))
   
   # removing deaths & saving stats
-  { death.ids=NULL
+  { 
+    death.ids=NULL
     n.cvd.deaths=0
     n.hiv.deaths=0
     n.nonHiv.deaths=0
@@ -200,22 +205,24 @@ model.hiv.cvd.deaths<-function(pop,
       if (p$bMarkedDead.cvd==TRUE) {
         n.cvd.deaths<<-n.cvd.deaths+1
         death.ids<<-c(death.ids,x)
+        
+        pop$record.deaths.cvd(p$agegroup,p$sex,p$hivState,p$ncdState)
       }else{
         if (p$bMarkedDead.hiv ==TRUE) {
           n.hiv.deaths<<-n.hiv.deaths+1
           death.ids<<-c(death.ids,x)
+          pop$record.deaths.hiv(p$agegroup,p$sex,p$hivState,p$ncdState)
         }else{
           if (p$bMarkedDead.non.hiv ==TRUE) {
             n.nonHiv.deaths<<-n.nonHiv.deaths+1
             death.ids<<-c(death.ids,x)
+            pop$record.deaths.non.hiv(p$agegroup,p$sex,p$hivState,p$ncdState)
+
           }}}})
     #removing dead people:
     if(!is.null(death.ids))
       pop$members<-pop$members[-death.ids]
-    #stats
-    pop$stats$n.deaths.cvd[pop$params$YNOW]=n.cvd.deaths
-    pop$stats$n.deaths.hiv[pop$params$YNOW]=n.hiv.deaths
-    pop$stats$n.deaths.non.hiv[pop$params$YNOW]=n.nonHiv.deaths
+    
     
     if (bPrint2) cat("modeled n.deaths.cvd=",n.cvd.deaths," n.deaths.hiv=",n.hiv.deaths," n.deaths.non.hiv=",n.nonHiv.deaths,"\n")
   }
@@ -351,10 +358,11 @@ run.one.year<-function(pop){
     n.hiv.pos = apply(khm$population[as.character(pop$params$CYNOW-1),-1,,],c(2:3),sum) # extract all but hiv.negative, sum over hiv states
     target.hiv.mort = khm$hiv.mortality[as.character(pop$params$CYNOW),,] # pull out current year; dimensions are year, age, sex
     n.hiv.pos.now = apply(khm$population[as.character(pop$params$CYNOW),-1,,],c(2:3),sum)
-    delta = n.hiv.pos.now - n.hiv.pos # change in pop (aging in - aging out - deaths + hiv incidence)
-    detla = delta + target.hiv.mort
+    #we are using average to approximate the integral
+    # prob.hiv.mort=target.hiv.mort/((n.hiv.pos + n.hiv.pos.now)/2) 
+    prob.hiv.mort=target.hiv.mort/(n.hiv.pos.now+target.hiv.mort)
     
-    prob.hiv.mort=target.hiv.mort/(n.hiv.pos + delta) 
+    
     if(sum(prob.hiv.mort>1)>1)
       stop(paste("Error: probability of prob.hiv.mort >1 in year ",pop$params$CYNOW))
     prob.hiv.mort[prob.hiv.mort==Inf]<-0
@@ -364,10 +372,10 @@ run.one.year<-function(pop){
     n.pop = apply(khm$population[as.character(pop$params$CYNOW-1),,,],c(2:3),sum) # extract all population, sum over hiv states
     target.non.hiv.mort = khm$non.hiv.mortality[as.character(pop$params$CYNOW),,] # pull out current year; dimensions are year, age, sex
     n.pop.now = apply(khm$population[as.character(pop$params$CYNOW),,,],c(2:3),sum)
-    delta = n.pop.now - n.pop # change in pop (aging in - aging out - deaths)
-    delta = delta + target.non.hiv.mort # add back in mortality 
+    #we are using average to approximate the integral
+    # prob.non.hiv.mort=target.non.hiv.mort/((n.pop + n.pop.now)/2) # denominator is now population as well as aging in - aging out 
+    prob.non.hiv.mort=target.non.hiv.mort/( n.pop.now+target.non.hiv.mort)
     
-    prob.non.hiv.mort=target.non.hiv.mort/(n.pop + delta) # denominator is now population as well as aging in - aging out 
     if(sum(prob.non.hiv.mort>1)>1){
       browser()
       stop(paste("Error: probability of prob.non.hiv.mort >1 in year ",pop$params$CYNOW))
@@ -381,7 +389,7 @@ run.one.year<-function(pop){
     n.hiv.neg.now = khm$population[as.character(pop$params$CYNOW),"HIV.NEG",,]
     delta = n.hiv.neg.now - n.hiv.neg # change in hiv negative population (aging in - aging out - deaths - hiv incidence)
     delta = delta + target.inc
-    
+    #'@MS: maybe change later
     prob.inc=target.inc/(n.hiv.neg + delta)
     if(sum(prob.inc>1)>1)
       stop(paste("Error: probability of prob.inc >1 in year ",pop$params$CYNOW))
@@ -433,14 +441,19 @@ run.one.year<-function(pop){
                                khm.prob.hiv.mort,
                                khm.prob.non.hiv.mort)
     
+    ## xx- MODEL AGING --------
+    # invisible(lapply(pop$members,function(x){x$incAge}))
+    pop$modelAging()
+    
     pop$increaseMonth()
     
   }
   #### AT YEAR's END:
   ## 1-MODEL Deaths due to aging out --------
-  n.ageout=sum(unlist(invisible(lapply(pop$members,function(x){
-    if(x$age>=MAX.AGE) {
-      x$bMarkedDead.ageout=T;
+  n.ageout=sum(unlist(invisible(lapply(pop$members,function(p){
+    if(p$age>=MAX.AGE) {
+      p$bMarkedDead.ageout=T;
+      pop$record.deaths.ageout(p$agegroup,p$sex,p$hivState,p$ncdState)
       return(1)
     }}))))
   # modeling deaths
@@ -449,7 +462,7 @@ run.one.year<-function(pop){
   
   ## 2-MODEL BIRTHS --------
   { # non-HIV births
-    absolute.n.births.non.hiv=khm$target.parameters$non.hiv.births[as.character(pop$params$CYNOW)] # total non HIV births from HIV model 
+    absolute.n.births.non.hiv=khm$target.parameters$non.hiv.births[as.character(pop$params$CYNOW)] # total non HIV births from HIV model
     non.hiv.births.scalar = absolute.n.births.non.hiv/sum(khm$population[as.character(pop$params$CYNOW),,,]) # scaled to pop size from HIV model
     n.births.non.hiv = round(non.hiv.births.scalar*length(pop$members),0) # re-scaled to pop size from NCD model
     
@@ -497,9 +510,7 @@ run.one.year<-function(pop){
     if(bPrint2) cat("n.births.non.hiv= ",n.births.non.hiv, " n.births.hiv= ",n.births.hiv, " modeled \n")
   }
   
-  ## 3- MODEL AGING --------
-  # invisible(lapply(pop$members,function(x){x$incAge}))
-  pop$modelAging()
+ 
   
   ## 4- UPDATE NCD STATES & CVD RISKS FOR NEXT YEAR --------
   pop<-update.ncd.states(pop)

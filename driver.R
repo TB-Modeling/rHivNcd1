@@ -94,7 +94,7 @@ print("Sourcing dependencies")
 # #######################################################
 
 # MULTI REPS
-lapply(c(3:10),function(rep){
+lapply(c(1:2),function(rep){
 
   start_time <- Sys.time()
   bDebugMode=F
@@ -114,26 +114,21 @@ lapply(c(3:10),function(rep){
 })
 # 
 # #######################################################
-{
-  print("Sourcing dependencies")
-  source("globalEnvironment.R")
-  source("person.R")
-  source("population.R")
-  source("rHelperFunctions.R")
-  source("rCoreFunctions.R")
-  source("plots.R")
-}
+
 # # # Reading populations back into a simset object
 {
   simset=list()
-lapply(c(1:10),function(rep){
-  pop<-readRDS(sprintf("outputs/pop%g",rep))
-  simset[[sprintf("pop%g",rep)]]<<-pop
-})
-print(paste0(length(simset)," ncd populationd data is read"))
-ncd.simset = simset
-khm.simset = ncd.simset[[1]]$params$khm.full # HIV simset
-print(paste0(length(khm.simset)," khm populationd data is read"))
+  lapply(c(1:2),function(rep){
+    pop<-readRDS(sprintf("outputs/pop%g",rep))
+    simset[[sprintf("pop%g",rep)]]<<-pop
+  })
+  print(paste0(length(simset)," ncd populationd data is read"))
+  ncd.simset = simset
+  khm.simset = ncd.simset[[1]]$params$khm.full # HIV simset
+  print(paste0(length(khm.simset)," khm populationd data is read"))
+  khm.simset=khm.simset[c(68,85)]
+  # khm.simset=khm.simset[c(5,75)]
+  class(khm.simset)="khm_simulation_output"
 }
 {
   #comparing ncd and khm population sizes
@@ -141,34 +136,38 @@ print(paste0(length(khm.simset)," khm populationd data is read"))
   simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "age")
   # simplot(ncd.simset,data.type = "population",facet.by = "age")
   simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "sex")
+  #' @MS: simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = c("age","sex")
+  #'
   simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "hiv.status")
-  
-# comparing deaths ???
-    simplot(khm.simset,data.type = "hiv.mortality",scale.population = F)
+
+  # comparing deaths ???
+  simplot(khm.simset,ncd.simset,data.type = "hiv.mortality",scale.population =T)
   simplot(khm.simset,data.type = "hiv.mortality",scale.population = F,facet.by = "age")
   #'@MS
-  simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = "age")
+  # simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = "age")
+  # simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = c("sex","age"))
+
 }
 
-# #check NCD prevalence in 2015
-# {
-#   pop=simset$pop1
-#   ncd.states2015 = filter.5D.stats.by.field(pop$stats$n.state.sizes,
-#                                             years = as.character(2014),
-#                                             keep.dimensions = c('age','sex','ncd.status','year'))
-#   ncd.states2015=ncd.states2015[,,,1] #to remove year dimension
-#   ncd.props2015<-return.prop.sex.age(vFreq = ncd.states2015)
-# 
-#   par(mfrow=c(2,2))
-#   plot(pop$params$target.ncd.props[,"MALE","NCD.DIAB"],type="l",ylab="",main="diab.prev male",xlab="agegroups")
-#   lines(ncd.props2015[,"MALE","NCD.DIAB"],col="red")
-#   plot(pop$params$target.ncd.props[,"FEMALE","NCD.DIAB"],type="l",ylab="",main="diab.prev female",xlab="agegroups")
-#   lines(ncd.props2015[,"FEMALE","NCD.DIAB"],col="red")
-#   plot(pop$params$target.ncd.props[,"MALE","NCD.HYP"],ylim=c(0, 0.6), type="l",ylab="",main="hyp.prev male",xlab="agegroups")
-#   lines(ncd.props2015[,"MALE","NCD.HYP"],col="red")
-#   plot(pop$params$target.ncd.props[,"FEMALE","NCD.HYP"],ylim=c(0, 0.6), type="l",ylab="",main="hyp.prev female",xlab="agegroups")
-#   lines(ncd.props2015[,"FEMALE","NCD.HYP"],col="red")
-# }
+#' #check NCD prevalence in 2015
+#' {
+#'   pop=simset$pop1
+#'   ncd.states2015 = filter.5D.stats.by.field(pop$stats$n.state.sizes,
+#'                                             years = as.character(2014),
+#'                                             keep.dimensions = c('age','sex','ncd.status','year'))
+#'   ncd.states2015=ncd.states2015[,,,1] #to remove year dimension
+#'   ncd.props2015<-return.prop.sex.age(vFreq = ncd.states2015)
+#' 
+#'   par(mfrow=c(2,2))
+#'   plot(pop$params$target.ncd.props[,"MALE","NCD.DIAB"],type="l",ylab="",main="diab.prev male",xlab="agegroups")
+#'   lines(ncd.props2015[,"MALE","NCD.DIAB"],col="red")
+#'   plot(pop$params$target.ncd.props[,"FEMALE","NCD.DIAB"],type="l",ylab="",main="diab.prev female",xlab="agegroups")
+#'   lines(ncd.props2015[,"FEMALE","NCD.DIAB"],col="red")
+#'   plot(pop$params$target.ncd.props[,"MALE","NCD.HYP"],ylim=c(0, 0.6), type="l",ylab="",main="hyp.prev male",xlab="agegroups")
+#'   lines(ncd.props2015[,"MALE","NCD.HYP"],col="red")
+#'   plot(pop$params$target.ncd.props[,"FEMALE","NCD.HYP"],ylim=c(0, 0.6), type="l",ylab="",main="hyp.prev female",xlab="agegroups")
+#'   lines(ncd.props2015[,"FEMALE","NCD.HYP"],col="red")
+#' }
 
 # #######################################################
 # 
