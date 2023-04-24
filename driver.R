@@ -38,30 +38,30 @@ print("Sourcing dependencies")
 }
 # #######################################################
 # # SINGLE RUN ON ROCKFISH
-# {
-  # Create the population in year 2014; save the stats and move the clock to 2015
-  args = commandArgs(trailingOnly=TRUE)
-  rep=as.numeric(args[1])
-  # we need to set the seed first, then sample KHM models
-  set.seed(rep)
-  print(paste("replication ",rep,"starting..."))
-
-  ####
-  start_time <- Sys.time()
-  pop<-initialize.simulation(id = rep, n = POP.SIZE)
-
-  while(pop$params$CYNOW<= END.YEAR)
-    pop<-run.one.year(pop)
-
-  #saving population
-  saveRDS(list(stats=pop$stats,
-               params=pop$params),file = paste0("outputs/popList-c",rep),compress = T)
-
-  # saving time
-  end_time <- Sys.time()
-  session_time=hms_span(start_time,end_time)
-  write.table(session_time,file = paste0("outputs/out-sessionTime",rep),col.names = F,row.names = F)
-# }
+# # {
+#   # Create the population in year 2014; save the stats and move the clock to 2015
+#   args = commandArgs(trailingOnly=TRUE)
+#   rep=as.numeric(args[1])
+#   # we need to set the seed first, then sample KHM models
+#   set.seed(rep)
+#   print(paste("replication ",rep,"starting..."))
+# 
+#   ####
+#   start_time <- Sys.time()
+#   pop<-initialize.simulation(id = rep, n = POP.SIZE)
+# 
+#   while(pop$params$CYNOW<= END.YEAR)
+#     pop<-run.one.year(pop)
+# 
+#   #saving population
+#   saveRDS(list(stats=pop$stats,
+#                params=pop$params),file = paste0("outputs/popList-c",rep),compress = T)
+# 
+#   # saving time
+#   end_time <- Sys.time()
+#   session_time=hms_span(start_time,end_time)
+#   write.table(session_time,file = paste0("outputs/out-sessionTime",rep),col.names = F,row.names = F)
+# # }
 
 #######################################################
 #######################################################
@@ -93,44 +93,63 @@ print("Sourcing dependencies")
 # }
 # #######################################################
 
-# # MULTI REPS
-# lapply(c(1:2),function(rep){
-#   
-#   start_time <- Sys.time()
-#   bDebugMode=F
-#   set.seed(rep)
-#   # create pop; set up hiv/ncd states; records stats and increate year
-#   pop<-initialize.simulation(id = rep, n = POP.SIZE)
-#   #run sims
-#   while(pop$params$CYNOW<= 2020)
-#     pop<-run.one.year(pop)
-#   #saving population
-#   saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
-#   # saving time
-#   end_time <- Sys.time()
-#   session_time=end_time - start_time
-#   txt=paste("Model ",rep," >> session time ",session_time)
-#   write.table(x = txt,file = "outputs/out-sessionTime.txt",col.names = F,row.names = F,append = T)
-# })
+# MULTI REPS
+lapply(c(3:10),function(rep){
+
+  start_time <- Sys.time()
+  bDebugMode=F
+  set.seed(rep)
+  # create pop at the end of 2014; set up hiv/ncd states; records stats and increament the year to 2015
+  pop<-initialize.simulation(id = rep, n = POP.SIZE)
+  #run sims
+  while(pop$params$CYNOW<= 2030)
+    pop<-run.one.year(pop)
+  #saving population
+  saveRDS(pop,file = sprintf("outputs/pop%g",rep),compress = F)
+  # saving time
+  end_time <- Sys.time()
+  session_time=end_time - start_time
+  txt=paste("Model ",rep," >> session time ",session_time)
+  write.table(x = txt,file = "outputs/out-sessionTime.txt",col.names = F,row.names = F,append = T)
+})
 # 
 # #######################################################
+{
+  print("Sourcing dependencies")
+  source("globalEnvironment.R")
+  source("person.R")
+  source("population.R")
+  source("rHelperFunctions.R")
+  source("rCoreFunctions.R")
+  source("plots.R")
+}
 # # # Reading populations back into a simset object
-# simset=list()
-# lapply(c(1:2),function(rep){
-#   pop<-readRDS(sprintf("outputs/pop%g",rep))
-#   simset[[sprintf("pop%g",rep)]]<<-pop
-# })
-# simset
-# 
-# #check age distribution
-# {
-#   ncd.simset = simset
-#   khm.simset = ncd.simset[[1]]$params$khm.full # HIV simset 
-#   # simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T)
-#   simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "age")
-#   # simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "sex")
-#   # simplot(ncd.simset,data.type = "population",scale.population = F, facet.by="age")
-# }
+{
+  simset=list()
+lapply(c(1:10),function(rep){
+  pop<-readRDS(sprintf("outputs/pop%g",rep))
+  simset[[sprintf("pop%g",rep)]]<<-pop
+})
+print(paste0(length(simset)," ncd populationd data is read"))
+ncd.simset = simset
+khm.simset = ncd.simset[[1]]$params$khm.full # HIV simset
+print(paste0(length(khm.simset)," khm populationd data is read"))
+}
+{
+  #comparing ncd and khm population sizes
+  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T)
+  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "age")
+  # simplot(ncd.simset,data.type = "population",facet.by = "age")
+  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "sex")
+  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "hiv.status")
+  
+# comparing deaths ???
+    simplot(khm.simset,data.type = "hiv.mortality",scale.population = F)
+  simplot(khm.simset,data.type = "hiv.mortality",scale.population = F,facet.by = "age")
+  #'@MS
+  simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = "age")
+}
+
 # #check NCD prevalence in 2015
 # {
 #   pop=simset$pop1
@@ -139,7 +158,7 @@ print("Sourcing dependencies")
 #                                             keep.dimensions = c('age','sex','ncd.status','year'))
 #   ncd.states2015=ncd.states2015[,,,1] #to remove year dimension
 #   ncd.props2015<-return.prop.sex.age(vFreq = ncd.states2015)
-#   
+# 
 #   par(mfrow=c(2,2))
 #   plot(pop$params$target.ncd.props[,"MALE","NCD.DIAB"],type="l",ylab="",main="diab.prev male",xlab="agegroups")
 #   lines(ncd.props2015[,"MALE","NCD.DIAB"],col="red")
