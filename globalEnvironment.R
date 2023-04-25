@@ -189,6 +189,8 @@ generate.new.stat<-function(){
   
   
   stats<-list(
+    ncd.id=0,
+    
     #1D arrays for entire population over time
     pop.size=v1temp,
     n.births=v1temp,
@@ -196,8 +198,7 @@ generate.new.stat<-function(){
     n.births.hiv=v1temp,
   
     
-    #'@PK - below 4D arrays inherently have to be 4D (i.e., don't have an HIV dimension for HIV transitions; same for NCD)
-    
+
     #5D arrays [age, sex, hiv, ncd, year]
     # counting events modeled (incidence, getting diagnosed, etc)
     n.hiv.inc=v5temp, 

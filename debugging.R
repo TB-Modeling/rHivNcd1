@@ -1,162 +1,125 @@
-# need a standard set of plots to review the population
-# please add notes/documentation to plots.R
 
-#
-#  R HIVNCD 2022
-#  Driver.R class
-#  
-#####################################
-# list.of.packages <- c("ggplot2", "R6","Rcpp")
-# new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-# if(length(new.packages)) install.packages(new.packages)
-
-library(R6)
-# library(Rcpp)
-library(ggplot2)
-# library(data.table)
-#######################################################
-#function to return elapse run time for the simulation
-hms_span <- function(start, end) {
-  dsec <- as.numeric(difftime(end, start, unit = "secs"))
-  hours <- floor(dsec / 3600)
-  minutes <- floor((dsec - 3600 * hours) / 60)
-  seconds <- dsec - 3600*hours - 60*minutes
-  paste0(
-    sapply(c(hours, minutes, seconds), function(x) {
-      formatC(x, width = 2, format = "d", flag = "0")
-    }), collapse = ":")
-}
-
-print("Sourcing dependencies")
-{
-  source("globalEnvironment.R")
-  source("person.R")
-  source("population.R")
-  source("rHelperFunctions.R")
-  source("rCoreFunctions.R")
-  source("plots.R")
-}
-# #######################################################
-# # SINGLE RUN ON ROCKFISH
-# # {
-#   # Create the population in year 2014; save the stats and move the clock to 2015
-#   args = commandArgs(trailingOnly=TRUE)
-#   rep=as.numeric(args[1])
-#   # we need to set the seed first, then sample KHM models
-#   set.seed(rep)
-#   print(paste("replication ",rep,"starting..."))
-# 
-#   ####
-#   start_time <- Sys.time()
-#   pop<-initialize.simulation(id = rep, n = POP.SIZE)
-# 
-#   while(pop$params$CYNOW<= END.YEAR)
-#     pop<-run.one.year(pop)
-# 
-#   #saving population
-#   res=list(stats=pop$stats,
-#                params=pop$params)
-#   saveRDS(res,file = paste0("outputs/popList-c",rep),compress = T)
-# 
-#   # saving time
-#   end_time <- Sys.time()
-#   session_time=hms_span(start_time,end_time)
-#   write.table(session_time,file = paste0("outputs/out-sessionTime",rep),col.names = F,row.names = F)
-# # }
-
-#######################################################
-#######################################################
-# SINGLE RUN WITH INTERVENTION
-# {
-#   # Create the population in year 2014; save the stats and move the clock to 2015
-#   rep=1
-#   bDebugMode=F
-#   set.seed(1)
-#   pop<-initialize.simulation(id = rep,n = POP.SIZE)
-# 
-# 
-#   # pre-intervention
-#   # while(pop$params$CYNOW< INT.START.YEAR)
-#   #   pop<-run.one.year(pop)
-#   #
-#   # # model intervention
-#   # while(pop$params$CYNOW<= INT.END.YEAR){
-#   #   pop<-model.intervention(pop)
-#   #   pop<-run.one.year(pop)
-#   #   }
-#   # post-intervention
-#   while(pop$params$CYNOW<= 2030)
-#     pop<-run.one.year(pop)
-# 
-#   filter.5D.stats.by.field(pop$stats$n.diab.inc,keep.dimensions = c("year"))
-#   #saving population
-#   res=list(stats=pop$stats,
-#                params=pop$params)
-#   saveRDS(res,file = paste0("outputs/popList-c",rep),compress = T)
-# }
-# #######################################################
-
-# MULTI REPS
-print("running models....")
-lapply(c(1:10),function(rep){
-  start_time <- Sys.time()
-  bDebugMode=F
-  set.seed(rep)
-  # create pop at the end of 2014; set up hiv/ncd states; records stats and increament the year to 2015
-  pop<-initialize.simulation(id = rep, n = POP.SIZE)
-  
-  #run sims
-  while(pop$params$CYNOW<= 2030)
-    pop<-run.one.year(pop)
-  #saving population
-  res=list(stats=pop$stats,
-           params=pop$params)
-  saveRDS(res,file = paste0("outputs/popList-",rep),compress = T)
-  # saving time
-  end_time <- Sys.time()
-  session_time=end_time - start_time
-  txt=paste("Model ",rep," >> session time ",session_time)
-  write.table(x = txt,file = "outputs/out-sessionTime.txt",col.names = F,row.names = F,append = T)
-})
-# 
-# #######################################################
-
-# # # Reading populations back into a simset object
-{
+# # # Reading populations back into a simset object{
+{  
   simset=list()
-  lapply(c(1:6),function(rep){
-    pop<-readRDS(sprintf("outputs/pop%g",rep))
+  invisible(lapply(c(1:10),function(rep){
+    pop<-readRDS(sprintf("outputs/popList-%g",rep))
     simset[[sprintf("pop%g",rep)]]<<-pop
-  })
+  }))
   print(paste0(length(simset)," ncd populationd data is read"))
   ncd.simset = simset
+  #
   khm.simset = ncd.simset[[1]]$params$khm.full # HIV simset
+  khm.ids<-lapply(simset,
+                  function(x){ return (x$params$khm.id)})
+  khm.ids=unlist(khm.ids)
+  khm.simset=khm.simset[khm.ids];class(khm.simset)="khm_simulation_output"
   print(paste0(length(khm.simset)," khm populationd data is read"))
-  
-  # vector of sampled khm.ids
-  khm.ids = sapply(ncd.simset,function(pop){pop$params$khm.id})
-  khm.simset=khm.simset[khm.ids]
-  # khm.simset=khm.simset[c(5,75)]
-  class(khm.simset)="khm_simulation_output"
 }
+
+
+#   #comparing ncd and khm population sizes
+#   simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T)
+simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = c("age","sex"))
+#   # simplot(ncd.simset,data.type = "population",facet.by = "age")
+# simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "sex")
+simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "hiv.status")
+
+# # comparing deaths ???
+# simplot(khm.simset,ncd.simset,data.type = "hiv.mortality",scale.population =T)
+# simplot(khm.simset,ncd.simset,data.type = "non.hiv.mortality",scale.population = T,facet.by = "age")
+# 
+# simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = "age")
+# simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = c("sex","age"))
+
+
+
+# looking at population age distribution one year at a time
 {
-  #comparing ncd and khm population sizes
-  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T)
-  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "age")
-  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = c("age","sex"))
-  # simplot(ncd.simset,data.type = "population",facet.by = "age")
-  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "sex")
-  #' @MS: simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = c("age","sex")
-  #'
-  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "hiv.status")
+  #choose a year:
+  plottingYear="2025"
+  ##
+  D<-lapply(c(1:10),function(x){
+    pop=ncd.simset[[x]]
+    res=filter.5D.stats.by.field(pop$stats$n.state.sizes,years = plottingYear,keep.dimensions = c("year","age","sex" ))
+    res<-as.data.frame(rbind(res[,,1],res[,,2]));
+    res=res/rowSums(res)
+    res$sex=c("FEMALE","MALE")
+    res$id=x
+    return(res)
+  })
+  D=do.call(rbind,D)
+  ncd.pop=D
+  ##
+  D=lapply(c(1:10),function(x){
+    khm=khm.simset[[x]]
+    res=return.khm.data(khm.output=khm,
+                        data.type = "population",
+                        years=plottingYear,
+                        keep.dimensions = c("year","age","sex" ))
+    res<-as.data.frame(rbind(res[,,1],res[,,2]));
+    res=res/rowSums(res)
+    res$sex=c("FEMALE","MALE")
+    res$id=x
+    return(res)
+  })
+  D=do.call(rbind,D)
+  khm.pop=D
+  ##
+  res=as.data.frame(rbind(ncd.pop,khm.pop))
+  par(mfrow=c(2,1))
+  barplot( as.matrix(res[res$sex=="MALE",1:17]),beside = T,col = sapply(c("cyan","red"),rep,10),names.arg = DIM.NAMES.AGE,main = paste("Male pop in ",plottingYear))
+  legend("topright",legend = c("ncd","khm"),fill = c("cyan","red"))
+  barplot( as.matrix(res[res$sex=="FEMALE",1:17]),beside = T,col = sapply(c("cyan","red"),rep,10),names.arg = DIM.NAMES.AGE,main = paste("Female pop in ",plottingYear))
+  legend("topright",legend = c("ncd","khm"),fill = c("cyan","red"))
+}
 
-  # comparing deaths ???
-  simplot(khm.simset,ncd.simset,data.type = "hiv.mortality",scale.population =T)
-  simplot(khm.simset,ncd.simset,data.type = "hiv.mortality",scale.population = T,facet.by = "age")
-  #'@MS
-  # simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = "age")
-  # simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = c("sex","age"))
-
+# looking at changes in each agegroup accross various simulations over time
+# we have 2 options:
+# looking at each year independently, and mapping the age distribution in that year
+# mapping each year's age dist relative to agegroup size in 2015 (all plots start from 1)
+{
+  plottingYear=as.character(c(2015:2030))
+  N=length(ncd.simset)
+  #NCD
+  D=lapply(ncd.simset,function(pop){
+    res=filter.5D.stats.by.field(pop$stats$n.state.sizes,ages = DIM.NAMES.AGE ,years = plottingYear,keep.dimensions = c("year","age" ))
+    # return(res/rowSums(res)) #prop in each year
+    
+    res=t(t(res)/t(res)[,1]) #relative to 2015
+    res[is.nan(res)]<-1;res[res==Inf]<-1;
+    return(res)
+  })
+  D=as.data.frame(do.call(rbind,D))
+  D$year=as.numeric(rep(plottingYear,length(N)))
+  ncd.pop=D
+  
+  #KHM
+  D=lapply(khm.simset,function(khm){
+    res= return.khm.data(khm.output=khm,
+                         data.type = "population",
+                         ages = DIM.NAMES.AGE,
+                         years=plottingYear,
+                         keep.dimensions = c("year","age" ))
+    # return(res/rowSums(res)) #prop in each year
+    
+    res=t(t(res)/t(res)[,1]) #relative to 2015
+    res[is.nan(res)]<-1;res[res==Inf]<-1;
+    return(res)
+  })
+  D=as.data.frame(do.call(rbind,D))
+  D$year=as.numeric(rep(plottingYear,length(N)))
+  khm.pop=D
+  
+  
+  par(mfrow=c(4,5))
+  lapply(c(1:17),function(c){
+    plot(x=ncd.pop$year, y = ncd.pop[,c],col="cyan",main=DIM.NAMES.AGE[c],xlab ="",ylab=""
+         ,ylim=range(ncd.pop[,c])*c(0.8,1.2)
+    )
+    points(x=khm.pop$year+.2, y = khm.pop[,c],col="red")
+  })
+  
 }
 
 #' #check NCD prevalence in 2015
@@ -167,7 +130,7 @@ lapply(c(1:10),function(rep){
 #'                                             keep.dimensions = c('age','sex','ncd.status','year'))
 #'   ncd.states2015=ncd.states2015[,,,1] #to remove year dimension
 #'   ncd.props2015<-return.prop.sex.age(vFreq = ncd.states2015)
-#' 
+#'
 #'   par(mfrow=c(2,2))
 #'   plot(pop$params$target.ncd.props[,"MALE","NCD.DIAB"],type="l",ylab="",main="diab.prev male",xlab="agegroups")
 #'   lines(ncd.props2015[,"MALE","NCD.DIAB"],col="red")
@@ -180,8 +143,8 @@ lapply(c(1:10),function(rep){
 #' }
 
 # #######################################################
-# 
-# 
+#
+#
 # # pop$stats$n.births
 # # pop$stats$n.births.non.hiv
 # # pop$stats$n.births.hiv
@@ -199,10 +162,10 @@ lapply(c(1:10),function(rep){
 # filter.5D.stats.by.field(pop$stats$n.diab.hyp.inc, keep.dimensions = c('year',"sex"))
 # filter.5D.stats.by.field(pop$stats$n.diab.inc, keep.dimensions = c('year',"age","sex"))
 # filter.5D.stats.by.field(pop$stats$n.hyp.inc, keep.dimensions = c('year',"age","sex"))
-# # 
+# #
 # filter.5D.stats.by.field(pop$stats$n.mi.inc, keep.dimensions = c('year'))
 # filter.5D.stats.by.field(pop$stats$n.stroke.inc, keep.dimensions = c('year'))
-# # 
+# #
 # filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year'))
 # filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year','hiv.status'))
 # filter.5D.stats.by.field(pop$stats$n.state.sizes, keep.dimensions = c('year','ncd.status'))
@@ -354,12 +317,12 @@ lapply(c(1:10),function(rep){
 # dev.off()
 # }
 
-#' 
-#'      
+#'
+#'
 #' # @MS:
 #' #' @step.dataset has been randomized, correct?
-#' 
-#' 
+#'
+#'
 #' #seems like lapply over the pop$member is the winner
 #' system.time(
 #'   invisible(sapply(pop$members,function(p){
@@ -371,7 +334,7 @@ lapply(c(1:10),function(rep){
 #'     p.probs = hiv.probs[,p$agegroup,p$sex]
 #'     if (p$hivState==HIV.NEG) p$bMarkedDead.hiv=T
 #'   })), gcFirst = TRUE)
-#' 
+#'
 #' system.time(
 #'   invisible(lapply((1:length(pop$members)),function(x){
 #'     p=pop$members[[x]]
@@ -384,8 +347,8 @@ lapply(c(1:10),function(rep){
 #'     p.probs = hiv.probs[,p$agegroup,p$sex]
 #'     if (p$hivState==HIV.NEG) p$bMarkedDead.hiv=T
 #'   })), gcFirst = TRUE)
-#' 
-#' 
+#'
+#'
 #' #@MS
 #' MP$annual.cvd.risk.by.age.sex=-((log(1- x/100 ))/10)
 #' #assuming geometric distribution of risk over time
@@ -393,3 +356,8 @@ lapply(c(1:10),function(rep){
 #' # why using differnt approaches to convert risk?
 #' #why accessing previous agegroup?
 
+
+# end_time <- Sys.time()
+# session_time=end_time - start_time
+# print(paste("Session time=",session_time))
+# write.table(x = session_time,file = "outputs/out-sessionTime",col.names = F,row.names = F)
