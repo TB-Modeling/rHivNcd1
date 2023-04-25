@@ -39,10 +39,17 @@ POPULATION<-R6Class("POPULATION",
                       modelAging=function(){
                         invisible(lapply(self$members,function(p) {p$incAge}))
                       },
-                      remove.dead.ageout=function(){
-                        vdead <- unlist(invisible(lapply(self$members,function(p) {return(p$bMarkedDead.ageout)})))
-                        self$members <- self$members[!vdead] #remove dead people
-                        return(sum(vdead))
+                      model.aging.out=function(){
+                        vdead<-lapply(self$members,function(p) {
+                          res=0; 
+                          if (p$age>=MAX.AGE){ 
+                            res=1;
+                            self$record.deaths.ageout(p$agegroup,p$sex,p$hivState,p$ncdState)
+                            }
+                          return(res)
+                        })
+                        self$members <- self$members[!unlist(vdead)] #remove dead people
+                        pop$stats$n.deaths.ageout[pop$params$YNOW]=sum(unlist(vdead))
                       },
                       ###
                       return.state.size.distribution=function(){
@@ -150,7 +157,7 @@ POPULATION<-R6Class("POPULATION",
                       },
                       
                       #record deaths
-                                            record.deaths.hiv=function(age,sex,hiv,ncd){
+                      record.deaths.hiv=function(age,sex,hiv,ncd){
                         self$stats$n.deaths.hiv[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
                           self$stats$n.deaths.hiv[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
