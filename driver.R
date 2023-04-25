@@ -98,7 +98,7 @@ print("Sourcing dependencies")
 
 # MULTI REPS
 print("running models....")
-lapply(c(1:10),function(rep){
+lapply(c(1:6),function(rep){
   start_time <- Sys.time()
   bDebugMode=F
   set.seed(rep)
@@ -125,8 +125,8 @@ lapply(c(1:10),function(rep){
 {
   simset=list()
   lapply(c(1:6),function(rep){
-    pop<-readRDS(sprintf("outputs/pop%g",rep))
-    simset[[sprintf("pop%g",rep)]]<<-pop
+    pop<-readRDS(sprintf("outputs/popList-%g",rep))
+    simset[[sprintf("popList-%g",rep)]]<<-pop
   })
   print(paste0(length(simset)," ncd populationd data is read"))
   ncd.simset = simset
