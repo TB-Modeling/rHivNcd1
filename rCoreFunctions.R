@@ -67,8 +67,8 @@ initialize.simulation <- function( id=0,
   pop$stats$ncd.id<-id
   pop$greet()
   #
-  pop<-invisible(set.initial.hiv.status(pop ))
-  pop<-invisible(set.cvd.risk(pop))
+  # pop<-invisible(set.initial.hiv.status(pop ))
+  # pop<-invisible(set.cvd.risk(pop))
   pop$record.annual.stats()
   pop$increaseYear() 
   #
@@ -520,8 +520,7 @@ run.one.year<-function(pop){
   #### AT YEAR's END:
   ## --MODEL Deaths due to aging out --------
   pop$model.aging.out()
-  print(apply(pop$stats$n.deaths.ageout,c(5),sum))
-  
+
   ## -- UPDATE NCD STATES & CVD RISKS FOR NEXT YEAR --------
   # pop<-update.ncd.states(pop)
   # pop<-invisible(set.cvd.risk(pop))

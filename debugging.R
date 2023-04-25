@@ -18,53 +18,59 @@
 }
 
 
-#' 
-#'   #comparing ncd and khm population sizes
-#'   simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T)
-simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "age")
-#'   # simplot(ncd.simset,data.type = "population",facet.by = "age")
-#'   simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "sex")
-#'   #' @MS: simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = c("age","sex")
-#'   #'
-#'   simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "hiv.status")
-#' 
-#'   # comparing deaths ???
-#'   simplot(khm.simset,ncd.simset,data.type = "hiv.mortality",scale.population =T)
-#'   simplot(khm.simset,ncd.simset,data.type = "non.hiv.mortality",scale.population = T,facet.by = "age")
-#'   #'@MS
-#'   # simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = "age")
-#'   # simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = c("sex","age"))
-#' 
-#' 
+#   #comparing ncd and khm population sizes
+#   simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T)
+simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = c("age","sex"))
+#   # simplot(ncd.simset,data.type = "population",facet.by = "age")
+# simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "sex")
+simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "hiv.status")
+
+# # comparing deaths ???
+# simplot(khm.simset,ncd.simset,data.type = "hiv.mortality",scale.population =T)
+# simplot(khm.simset,ncd.simset,data.type = "non.hiv.mortality",scale.population = T,facet.by = "age")
+# 
+# simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = "age")
+# simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = c("sex","age"))
+
+
 
 # looking at population age distribution one year at a time
 {
   #choose a year:
-  plottingYear="2020"
+  plottingYear="2025"
   ##
-  D=lapply(ncd.simset,function(pop){
-    return(filter.5D.stats.by.field(pop$stats$n.state.sizes,ages = DIM.NAMES.AGE ,years = plottingYear,keep.dimensions = c("year","age" )))
+  D<-lapply(c(1:10),function(x){
+    pop=ncd.simset[[x]]
+    res=filter.5D.stats.by.field(pop$stats$n.state.sizes,years = plottingYear,keep.dimensions = c("year","age","sex" ))
+    res<-as.data.frame(rbind(res[,,1],res[,,2]));
+    res=res/rowSums(res)
+    res$sex=c("FEMALE","MALE")
+    res$id=x
+    return(res)
   })
   D=do.call(rbind,D)
-  D=D/rowSums(D)
-  apply(D,1,sum)
   ncd.pop=D
   ##
-  D=lapply(khm.simset,function(khm){
-    return( return.khm.data(khm.output=khm,
-                            data.type = "population",
-                            ages = DIM.NAMES.AGE,
-                            years=plottingYear,
-                            keep.dimensions = c("year","age" )))
+  D=lapply(c(1:10),function(x){
+    khm=khm.simset[[x]]
+    res=return.khm.data(khm.output=khm,
+                        data.type = "population",
+                        years=plottingYear,
+                        keep.dimensions = c("year","age","sex" ))
+    res<-as.data.frame(rbind(res[,,1],res[,,2]));
+    res=res/rowSums(res)
+    res$sex=c("FEMALE","MALE")
+    res$id=x
+    return(res)
   })
   D=do.call(rbind,D)
-  D=D/rowSums(D)
-  apply(D,1,sum)
   khm.pop=D
   ##
-  res=as.matrix(rbind(ncd.pop,khm.pop))
-  par(mfrow=c(1,1))
-  barplot( res,beside = T,col = sapply(c("cyan","red"),rep,10),names.arg = DIM.NAMES.AGE,main = paste("pop in ",plottingYear))
+  res=as.data.frame(rbind(ncd.pop,khm.pop))
+  par(mfrow=c(2,1))
+  barplot( as.matrix(res[res$sex=="MALE",1:17]),beside = T,col = sapply(c("cyan","red"),rep,10),names.arg = DIM.NAMES.AGE,main = paste("Male pop in ",plottingYear))
+  legend("topright",legend = c("ncd","khm"),fill = c("cyan","red"))
+  barplot( as.matrix(res[res$sex=="FEMALE",1:17]),beside = T,col = sapply(c("cyan","red"),rep,10),names.arg = DIM.NAMES.AGE,main = paste("Female pop in ",plottingYear))
   legend("topright",legend = c("ncd","khm"),fill = c("cyan","red"))
 }
 
@@ -91,10 +97,10 @@ simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, fac
   #KHM
   D=lapply(khm.simset,function(khm){
     res= return.khm.data(khm.output=khm,
-                            data.type = "population",
-                            ages = DIM.NAMES.AGE,
-                            years=plottingYear,
-                            keep.dimensions = c("year","age" ))
+                         data.type = "population",
+                         ages = DIM.NAMES.AGE,
+                         years=plottingYear,
+                         keep.dimensions = c("year","age" ))
     # return(res/rowSums(res)) #prop in each year
     
     res=t(t(res)/t(res)[,1]) #relative to 2015
@@ -110,7 +116,7 @@ simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, fac
   lapply(c(1:17),function(c){
     plot(x=ncd.pop$year, y = ncd.pop[,c],col="cyan",main=DIM.NAMES.AGE[c],xlab ="",ylab=""
          ,ylim=range(ncd.pop[,c])*c(0.8,1.2)
-         )
+    )
     points(x=khm.pop$year+.2, y = khm.pop[,c],col="red")
   })
   

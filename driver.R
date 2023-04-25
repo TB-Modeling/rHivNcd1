@@ -97,12 +97,13 @@ print("Sourcing dependencies")
 # #######################################################
 
 # MULTI REPS
-lapply(c(11:20),function(rep){
-start_time <- Sys.time()
-bDebugMode=F
+lapply(c(1:10),function(rep){
+  start_time <- Sys.time()
+  bDebugMode=F
   set.seed(rep)
   # create pop at the end of 2014; set up hiv/ncd states; records stats and increament the year to 2015
   pop<-initialize.simulation(id = rep, n = POP.SIZE)
+  pop$stats$ncd.id
   
   #run sims
   while(pop$params$CYNOW<= 2030)
