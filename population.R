@@ -49,7 +49,7 @@ POPULATION<-R6Class("POPULATION",
                           return(res)
                         })
                         self$members <- self$members[!unlist(vdead)] #remove dead people
-                        pop$stats$n.deaths.ageout[pop$params$YNOW]=sum(unlist(vdead))
+                        self$stats$n.deaths.ageout[self$params$YNOW]=sum(unlist(vdead))
                       },
                       ###
                       return.state.size.distribution=function(){
