@@ -98,7 +98,7 @@ print("Sourcing dependencies")
 
 # MULTI REPS
 print("running models....")
-lapply(c(1:6),function(rep){
+lapply(c(11:20),function(rep){
   start_time <- Sys.time()
   bDebugMode=F
   set.seed(rep)
@@ -122,42 +122,42 @@ lapply(c(1:6),function(rep){
 # #######################################################
 
 # # # Reading populations back into a simset object
-{
-  simset=list()
-  lapply(c(1:6),function(rep){
-    pop<-readRDS(sprintf("outputs/popList-%g",rep))
-    simset[[sprintf("popList-%g",rep)]]<<-pop
-  })
-  print(paste0(length(simset)," ncd populationd data is read"))
-  ncd.simset = simset
-  khm.simset = ncd.simset[[1]]$params$khm.full # HIV simset
-  print(paste0(length(khm.simset)," khm populationd data is read"))
-  
-  # vector of sampled khm.ids
-  khm.ids = sapply(ncd.simset,function(pop){pop$params$khm.id})
-  khm.simset=khm.simset[khm.ids]
-  # khm.simset=khm.simset[c(5,75)]
-  class(khm.simset)="khm_simulation_output"
-}
-{
-  #comparing ncd and khm population sizes
-  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T)
-  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "age")
-  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = c("age","sex"))
-  # simplot(ncd.simset,data.type = "population",facet.by = "age")
-  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "sex")
-  #' @MS: simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = c("age","sex")
-  #'
-  simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "hiv.status")
-
-  # comparing deaths ???
-  simplot(khm.simset,ncd.simset,data.type = "hiv.mortality",scale.population =T)
-  simplot(khm.simset,ncd.simset,data.type = "hiv.mortality",scale.population = T,facet.by = "age")
-  #'@MS
-  # simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = "age")
-  # simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = c("sex","age"))
-
-}
+#' {
+#'   simset=list()
+#'   lapply(c(1:6),function(rep){
+#'     pop<-readRDS(sprintf("outputs/popList-%g",rep))
+#'     simset[[sprintf("popList-%g",rep)]]<<-pop
+#'   })
+#'   print(paste0(length(simset)," ncd populationd data is read"))
+#'   ncd.simset = simset
+#'   khm.simset = ncd.simset[[1]]$params$khm.full # HIV simset
+#'   print(paste0(length(khm.simset)," khm populationd data is read"))
+#'   
+#'   # vector of sampled khm.ids
+#'   khm.ids = sapply(ncd.simset,function(pop){pop$params$khm.id})
+#'   khm.simset=khm.simset[khm.ids]
+#'   # khm.simset=khm.simset[c(5,75)]
+#'   class(khm.simset)="khm_simulation_output"
+#' }
+#' {
+#'   #comparing ncd and khm population sizes
+#'   simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T)
+#'   simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "age")
+#'   simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = c("age","sex"))
+#'   # simplot(ncd.simset,data.type = "population",facet.by = "age")
+#'   simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "sex")
+#'   #' @MS: simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = c("age","sex")
+#'   #'
+#'   simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "hiv.status")
+#' 
+#'   # comparing deaths ???
+#'   simplot(khm.simset,ncd.simset,data.type = "hiv.mortality",scale.population =T)
+#'   simplot(khm.simset,ncd.simset,data.type = "hiv.mortality",scale.population = T,facet.by = "age")
+#'   #'@MS
+#'   # simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = "age")
+#'   # simplot(ncd.simset,data.type = "mortality",scale.population = F,facet.by = c("sex","age"))
+#' 
+#' }
 
 #' #check NCD prevalence in 2015
 #' {

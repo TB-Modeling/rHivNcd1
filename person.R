@@ -34,7 +34,7 @@ PERSON<-R6Class("PERSON",
         tDiabHypTrt=-1,
         
         # cvd events and times
-        monthlyCvdRisk=NULL,
+        monthlyCvdRisk=0,
         nMi=0,
         nStroke=0,
         tMiInc=-1,
