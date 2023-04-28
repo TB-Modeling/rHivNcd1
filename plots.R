@@ -525,32 +525,32 @@ if(1==2){
   simplot(ncd.simset, data.type = "hiv.prevalence", facet.by = "ncd.status")
   
   # Plot type 4: Diabetes incidence & prevalence
-  # simplot(ncd.simset, data.type = "diab.inc")
+  simplot(ncd.simset, data.type = "diab.inc")
   # simplot(ncd.simset, data.type = "diab.inc", facet.by = "age")
   # simplot(ncd.simset, data.type = "diab.inc", facet.by = "sex")
   # simplot(ncd.simset, data.type = "diab.inc", facet.by = "hiv.status")
-  # simplot(ncd.simset, data.type = "diab.prev")
-  # simplot(ncd.simset, data.type = "diab.prev", facet.by = "age")
-  # simplot(ncd.simset, data.type = "diab.prev", facet.by = "sex")
-  # simplot(ncd.simset, data.type = "diab.prev", facet.by = "hiv.status")
+  simplot(ncd.simset, data.type = "diab.prev")
+  simplot(ncd.simset, data.type = "diab.prev", facet.by = "age")
+  simplot(ncd.simset, data.type = "diab.prev", facet.by = "sex")
+  simplot(ncd.simset, data.type = "diab.prev", facet.by = "hiv.status")
   
   # Plot type 5: Hypertension incidence & prevalence
-  # simplot(ncd.simset, data.type = "hyp.inc")
-  # simplot(ncd.simset, data.type = "hyp.inc", facet.by = "age")
+  simplot(ncd.simset, data.type = "hyp.inc")
+  simplot(ncd.simset, data.type = "hyp.inc", facet.by = "age")
   # simplot(ncd.simset, data.type = "hyp.inc", facet.by = "sex")
   # simplot(ncd.simset, data.type = "hyp.inc", facet.by = "hiv.status")
-  # simplot(ncd.simset, data.type = "hyp.prev")
-  # simplot(ncd.simset, data.type = "hyp.prev", facet.by = "age")
-  # simplot(ncd.simset, data.type = "hyp.prev", facet.by = "sex")
-  # simplot(ncd.simset, data.type = "hyp.prev", facet.by = "hiv.status")
+  simplot(ncd.simset, data.type = "hyp.prev") 
+  simplot(ncd.simset, data.type = "hyp.prev", facet.by = "age") #'@MS: we have some hyp among those age 15?
+  simplot(ncd.simset, data.type = "hyp.prev", facet.by = "sex") 
+  simplot(ncd.simset, data.type = "hyp.prev", facet.by = "hiv.status")
   
   # Plot type 6: Diabetes + Hypertension incidence & prevalence
   # simplot(ncd.simset, data.type = "diab.hyp.inc")
   # simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "age")
   # simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "sex")
   # simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "hiv.status")
-  # simplot(ncd.simset, data.type = "diab.hyp.prev")
-  # simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "age")
+  simplot(ncd.simset, data.type = "diab.hyp.prev")
+  simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "age")
   # simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "sex")
   # simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "hiv.status")
   
@@ -584,3 +584,4 @@ if(1==2){
   
 }
 
+#'@MS: does hyp prev and diab prev include hyp.diab too?

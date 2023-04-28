@@ -178,19 +178,3 @@ POPULATION<-R6Class("POPULATION",
                     
 )
 
-
-# source("globalVariables.R")
-# source("stats.R")
-# source("person.R")
-# GP
-# 
-# p1<-PERSON$new(id=1,sex="male",age="10")
-# p2<-PERSON$new(id=2,sex="female",age="20")
-# p1$greet();p2$greet()
-# 
-# pop<-POPULATION$new(id=1,members=list(p1,p2))
-# pop$greet()
-# pop$stats$pop.size<-rep(1,10)
-#  
-# pop$members[1]
-
