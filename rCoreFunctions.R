@@ -225,12 +225,13 @@ model.hiv.cvd.deaths<-function(pop,
   pop
 }
 
+
 # update NCD state after aging
 print("Loading function update.ncd.states")
 update.ncd.states<-function(pop){ 
   # for each age/sex subgroup:
   #   compute current prp of ncd states, compare to baseline proportions, and estimate the difference
-  # if diference > 0, assign individuals to new ncd states with corresponding probabilities 
+  # if difference > 0, assign individuals to new ncd states with corresponding probabilities 
   # states: S, D, H, DH
   # only allowing one NCD incidence at a time (H>DH, D>DH and not S>>DH)
   # 1- modeling moves from H >> DH or D>> DH
@@ -252,7 +253,6 @@ update.ncd.states<-function(pop){
   # DIFFERENCE in prevalence of NCDs
   diff.props =  pop$params$target.ncd.props-current.ncd.props
   
-  
   # ADDITIONAL Transitions required to reach the target proportions in our current population:
   trans.freq=diff.props
   invisible(lapply(1:DIM.AGE, function(ag){
@@ -265,6 +265,7 @@ update.ncd.states<-function(pop){
   #PROBABILITY Of transition to DH for those in D or H state
   trans.prob.diab.hyp=
     trans.freq[,,"NCD.DIAB_HYP"]/(current.ncd.states[,,"NCD.DIAB"]+current.ncd.states[,,"NCD.HYP"])
+  trans.prob.diab.hyp[is.na(trans.prob.diab.hyp) | trans.prob.diab.hyp==Inf]<-0
   
   # TRANSITION to DH from D or H 
   invisible(lapply(pop$members,function(p){
@@ -295,6 +296,7 @@ update.ncd.states<-function(pop){
   
   #PROBABILITY Of transition to DIAB for those in NCD.NEG
   trans.prob.diab= trans.freq[,,"NCD.DIAB"]/(current.ncd.states[,,"NCD.NEG"])
+  trans.prob.diab[is.na(trans.prob.diab) | trans.prob.diab==Inf]<-0
   
   # TRANSITION to D from neg
   invisible(lapply(c(1:length(pop$members)),function(x){
@@ -306,7 +308,7 @@ update.ncd.states<-function(pop){
       }}}))
   
   # HYP #############################################################################
-  current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
+    current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
                                                 years = as.character(pop$params$CYNOW),
                                                 keep.dimensions = c('age','sex','ncd.status','year'))
   current.ncd.states=current.ncd.states[,,,1] #to remove year dimension
@@ -326,15 +328,17 @@ update.ncd.states<-function(pop){
   
   #PROBABILITY Of transition to HYP for those in NCD.NEG
   trans.prob.hyp= trans.freq[,,"NCD.HYP"]/(current.ncd.states[,,"NCD.NEG"])
+  trans.prob.hyp[is.na(trans.prob.hyp) | trans.prob.hyp==Inf]<-0
   
   # TRANSITION to H from neg
   invisible(lapply(c(1:length(pop$members)),function(x){
     p=pop$members[[x]] 
-    if(p$ncdState==NCD.NEG){
-      if(runif(1)<trans.prob.diab[p$agegroup,p$sex]){
+    if(p$ncdState==NCD.NEG) {
+      if(runif(1)< trans.prob.hyp[p$agegroup,p$sex]){
         pop$record.hyp.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
         p$model.hyp.inc(pop$params$TNOW)
       }}}))
+  
   pop
 }
 
@@ -350,7 +354,7 @@ run.one.year<-function(pop){
   #### AT YEAR's BEGINNING:computing event probabilities from KHM
   khm=pop$params$khm
   ###computing prob of death
-  
+  { 
     ##Probability of HIV mortality (estimated via # events/ elig pop) --------
     n.hiv.pos = apply(khm$population[as.character(pop$params$CYNOW-1),-1,,],c(2:3),sum) # extract all but hiv.negative, sum over hiv states
     target.hiv.mort = khm$hiv.mortality[as.character(pop$params$CYNOW),,] # pull out current year; dimensions are year, age, sex
@@ -379,9 +383,9 @@ run.one.year<-function(pop){
     khm.annual.non.hiv.mort=prob.non.hiv.mort
     khm.monthly.non.hiv.mort=(1-(1-prob.non.hiv.mort)^(1/12))
     
-  
+  }
   ###computing number of births (and distributing them over 12 months)
-  
+  {
     # non-HIV births
     absolute.n.births.non.hiv=khm$target.parameters$non.hiv.births[as.character(pop$params$CYNOW)] # total non HIV births from HIV model
     non.hiv.births.scalar = absolute.n.births.non.hiv/sum(khm$population[as.character(pop$params$CYNOW),,,]) # scaled to pop size from HIV model
@@ -399,9 +403,9 @@ run.one.year<-function(pop){
     n.births.hiv.per.month=rep(0,ANNUAL.TIMESTEPS)
     if(n.births.hiv>0)
       n.births.hiv.per.month=as.vector(tabulate(sample(size = n.births.hiv,x = c(1:ANNUAL.TIMESTEPS),replace = T),nbins = 12))
-  
+  }
   ###computing care cascade prob of events
-  
+  {
     ##Probability of incidence (estimated via # events/ elig pop) --------
     n.hiv.neg = khm$population[as.character(pop$params$CYNOW-1),"HIV.NEG",,]
     target.inc = khm$incidence[as.character(pop$params$CYNOW),,] # pull out current year; dimensions are year, age, sex
@@ -435,11 +439,10 @@ run.one.year<-function(pop){
       stop(paste("Error: probability of prob.diag >1 in year ",pop$params$CYNOW))
     prob.diag[prob.diag==Inf]<-0
     khm.prob.hiv.diag=(1-(1-prob.diag)^(1/12))
-  
+  }
   
   ##### AT EACH TIMESTEP WITHIN THE YEAR:
   for(i in (1:ANNUAL.TIMESTEPS)){
-    # if (bPrint1) cat("Running month ",pop$params$TNOW,"\n")
     # CVD events and HIV transitions are independent, so the order doesn't matter    # we model HIV deaths based on new HIV states after new transitions are modeled
     
     # 1- modeling cvd events based on current cvd annual risk    # counting new events: marking those who will die after the event
@@ -457,7 +460,7 @@ run.one.year<-function(pop){
                                khm.monthly.hiv.mort,
                                khm.monthly.non.hiv.mort)
     
-    ## xx- MODEL AGING --------
+    ## MODEL AGING --------
     pop$modelAging()
     
     ## MODEL BIRTHS -------
@@ -501,7 +504,9 @@ run.one.year<-function(pop){
     
     pop$increaseMonth()
     
-  }
+  
+    # Model intervention???
+    }
   
   #### AT YEAR's END:
   ## --MODEL Deaths due to aging out --------
@@ -511,9 +516,12 @@ run.one.year<-function(pop){
   pop<-update.ncd.states(pop)
   pop<-invisible(set.cvd.risk(pop))
   ##############################################
+  
+  ##Model the intervention??? 
+  
   # END OF YEAR----
   if (bPrint1) cat("End of year: ",pop$params$CYNOW," --------------------------- \n")
-  # Record annual statatistics --------
+  # Record annual statistics --------
   pop$record.annual.stats()
   #Increment the clock
   pop$increaseYear()
@@ -528,8 +536,20 @@ run.one.year<-function(pop){
 # pNcdTrtInitiation represents a combination of factors related to acceptability, uptake, and adherence, 
 # represenitng the likelihood of starting and adhereing to ncd treatment
 # we are not modeling drop outs
-model.intervention<-function(pop){
-  pCoverage=1
+# Dimensions
+# Time: freq of interevention: one time, annual, limited number of years
+# scope: community wide vs HIV clinic
+# coverage: proportion receiving the intervention
+# prbOfEffTrtInitiation: a combined measure of access, uptake, and adherence
+
+# allowForReenrollment: should we allow individuals to enroll in the intervention if they have been screened and/or started trt before?
+# rate of dropout: 
+  # HIV: are new ART initiators subject to the same cascade? 
+
+# so HIV intervention will run seperately in khm, we will read the input here but dont model explicit HIV intervention
+
+model.intervention<-function(pop,scenario){
+  # successful trt initiation
   pNcdTrtInitiation=1
   pHivTrtInitiation=1
   
