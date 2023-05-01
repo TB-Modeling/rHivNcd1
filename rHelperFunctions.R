@@ -7,7 +7,7 @@ print("Reading R Helper Functions... ")
 
 # Transform 1D data on HIV state sizes (hiv.pop) to proportion of people in different HIV states by age/sex
 print("loading function get.hiv.state.proportions")
-  transform.hiv.data.1d.to.3d = function(hiv.pop){
+transform.hiv.data.1d.to.3d = function(hiv.pop){
   #transform 1D data to correct array dimensions
   ages = DIM.NAMES.AGE
   sexes = DIM.NAMES.SEX
@@ -35,12 +35,12 @@ print("loading function get.hiv.state.proportions")
 #filters the state sizes to appropriate dimensions
 print("loading function filter.stateSizes.by.field")
 filter.5D.stats.by.field<- function(stateSizes, # a 5D array
-                                          ages = DIM.NAMES.AGE, 
-                                          sexes = DIM.NAMES.SEX,
-                                          hiv.status = DIM.NAMES.HIV,
-                                          ncd.status = DIM.NAMES.NCD,
-                                          years=as.character(DIM.NAMES.YEAR),
-                                          keep.dimensions = 'year' # collapse all other dimensions & report the data as total value over this dimension
+                                    ages = DIM.NAMES.AGE, 
+                                    sexes = DIM.NAMES.SEX,
+                                    hiv.status = DIM.NAMES.HIV,
+                                    ncd.status = DIM.NAMES.NCD,
+                                    years=as.character(DIM.NAMES.YEAR),
+                                    keep.dimensions = 'year' # collapse all other dimensions & report the data as total value over this dimension
 ){
   if(all(keep.dimensions!='year'))  
     stop("must keep year dimension")
@@ -79,11 +79,21 @@ filter.5D.stats.by.field<- function(stateSizes, # a 5D array
 print("loading function return.prop.sex.age")
 return.prop.sex.age<-function(vFreq){
   vProp=vFreq
-  invisible(sapply(1:length(DIM.NAMES.SEX), function(sex){
-    sapply(1:length(DIM.NAMES.AGE), function(age){
-      vProp[age,sex,]<<-vProp[age,sex,]/sum(vFreq[age,sex,]) 
-    })
-  }))
+  if (length(dim(vFreq))==4){
+    print("detected 4 dimensions")
+    invisible(sapply(1:length(DIM.NAMES.SEX), function(sex){
+      sapply(1:length(DIM.NAMES.AGE), function(age){
+        vProp[age,sex,,]<<-vProp[age,sex,,]/sum(vFreq[age,sex,,]) 
+      })}))
+  }
+  if (length(dim(vFreq))==3){
+    print("detected 3 dimensions")
+    invisible(sapply(1:length(DIM.NAMES.SEX), function(sex){
+      sapply(1:length(DIM.NAMES.AGE), function(age){
+        vProp[age,sex,]<<-vProp[age,sex,]/sum(vFreq[age,sex,]) 
+      })}))
+  }
+  
   vProp[vProp=="NaN"] = 0 # to remove NaN values that were introduced by dividing by 0 
   vProp
 }

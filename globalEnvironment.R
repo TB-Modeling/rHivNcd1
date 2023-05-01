@@ -16,7 +16,7 @@ END.YEAR=2030 #simulation ends
 AGE.INTERVAL=5
 MIN.AGE=0
 MAX.AGE=85*12
-POP.SIZE=100000
+POP.SIZE=10000
 #
 FEMALE=1
 MALE=2
@@ -110,11 +110,11 @@ generate.new.modelParameter<-function(){
       target.ncd.props[age,sex,]<<-target.ncd.props[age,sex,]/sum(target.ncd.sizes[age,sex,]) # double assignment goes back to the most recent value of D in the upper environment
     })}))
   target.ncd.props[is.na(target.ncd.props)]<-0
-  MP$target.ncd.props=target.ncd.props
+  MP$target.ncd.props=target.ncd.props #'@MS: please revise this to include the hiv dimension too
   
-  #relative risk of ncd incidence by hiv status (relative hiv negative)
+  #relative risk of ncd incidence by hiv status (>1 relative to hiv.neg) (can be a single value or an array)
   MP$relative.ncd.risk.by.hiv=1 
-  #annual growth in age/sex-specific prev of ncds relative to baseline
+  #annual growth in age/sex-specific prev of ncds relative to baseline (>1)
   MP$annaul.growth.ncd.prev=1
   
   #4-load pooled 10-year CVD risk by age/sex/ncd category
@@ -233,8 +233,8 @@ generate.new.stat<-function(){
     
     # ncd treatment initiation
     n.diab.trt.int=v5temp,
-    n.hyp..trt.int=v5temp,
-    n.diab.hyp..trt.int=v5temp,
+    n.hyp.trt.int=v5temp,
+    n.diab.hyp.trt.int=v5temp,
     
     
     ## STATE SIZES ##

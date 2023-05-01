@@ -128,7 +128,7 @@ POPULATION<-R6Class("POPULATION",
                       },
                       
                       
-                      #record NCD diagnosis through intevention
+                      #record NCD diagnosis through intervention
                       record.diab.diag.int=function(age,sex,hiv,ncd){
                         self$stats$n.diab.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
                           self$stats$n.diab.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1

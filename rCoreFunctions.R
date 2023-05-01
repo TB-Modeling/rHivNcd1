@@ -226,51 +226,61 @@ model.hiv.cvd.deaths<-function(pop,
 }
 
 
-# update NCD state after aging
+# update NCD state (based on hiv and annual population growth)
 print("Loading function update.ncd.states")
 update.ncd.states<-function(pop){ 
-  # for each age/sex subgroup:
-  #   compute current prp of ncd states, compare to baseline proportions, and estimate the difference
-  # if difference > 0, assign individuals to new ncd states with corresponding probabilities 
-  # states: S, D, H, DH
-  # only allowing one NCD incidence at a time (H>DH, D>DH and not S>>DH)
-  # 1- modeling moves from H >> DH or D>> DH
-  # 2- modeling moves from S >> D
-  # 3- modeling moves from S >>H
+  #'MS: the aim is to incorporate these two coefficients for sensitivity analysis
+  #'we need to include HIV dimention in our calculation
   
-  # TARGET ncNCDd state sizes and proportions 
-  # target.ncd.sizes
-  # target.ncd.props
+  #new parameters to incorporate:
+  #1-additional risk of ncds by hiv status (can be a single value or different based on engagement)
+  # MP$relative.ncd.risk.by.hiv=1 
+  #2-annual growth in age/sex-specific prev of ncds
+  # MP$annaul.growth.ncd.prev=1
+  
+  
+  # TARGET PREV OF NCDs BASED ON 2015, HIV STATUS AND ANNUAL GROWTH
+  q=array(rep(pop$params$target.ncd.props,4),c(dim(pop$params$target.ncd.props),DIM.HIV))
+  dimnames(q)<-list(DIM.NAMES.AGE,DIM.NAMES.SEX,DIM.NAMES.NCD,DIM.NAMES.HIV)
+  q<-aperm(q,c(1,2,4,3)) #reorder dimensions
+  dimnames(q)#'@MS: should incorporate this in params
+  target.ncd.props=q
+  
+  #1-multiply by HIV coef
+  target.ncd.props[,,c("HIV.UNDIAG", "HIV.UNENG" , "HIV.ENG"),]=pop$params$relative.ncd.risk.by.hiv* target.ncd.props[,,c("HIV.UNDIAG", "HIV.UNENG" , "HIV.ENG"),]
+  
+  #2-multiply by rhe annual growth factor:
+  target.ncd.props= pop$params$annaul.growth.ncd.prev^(pop$params$CYNOW-INITIAL.YEAR)  * target.ncd.props
   
   # DIAB HYP #######################################
   # CURRENT NCD state sizes & prop
   current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
                                                 years = as.character(pop$params$CYNOW),
-                                                keep.dimensions = c('age','sex','ncd.status','year'))
-  current.ncd.states=current.ncd.states[,,,1] #to remove year dimension
+                                                keep.dimensions = c('age','sex','hiv.status','ncd.status','year'))[,,,,1]#to remove year dimension
   current.ncd.props<-return.prop.sex.age(vFreq = current.ncd.states)
+  # dimnames(current.ncd.props);dimnames(current.ncd.states)
   
-  # DIFFERENCE in prevalence of NCDs
-  diff.props =  pop$params$target.ncd.props-current.ncd.props
+  diff.props =  target.ncd.props-current.ncd.props
   
   # ADDITIONAL Transitions required to reach the target proportions in our current population:
   trans.freq=diff.props
   invisible(lapply(1:DIM.AGE, function(ag){
     lapply(1:DIM.SEX, function(sex){
-      lapply(1:DIM.NCD, function(ncd){
-        trans.freq[ag,sex,ncd]<<-diff.props[ag,sex,ncd]*sum(current.ncd.states[ag,sex,]) # the required number of new transitions
-      })})}))
+      lapply(1:DIM.HIV, function(hiv){
+        lapply(1:DIM.NCD, function(ncd){
+          trans.freq[ag,sex,hiv,ncd]<<-diff.props[ag,sex,hiv,ncd]*sum(current.ncd.states[ag,sex,hiv,]) # the required number of new transitions
+        })})})}))
   trans.freq[trans.freq<0]<-0
   
   #PROBABILITY Of transition to DH for those in D or H state
   trans.prob.diab.hyp=
-    trans.freq[,,"NCD.DIAB_HYP"]/(current.ncd.states[,,"NCD.DIAB"]+current.ncd.states[,,"NCD.HYP"])
+    trans.freq[,,,"NCD.DIAB_HYP"]/(current.ncd.states[,,,"NCD.DIAB"]+current.ncd.states[,,,"NCD.HYP"])
   trans.prob.diab.hyp[is.na(trans.prob.diab.hyp) | trans.prob.diab.hyp==Inf]<-0
   
-  # TRANSITION to DH from D or H 
+  # TRANSITION to DH from D or H
   invisible(lapply(pop$members,function(p){
-    if(p$ncdState==NCD.DIAB || p$ncdState==NCD.HYP){ 
-      if(runif(1) < trans.prob.diab.hyp[p$agegroup,p$sex]){
+    if(p$ncdState==NCD.DIAB || p$ncdState==NCD.HYP){
+      if(runif(1) < trans.prob.diab.hyp[p$agegroup,p$sex,p$hivState]){
         pop$record.diab.hyp.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
         p$model.diab.hyp.inc(pop$params$TNOW)
       }}}))
@@ -278,71 +288,68 @@ update.ncd.states<-function(pop){
   # DIAB #######################################
   current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
                                                 years = as.character(pop$params$CYNOW),
-                                                keep.dimensions = c('age','sex','ncd.status','year'))
-  current.ncd.states=current.ncd.states[,,,1] #to remove year dimension
-  current.ncd.props<-return.prop.sex.age(current.ncd.states)
+                                                keep.dimensions = c('age','sex','hiv.status','ncd.status','year'))[,,,,1]#to remove year dimension
+  current.ncd.props<-return.prop.sex.age(vFreq = current.ncd.states)
   
-  # DIFFERENCE in prevalence of NCDs
-  diff.props =  pop$params$target.ncd.props-current.ncd.props
+  diff.props =  target.ncd.props-current.ncd.props
   
-  # ADDITIONAL Transitions required to reach the target proportions:
+  # ADDITIONAL Transitions required to reach the target proportions in our current population:
   trans.freq=diff.props
   invisible(lapply(1:DIM.AGE, function(ag){
     lapply(1:DIM.SEX, function(sex){
-      lapply(1:DIM.NCD, function(ncd){
-        trans.freq[ag,sex,ncd]<<-diff.props[ag,sex,ncd]*sum(current.ncd.states[ag,sex,]) # the required number of new transitions
-      })})}))
+      lapply(1:DIM.HIV, function(hiv){
+        lapply(1:DIM.NCD, function(ncd){
+          trans.freq[ag,sex,hiv,ncd]<<-diff.props[ag,sex,hiv,ncd]*sum(current.ncd.states[ag,sex,hiv,]) # the required number of new transitions
+        })})})}))
   trans.freq[trans.freq<0]<-0
   
   #PROBABILITY Of transition to DIAB for those in NCD.NEG
-  trans.prob.diab= trans.freq[,,"NCD.DIAB"]/(current.ncd.states[,,"NCD.NEG"])
+  trans.prob.diab= trans.freq[,,,"NCD.DIAB"]/(current.ncd.states[,,,"NCD.NEG"])
   trans.prob.diab[is.na(trans.prob.diab) | trans.prob.diab==Inf]<-0
   
   # TRANSITION to D from neg
   invisible(lapply(c(1:length(pop$members)),function(x){
-    p=pop$members[[x]] 
+    p=pop$members[[x]]
     if(p$ncdState==NCD.NEG){
-      if(runif(1)<trans.prob.diab[p$agegroup,p$sex]){
+      if(runif(1)<trans.prob.diab[p$agegroup,p$sex,p$hivState]){
         pop$record.diab.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
         p$model.diab.inc(pop$params$TNOW)
       }}}))
   
   # HYP #############################################################################
-    current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
+  current.ncd.states = filter.5D.stats.by.field(pop$return.state.size.distribution(),
                                                 years = as.character(pop$params$CYNOW),
-                                                keep.dimensions = c('age','sex','ncd.status','year'))
-  current.ncd.states=current.ncd.states[,,,1] #to remove year dimension
-  current.ncd.props<-return.prop.sex.age(current.ncd.states)
+                                                keep.dimensions = c('age','sex','hiv.status','ncd.status','year'))[,,,,1]#to remove year dimension
+  current.ncd.props<-return.prop.sex.age(vFreq = current.ncd.states)
+  # dimnames(current.ncd.props);dimnames(current.ncd.states)
   
-  # DIFFERENCE in prevalence of NCDs
-  diff.props =  pop$params$target.ncd.props-current.ncd.props
+  diff.props =  target.ncd.props-current.ncd.props
   
-  # ADDITIONAL Transitions required to reach the target proportions:
+  # ADDITIONAL Transitions required to reach the target proportions in our current population:
   trans.freq=diff.props
   invisible(lapply(1:DIM.AGE, function(ag){
     lapply(1:DIM.SEX, function(sex){
-      lapply(1:DIM.NCD, function(ncd){
-        trans.freq[ag,sex,ncd]<<-diff.props[ag,sex,ncd]*sum(current.ncd.states[ag,sex,]) # the required number of new transitions
-      })})}))
+      lapply(1:DIM.HIV, function(hiv){
+        lapply(1:DIM.NCD, function(ncd){
+          trans.freq[ag,sex,hiv,ncd]<<-diff.props[ag,sex,hiv,ncd]*sum(current.ncd.states[ag,sex,hiv,]) # the required number of new transitions
+        })})})}))
   trans.freq[trans.freq<0]<-0
   
   #PROBABILITY Of transition to HYP for those in NCD.NEG
-  trans.prob.hyp= trans.freq[,,"NCD.HYP"]/(current.ncd.states[,,"NCD.NEG"])
+  trans.prob.hyp= trans.freq[,,,"NCD.HYP"]/(current.ncd.states[,,,"NCD.NEG"])
   trans.prob.hyp[is.na(trans.prob.hyp) | trans.prob.hyp==Inf]<-0
   
   # TRANSITION to H from neg
   invisible(lapply(c(1:length(pop$members)),function(x){
-    p=pop$members[[x]] 
+    p=pop$members[[x]]
     if(p$ncdState==NCD.NEG) {
-      if(runif(1)< trans.prob.hyp[p$agegroup,p$sex]){
+      if(runif(1)< trans.prob.hyp[p$agegroup,p$sex,p$hivState]){
         pop$record.hyp.inc(p$agegroup,p$sex,p$hivState,p$ncdState)
         p$model.hyp.inc(pop$params$TNOW)
       }}}))
   
   pop
 }
-
-
 
 
 # model one simulated year (from Jan 1st to Dec 31st)
@@ -548,10 +555,11 @@ run.one.year<-function(pop){
 
 # so HIV intervention will run seperately in khm, we will read the input here but dont model explicit HIV intervention
 
-model.intervention<-function(pop,scenario){
+model.onetime.intervention<-function(pop,scenario){
   # successful trt initiation
+  pCoverage=0.5
   pNcdTrtInitiation=1
-  pHivTrtInitiation=1
+  
   
   #estiamte the number of people that will be screened
   nToScreen= round(pCoverage * length(pop$members))

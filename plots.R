@@ -555,17 +555,18 @@ if(1==2){
   # simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "hiv.status")
   
   # Plot type 7: MI and stroke incidence 
-  # simplot(ncd.simset, data.type = "mi.inc")
-  # simplot(ncd.simset, data.type = "mi.inc", facet.by = "age")
-  # simplot(ncd.simset, data.type = "mi.inc", facet.by = "sex")
-  # simplot(ncd.simset, data.type = "mi.inc", facet.by = "ncd.status")
-  # simplot(ncd.simset, data.type = "mi.inc", facet.by = "hiv.status")
-  # simplot(ncd.simset, data.type = "stroke.inc")
-  # simplot(ncd.simset, data.type = "stroke.inc", facet.by = "age")
-  # simplot(ncd.simset, data.type = "stroke.inc", facet.by = "sex")
-  # simplot(ncd.simset, data.type = "stroke.inc", facet.by = "ncd.status")
-  # simplot(ncd.simset, data.type = "stroke.inc", facet.by = "ncd.status", scale.population = T)
-  # simplot(ncd.simset, data.type = "stroke.inc", facet.by = "hiv.status")
+  simplot(ncd.simset, data.type = "mi.inc")
+  simplot(ncd.simset, data.type = "mi.inc", facet.by = "age")
+  simplot(ncd.simset, data.type = "mi.inc", facet.by = "sex")
+  simplot(ncd.simset, data.type = "mi.inc", facet.by = "ncd.status",view.as.rate = T,per.X.population = 1)
+  simplot(ncd.simset, data.type = "mi.inc", facet.by = "hiv.status")
+  
+  simplot(ncd.simset, data.type = "stroke.inc")
+  simplot(ncd.simset, data.type = "stroke.inc", facet.by = "age")
+  simplot(ncd.simset, data.type = "stroke.inc", facet.by = "sex")
+  simplot(ncd.simset, data.type = "stroke.inc", facet.by = "ncd.status",view.as.rate = T,per.X.population = 1)
+  simplot(ncd.simset, data.type = "stroke.inc", facet.by = "ncd.status", scale.population = T)
+  simplot(ncd.simset, data.type = "stroke.inc", facet.by = "hiv.status")
   
   # Plot type X: not yet completed 
   simplot(khm.simset, data.type = "engagement") # need to make this a proportion 
