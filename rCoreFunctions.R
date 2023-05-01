@@ -243,7 +243,7 @@ update.ncd.states<-function(pop){
   q=array(rep(pop$params$target.ncd.props,4),c(dim(pop$params$target.ncd.props),DIM.HIV))
   dimnames(q)<-list(DIM.NAMES.AGE,DIM.NAMES.SEX,DIM.NAMES.NCD,DIM.NAMES.HIV)
   q<-aperm(q,c(1,2,4,3)) #reorder dimensions
-  dimnames(q)#'@MS: should incorporate this in params
+   #'@MS: should incorporate this in params
   target.ncd.props=q
   
   #1-multiply by HIV coef

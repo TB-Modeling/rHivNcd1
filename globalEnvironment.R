@@ -59,7 +59,7 @@ DIM.YEAR=length(DIM.NAMES.YEAR)
 ################################################################################################################
 # MODEL PARAMETERS (MP) HOUSES ALL PARAMETERS THAT MAY BE CHANGED IN SENSITIVITY ANALYSIS. THEY'RE CREATED ONCE FOR EACH POPULATION
 cat("loading function generate.new.modelParameter ... \n")
-generate.new.modelParameter<-function(){
+generate.new.modelParameter<-function(scenario){
   #variables
   MP<-list(
     TNOW=1, #current timestep
@@ -70,6 +70,8 @@ generate.new.modelParameter<-function(){
   #1- load HIV data 
   # load('data/hiv_sim.RData')  #a single run from the HIV model
   load("data/hiv_simset.RData") #multiple runs from the HIV model
+  # load(paste0("data/hiv_simset-scenario",scenario,".RData") # extended name for different datasets from KHM
+  
   MP$khm.full=khm # leaving full simset in here for plotting purposes
   class(MP$khm.full) = "khm_simulation_output"
   x=sample(1:length(khm),1)
@@ -113,7 +115,7 @@ generate.new.modelParameter<-function(){
   MP$target.ncd.props=target.ncd.props #'@MS: please revise this to include the hiv dimension too
   
   #relative risk of ncd incidence by hiv status (>1 relative to hiv.neg) (can be a single value or an array)
-  MP$relative.ncd.risk.by.hiv=1 
+  MP$relative.ncd.risk.by.hiv=10 
   #annual growth in age/sex-specific prev of ncds relative to baseline (>1)
   MP$annaul.growth.ncd.prev=1
   

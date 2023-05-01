@@ -98,7 +98,7 @@ print("Sourcing dependencies")
 
 # MULTI REPS
 print("running models....")
-lapply(c(1:10),function(rep){
+lapply(c(6:10),function(rep){
   start_time <- Sys.time()
   bDebugMode=F
   set.seed(rep)
