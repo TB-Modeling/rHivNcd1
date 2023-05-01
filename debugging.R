@@ -1,9 +1,9 @@
 
 # # # Reading populations back into a simset object{
 {  
-  reps=7
+  reps=10
   simset=list()
-  invisible(lapply(c((1:reps)+10),function(rep){
+  invisible(lapply(c((1:reps)+0),function(rep){
     pop<-readRDS(sprintf("outputs/popList-%g",rep))
     simset[[sprintf("pop%g",rep)]]<<-pop
   }))
@@ -19,20 +19,59 @@
 }
 
 
-# #comparing ncd and khm population sizes
+# Plot type 1: population - SEE STANDARD PLOTS LIST (WORD DOC) - Commented out means it's saved in the above for loops 
 # simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T)
-simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = c("age"))
-# simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = c("age","sex"))
-# simplot(ncd.simset,data.type = "population",facet.by = "age")
-simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "hiv.status")
+simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "age")
+# simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T, facet.by = "sex")
+# simplot(ncd.simset,data.type = "population",scale.population = F, facet.by="age")
 
-# # comparing deaths ???
-simplot(khm.simset,ncd.simset,data.type = "hiv.mortality",scale.population =T)
-simplot(khm.simset,ncd.simset,data.type = "non.hiv.mortality",scale.population = T,facet.by = "age")
-# 
-simplot(ncd.simset,data.type = "non.hiv.mortality",scale.population = F,facet.by = "age")
-simplot(ncd.simset,data.type = "non.hiv.mortality",scale.population = F,facet.by = c("sex","age"))
+# Plot type 2: HIV hiv.incidence
+simplot(khm.simset, ncd.simset, data.type = "hiv.incidence", scale.population = T)
+simplot(khm.simset, ncd.simset, data.type = "hiv.incidence", scale.population = T, facet.by = "age")
+simplot(khm.simset, ncd.simset, data.type = "hiv.incidence", scale.population = T, facet.by = "sex")
+# simplot(ncd.simset, data.type = "hiv.incidence")
+# simplot(ncd.simset, data.type = "hiv.incidence", facet.by = "ncd.status")
 
+# Plot type 3: HIV prevalence
+simplot(khm.simset, ncd.simset, data.type = "hiv.prevalence", scale.population = T, facet.by = "age")
+simplot(khm.simset, ncd.simset, data.type = "hiv.prevalence", scale.population = T, facet.by = c("age","sex"))
+# simplot(khm.simset, ncd.simset, data.type = "hiv.prevalence", scale.population = T, facet.by = "hiv.status")
+# simplot(ncd.simset, data.type = "hiv.prevalence", facet.by = "age")
+# simplot(ncd.simset, data.type = "hiv.prevalence", facet.by = "ncd.status")
+
+# Plot type 4: Diabetes incidence & prevalence
+simplot(ncd.simset, data.type = "diab.inc")
+simplot(ncd.simset, data.type = "diab.inc", facet.by = "age")
+# simplot(ncd.simset, data.type = "diab.inc", facet.by = "sex")
+# simplot(ncd.simset, data.type = "diab.inc", facet.by = "hiv.status")
+simplot(ncd.simset, data.type = "diab.prev")
+simplot(ncd.simset, data.type = "diab.prev", facet.by = "age")
+simplot(ncd.simset, data.type = "diab.prev", facet.by = c("age","sex"),view.as.rate = T,per.X.population = 1)
+simplot(ncd.simset, data.type = "diab.prev", facet.by = "sex")
+simplot(ncd.simset, data.type = "diab.prev", facet.by = "hiv.status")
+
+# Plot type 5: Hypertension incidence & prevalence
+simplot(ncd.simset, data.type = "hyp.inc")
+simplot(ncd.simset, data.type = "hyp.inc", facet.by = "age")
+simplot(ncd.simset, data.type = "hyp.inc", facet.by = "sex")
+simplot(ncd.simset, data.type = "hyp.inc", facet.by = "hiv.status")
+simplot(ncd.simset, data.type = "hyp.prev") 
+simplot(ncd.simset, data.type = "hyp.prev", facet.by = "age")
+simplot(ncd.simset, data.type = "hyp.prev", facet.by = c("age"),view.as.rate = T,per.X.population = 1)
+simplot(ncd.simset, data.type = "hyp.prev", facet.by = "sex")
+simplot(ncd.simset, data.type = "hyp.prev", facet.by = "hiv.status",view.as.rate = T,per.X.population = 1)
+
+
+# Plot type 6: Diabetes + Hypertension incidence & prevalence
+simplot(ncd.simset, data.type = "diab.hyp.inc")
+simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "age",view.as.rate = T,per.X.population = 1)
+simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "sex")
+simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "hiv.status")
+
+simplot(ncd.simset, data.type = "diab.hyp.prev")
+simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "age",view.as.rate = T,per.X.population = 1)
+# simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "sex")
+# simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "hiv.status")
 
 
 # looking at population age distribution one year at a time
