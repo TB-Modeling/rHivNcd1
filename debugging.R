@@ -1,7 +1,10 @@
 
 # # # Reading populations back into a simset object{
+#1-5: baseline model
+#6-10:  10X risk by HIV
+#11-15: 1.1 annual ncd prev growth
 {  
-  reps=10
+  reps=5
   simset=list()
   invisible(lapply(c((1:reps)+0),function(rep){
     pop<-readRDS(sprintf("outputs/popList-%g",rep))
@@ -48,31 +51,39 @@ simplot(ncd.simset, data.type = "diab.prev")
 simplot(ncd.simset, data.type = "diab.prev", facet.by = "age")
 simplot(ncd.simset, data.type = "diab.prev", facet.by = c("age","sex"),view.as.rate = T,per.X.population = 1)
 simplot(ncd.simset, data.type = "diab.prev", facet.by = "sex")
-simplot(ncd.simset, data.type = "diab.prev", facet.by = "hiv.status")
-
+jpeg("diab.prev.by.hiv0.jpeg")
+simplot(ncd.simset, data.type = "diab.prev", facet.by = "hiv.status",view.as.rate = T,per.X.population = 1)
+dev.off()
 # Plot type 5: Hypertension incidence & prevalence
-simplot(ncd.simset, data.type = "hyp.inc")
-simplot(ncd.simset, data.type = "hyp.inc", facet.by = "age")
-simplot(ncd.simset, data.type = "hyp.inc", facet.by = "sex")
-simplot(ncd.simset, data.type = "hyp.inc", facet.by = "hiv.status")
-simplot(ncd.simset, data.type = "hyp.prev") 
-simplot(ncd.simset, data.type = "hyp.prev", facet.by = "age")
-simplot(ncd.simset, data.type = "hyp.prev", facet.by = c("age"),view.as.rate = T,per.X.population = 1)
-simplot(ncd.simset, data.type = "hyp.prev", facet.by = "sex")
+# simplot(ncd.simset, data.type = "hyp.inc")
+# simplot(ncd.simset, data.type = "hyp.inc", facet.by = "age")
+# simplot(ncd.simset, data.type = "hyp.inc", facet.by = "sex")
+jpeg("hyp.inc.by.agesex0.jpeg",width = 1500,height = 1000)
+simplot(ncd.simset, data.type = "hyp.inc", facet.by = c("age","sex"),view.as.rate = T,per.X.population = 1)
+dev.off()
+# simplot(ncd.simset, data.type = "hyp.inc", facet.by = "hiv.status",view.as.rate = T,per.X.population = 1)
+simplot(ncd.simset, data.type = "hyp.prev",view.as.rate = T,per.X.population = 1) 
+simplot(ncd.simset, data.type = "hyp.prev", facet.by = "age",view.as.rate = T,per.X.population = 1)
+jpeg("hyp.prev.by.agesex0.jpeg",width = 1500,height = 1000)
+simplot(ncd.simset, data.type = "hyp.prev", facet.by = c("age","sex"),view.as.rate = T,per.X.population = 1)
+dev.off()
+simplot(ncd.simset, data.type = "hyp.prev", facet.by = "sex",view.as.rate = T,per.X.population = 1)
+# jpeg("hyp.prev.by.hiv0.jpeg")
 simplot(ncd.simset, data.type = "hyp.prev", facet.by = "hiv.status",view.as.rate = T,per.X.population = 1)
-
+# dev.off()
 
 # Plot type 6: Diabetes + Hypertension incidence & prevalence
-simplot(ncd.simset, data.type = "diab.hyp.inc")
-simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "age",view.as.rate = T,per.X.population = 1)
-simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "sex")
-simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "hiv.status")
+# simplot(ncd.simset, data.type = "diab.hyp.inc")
+# simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "age",view.as.rate = T,per.X.population = 1)
+# simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "sex")
+# simplot(ncd.simset, data.type = "diab.hyp.inc", facet.by = "hiv.status",view.as.rate = T,per.X.population = 1)
 
-simplot(ncd.simset, data.type = "diab.hyp.prev")
-simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "age",view.as.rate = T,per.X.population = 1)
+# simplot(ncd.simset, data.type = "diab.hyp.prev")
+# simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "age",view.as.rate = T,per.X.population = 1)
 # simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "sex")
-# simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "hiv.status")
-
+jpeg("diabHyp.prev.by.hiv0.jpeg")
+simplot(ncd.simset, data.type = "diab.hyp.prev", facet.by = "hiv.status",view.as.rate = T,per.X.population = 1)
+dev.off()
 
 # looking at population age distribution one year at a time
 {

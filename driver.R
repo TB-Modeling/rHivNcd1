@@ -26,7 +26,7 @@ hms_span <- function(start, end) {
       formatC(x, width = 2, format = "d", flag = "0")
     }), collapse = ":")
 }
-
+#######################################################
 print("Sourcing dependencies")
 {
   source("globalEnvironment.R")
@@ -36,6 +36,39 @@ print("Sourcing dependencies")
   source("rCoreFunctions.R")
   source("plots.R")
 }
+# SCENARIOS
+# 0 : Baseline no intervention
+# 1: onetime community wide intervention
+
+#######################################################
+# MULTI REPS
+print("running models....")
+lapply(c(11:15),function(rep){
+  start_time <- Sys.time()
+  bDebugMode=F
+  set.seed(rep) 
+  scenario=0 #baseline
+  # create pop at the end of 2014; set up hiv/ncd states; records stats and increament the year to 2015
+  pop<-initialize.simulation(id = rep, 
+                             n = POP.SIZE,
+                             scenario=scenario)
+  
+  #run sims
+  while(pop$params$CYNOW<= 2030)
+    pop<-run.one.year.no.int(pop)
+  
+  #saving population
+  res=list(stats=pop$stats,
+           params=pop$params)
+  saveRDS(res,file = paste0("outputs/popList-",rep),compress = T)
+  # saving time
+  end_time <- Sys.time()
+  session_time=end_time - start_time
+  txt=paste("Model ",rep," >> session time ",session_time)
+  write.table(x = txt,file = "outputs/out-sessionTime.txt",col.names = F,row.names = F,append = T)
+})
+# 
+# #######################################################
 # #######################################################
 # # SINGLE RUN ON ROCKFISH
 # # {
@@ -64,62 +97,6 @@ print("Sourcing dependencies")
 #   write.table(session_time,file = paste0("outputs/out-sessionTime",rep),col.names = F,row.names = F)
 # # }
 
-#######################################################
-#######################################################
-# SINGLE RUN WITH INTERVENTION
-# {
-#   # Create the population in year 2014; save the stats and move the clock to 2015
-#   rep=1
-#   bDebugMode=F
-#   set.seed(1)
-#   pop<-initialize.simulation(id = rep,n = POP.SIZE)
-# 
-# 
-#   # pre-intervention
-#   # while(pop$params$CYNOW< INT.START.YEAR)
-#   #   pop<-run.one.year(pop)
-#   #
-#   # # model intervention
-#   # while(pop$params$CYNOW<= INT.END.YEAR){
-#   #   pop<-model.intervention(pop)
-#   #   pop<-run.one.year(pop)
-#   #   }
-#   # post-intervention
-#   while(pop$params$CYNOW<= 2030)
-#     pop<-run.one.year(pop)
-# 
-#   filter.5D.stats.by.field(pop$stats$n.diab.inc,keep.dimensions = c("year"))
-#   #saving population
-#   res=list(stats=pop$stats,
-#                params=pop$params)
-#   saveRDS(res,file = paste0("outputs/popList-c",rep),compress = T)
-# }
-# #######################################################
-
-# MULTI REPS
-print("running models....")
-lapply(c(6:10),function(rep){
-  start_time <- Sys.time()
-  bDebugMode=F
-  set.seed(rep)
-  # create pop at the end of 2014; set up hiv/ncd states; records stats and increament the year to 2015
-  pop<-initialize.simulation(id = rep, n = POP.SIZE)
-  
-  #run sims
-  while(pop$params$CYNOW<= 2030)
-    pop<-run.one.year(pop)
-  #saving population
-  res=list(stats=pop$stats,
-           params=pop$params)
-  saveRDS(res,file = paste0("outputs/popList-",rep),compress = T)
-  # saving time
-  end_time <- Sys.time()
-  session_time=end_time - start_time
-  txt=paste("Model ",rep," >> session time ",session_time)
-  write.table(x = txt,file = "outputs/out-sessionTime.txt",col.names = F,row.names = F,append = T)
-})
-# 
-# #######################################################
 
 # # # Reading populations back into a simset object
 #' {

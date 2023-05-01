@@ -62,6 +62,7 @@ cat("loading function generate.new.modelParameter ... \n")
 generate.new.modelParameter<-function(scenario){
   #variables
   MP<-list(
+    SCENARIO=scenario,
     TNOW=1, #current timestep
     YNOW=1, #variable showing current year
     CYNOW=INITIAL.YEAR, #calendar year (we start one year earlier, so that we save the initial population state before simulation begins)
@@ -69,8 +70,8 @@ generate.new.modelParameter<-function(scenario){
   
   #1- load HIV data 
   # load('data/hiv_sim.RData')  #a single run from the HIV model
-  load("data/hiv_simset.RData") #multiple runs from the HIV model
-  # load(paste0("data/hiv_simset-scenario",scenario,".RData") # extended name for different datasets from KHM
+  # load("data/hiv_simset.RData") #multiple runs from the HIV model
+  load(paste0("data/hiv_simset_scenario",scenario,".RData")) # extended name for different datasets from KHM
   
   MP$khm.full=khm # leaving full simset in here for plotting purposes
   class(MP$khm.full) = "khm_simulation_output"
@@ -90,7 +91,6 @@ generate.new.modelParameter<-function(scenario){
   if(as.numeric(unlist(dimnames(khm$incidence)[1])[[n]])< END.YEAR)
     stop(paste0("Error: KHM END year (",as.numeric(unlist(dimnames(khm$incidence)[1])[[n]]),") is smaller than NCD model (",END.YEAR,")"))
   
-    
   
   #2- load STEP dataset to generate the initial population by age, sex and ncd state
   step.dataset = read.csv("data/stepSimPop2015.csv")
@@ -115,9 +115,9 @@ generate.new.modelParameter<-function(scenario){
   MP$target.ncd.props=target.ncd.props #'@MS: please revise this to include the hiv dimension too
   
   #relative risk of ncd incidence by hiv status (>1 relative to hiv.neg) (can be a single value or an array)
-  MP$relative.ncd.risk.by.hiv=10 
+  MP$relative.ncd.risk.by.hiv=1 
   #annual growth in age/sex-specific prev of ncds relative to baseline (>1)
-  MP$annaul.growth.ncd.prev=1
+  MP$annaul.growth.ncd.prev=1.1
   
   #4-load pooled 10-year CVD risk by age/sex/ncd category
   load('data/10.year.cvd.risk.by.age.sex.ncd.Rdata')
