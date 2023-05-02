@@ -6,7 +6,7 @@
 {  
   reps=5
   simset=list()
-  invisible(lapply(c((1:reps)+0),function(rep){
+  invisible(lapply(c((1:reps)+10),function(rep){
     pop<-readRDS(sprintf("outputs/popList-%g",rep))
     simset[[sprintf("pop%g",rep)]]<<-pop
   }))
@@ -21,6 +21,7 @@
   print(paste0(length(khm.simset)," khm populationd data is read"))
 }
 
+ncd.simset[[1]]$params$annaul.growth.ncd.prev
 
 # Plot type 1: population - SEE STANDARD PLOTS LIST (WORD DOC) - Commented out means it's saved in the above for loops 
 # simplot(khm.simset,ncd.simset,data.type = "population",scale.population = T)
@@ -58,13 +59,13 @@ dev.off()
 # simplot(ncd.simset, data.type = "hyp.inc")
 # simplot(ncd.simset, data.type = "hyp.inc", facet.by = "age")
 # simplot(ncd.simset, data.type = "hyp.inc", facet.by = "sex")
-jpeg("hyp.inc.by.agesex0.jpeg",width = 1500,height = 1000)
+jpeg("hyp.inc.by.agesex.5growth.jpeg",width = 1500,height = 1000)
 simplot(ncd.simset, data.type = "hyp.inc", facet.by = c("age","sex"),view.as.rate = T,per.X.population = 1)
 dev.off()
 # simplot(ncd.simset, data.type = "hyp.inc", facet.by = "hiv.status",view.as.rate = T,per.X.population = 1)
 simplot(ncd.simset, data.type = "hyp.prev",view.as.rate = T,per.X.population = 1) 
 simplot(ncd.simset, data.type = "hyp.prev", facet.by = "age",view.as.rate = T,per.X.population = 1)
-jpeg("hyp.prev.by.agesex0.jpeg",width = 1500,height = 1000)
+jpeg("hyp.prev.by.agesex.5growth.jpeg",width = 1500,height = 1000)
 simplot(ncd.simset, data.type = "hyp.prev", facet.by = c("age","sex"),view.as.rate = T,per.X.population = 1)
 dev.off()
 simplot(ncd.simset, data.type = "hyp.prev", facet.by = "sex",view.as.rate = T,per.X.population = 1)

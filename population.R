@@ -118,42 +118,45 @@ POPULATION<-R6Class("POPULATION",
                       
                       ############### INTERVENTION ##################
                       # record HIV new diagnosis and treatment initiation through intervention
-                      record.hiv.diag.int=function(age,sex,hiv,ncd){
-                        self$stats$n.hiv.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
-                          self$stats$n.hiv.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      # record.hiv.diag=function(age,sex,hiv,ncd){
+                      #   self$stats$n.hiv.diag[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                      #     self$stats$n.hiv.diag[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      # },
+                      # record.hiv.trt=function(age,sex,hiv,ncd){
+                      #   self$stats$n.hiv.trt[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                      #     self$stats$n.hiv.trt[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      # },
+                      # 
+                      #record NCD screening through intervention
+                      record.ncd.screening=function(age,sex,hiv,ncd){
+                        self$stats$n.ncd.screened[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.ncd.screened[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
-                      record.hiv.trt.int=function(age,sex,hiv,ncd){
-                        self$stats$n.hiv.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
-                          self$stats$n.hiv.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
-                      },
-                      
-                      
                       #record NCD diagnosis through intervention
-                      record.diab.diag.int=function(age,sex,hiv,ncd){
-                        self$stats$n.diab.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
-                          self$stats$n.diab.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      record.diab.diag=function(age,sex,hiv,ncd){
+                        self$stats$n.diab.diag[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.diab.diag[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
-                      record.hyp.diag.int=function(age,sex,hiv,ncd){
-                        self$stats$n.hyp.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
-                          self$stats$n.hyp.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      record.hyp.diag=function(age,sex,hiv,ncd){
+                        self$stats$n.hyp.diag[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.hyp.diag[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
-                      record.diab.hyp.diag.int=function(age,sex,hiv,ncd){
-                        self$stats$n.diab.hyp.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
-                          self$stats$n.diab.hyp.diag.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      record.diab.hyp.diag=function(age,sex,hiv,ncd){
+                        self$stats$n.diab.hyp.diag[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.diab.hyp.diag[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
-                      
                       #record NCD treatment initiation through intervention
-                      record.diab.trt.int=function(age,sex,hiv,ncd){
-                        self$stats$n.diab.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
-                          self$stats$n.diab.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      record.diab.trt=function(age,sex,hiv,ncd){
+                        self$stats$n.diab.trt[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.diab.trt[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
-                      record.hyp.trt.int=function(age,sex,hiv,ncd){
-                        self$stats$n.hyp.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
-                          self$stats$n.hyp.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      record.hyp.trt=function(age,sex,hiv,ncd){
+                        self$stats$n.hyp.trt[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.hyp.trt[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
-                      record.diab.hyp.trt.int=function(age,sex,hiv,ncd){
-                        self$stats$n.diab.hyp.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
-                          self$stats$n.diab.hyp.trt.int[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
+                      record.diab.hyp.trt=function(age,sex,hiv,ncd){
+                        self$stats$n.diab.hyp.trt[age,sex,hiv,ncd,as.character(self$params$CYNOW)] <- 
+                          self$stats$n.diab.hyp.trt[age,sex,hiv,ncd,as.character(self$params$CYNOW)]+1
                       },
                       
                       #record deaths
